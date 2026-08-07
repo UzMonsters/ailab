@@ -1,0 +1,23 @@
+{
+  "datasetVersion": "laboratory-safety-reference-v1.1.0",
+  "rules": [
+    {
+      "ruleId": "SAFE-FUME-HOOD-REQ",
+      "version": 1,
+      "ruleType": "FUME_HOOD_REQUIREMENT",
+      "severity": "CRITICAL",
+      "stage": "PRE_EXECUTION",
+      "operationTypes": ["STOICHIOMETRIC_REACTION", "EQUILIBRIUM_REACTION", "KINETIC_PROGRESS"],
+      "requiredInputFields": ["fumeHoodOperating"],
+      "conditionField": "fumeHoodOperating",
+      "operator": "EQUALS",
+      "targetValue": "false",
+      "sourceType": "INTERNAL_GOVERNED_POLICY",
+      "sourceIdentifier": "AI-LAB-POLICY-001",
+      "sourceCitation": "AI Laboratory Conservative Operating Policy (OSHA 29 CFR 1910.1450 contextual guidance)",
+      "exactClauseSection": "Section 4.1 - Fume Hood Controls",
+      "supportedClaim": "Conservative internal policy requiring fume hood operation for high-reactivity operations in AI Lab MVP",
+      "sourceUrl": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1450"
+    }
+  ]
+}

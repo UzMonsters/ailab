@@ -1,0 +1,13 @@
+package com.ailab.chemistry.domain.hazard;
+
+public enum HazardEvidenceStatus {
+    HARMONIZED_CLASSIFICATION,
+    AUTHORITATIVE_CLASSIFICATION,
+    SUPPLIER_CLASSIFICATION,
+    CURATED_REFERENCE,
+    MEASURED,
+    ESTIMATED,
+    PROVISIONAL,
+    UNKNOWN,
+    NOT_APPLICABLE
+}

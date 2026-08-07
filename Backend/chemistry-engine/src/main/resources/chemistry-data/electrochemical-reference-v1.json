@@ -1,0 +1,37 @@
+{
+  "datasetId": "electrochemical-reference-v1.0.0",
+  "version": "1.0.0",
+  "immutableSnapshot": true,
+  "conditions": {
+    "conditionId": "EC-COND-AQ-298K-1BAR",
+    "temperatureK": "298.15",
+    "solventCode": "COMP-H2O",
+    "standardStateConvention": "aqueous solutes at unit activity, gases at 1 bar, pure condensed phases at activity 1",
+    "pressureBar": "1"
+  },
+  "sources": [
+    {
+      "sourceCode": "CRC-ELECTRODE-POTENTIALS",
+      "citation": "CRC Handbook of Chemistry and Physics standard reduction potentials, aqueous, 298.15 K.",
+      "reuseTerms": "Citation required; values are stored with stated standard-state convention."
+    },
+    {
+      "sourceCode": "IUPAC-SHE-CONVENTION",
+      "citation": "IUPAC electrochemical convention defining the standard hydrogen electrode as 0 V.",
+      "reuseTerms": "Citation required; zero is a reference convention, not a measured nonzero value."
+    }
+  ],
+  "standardReductionPotentials": [
+    { "recordId": "SRP-H2-REFERENCE", "equation": "2H+ + 2e- <=> H2(g)", "electronCount": "2", "standardPotentialV": "0.000000", "sourceRecordId": "SHE-CONVENTION-0V" },
+    { "recordId": "SRP-CU2-CU", "equation": "Cu2+ + 2e- <=> Cu(s)", "electronCount": "2", "standardPotentialV": "0.340000", "sourceRecordId": "CRC-AQ-SRP-CU2-CU-298K" },
+    { "recordId": "SRP-ZN2-ZN", "equation": "Zn2+ + 2e- <=> Zn(s)", "electronCount": "2", "standardPotentialV": "-0.763000", "sourceRecordId": "CRC-AQ-SRP-ZN2-ZN-298K" },
+    { "recordId": "SRP-AG-PLUS-AG", "equation": "Ag+ + e- <=> Ag(s)", "electronCount": "1", "standardPotentialV": "0.799600", "sourceRecordId": "CRC-AQ-SRP-AG-AG-298K" },
+    { "recordId": "SRP-FE3-FE2", "equation": "Fe3+ + e- <=> Fe2+", "electronCount": "1", "standardPotentialV": "0.771000", "sourceRecordId": "CRC-AQ-SRP-FE3-FE2-298K" },
+    { "recordId": "SRP-CL2-CL", "equation": "Cl2(g) + 2e- <=> 2Cl-", "electronCount": "2", "standardPotentialV": "1.358000", "sourceRecordId": "CRC-AQ-SRP-CL2-CL-298K" }
+  ],
+  "exclusions": [
+    "No fabricated potentials for missing half-reactions",
+    "No Butler-Volmer, Tafel, overpotential, corrosion or transport model",
+    "No arbitrary half-reaction auto-balancing"
+  ]
+}

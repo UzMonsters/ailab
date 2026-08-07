@@ -1,0 +1,334 @@
+{
+  "datasetVersion": "1.0.0",
+  "provenance": {
+    "sourceIdentifier": "IUPAC/CRC-HANDBOOK",
+    "citation": "CRC Handbook of Chemistry and Physics, 104th Ed. (2023-2024), Haynes, W.M., Ed., CRC Press; IUPAC Critical Evaluation of Equilibrium Constants.",
+    "license": "IUPAC Recommended Standards / Open Scientific Reference Data",
+    "evidenceStatus": "PEER_REVIEWED_EXPERIMENTAL"
+  },
+  "species": [
+    {
+      "code": "SPEC-H2O",
+      "name": "Water",
+      "formula": "H2O",
+      "kind": "SOLVENT",
+      "charge": 0,
+      "primaryRole": "AMPHIPROTIC",
+      "associatedCompoundCode": "COMP-H2O"
+    },
+    {
+      "code": "SPEC-H3O-PLUS",
+      "name": "Hydronium",
+      "formula": "H3O+",
+      "kind": "CATION",
+      "charge": 1,
+      "primaryRole": "ACID",
+      "associatedCompoundCode": null
+    },
+    {
+      "code": "SPEC-OH-MINUS",
+      "name": "Hydroxide",
+      "formula": "OH-",
+      "kind": "ANION",
+      "charge": -1,
+      "primaryRole": "BASE",
+      "associatedCompoundCode": null
+    },
+    {
+      "code": "SPEC-H-PLUS",
+      "name": "Hydrogen Ion",
+      "formula": "H+",
+      "kind": "CATION",
+      "charge": 1,
+      "primaryRole": "ACID",
+      "associatedCompoundCode": null
+    },
+    {
+      "code": "SPEC-NA-PLUS",
+      "name": "Sodium Ion",
+      "formula": "Na+",
+      "kind": "CATION",
+      "charge": 1,
+      "primaryRole": "NEUTRAL_SPECIES",
+      "associatedCompoundCode": null
+    },
+    {
+      "code": "SPEC-CL-MINUS",
+      "name": "Chloride Ion",
+      "formula": "Cl-",
+      "kind": "ANION",
+      "charge": -1,
+      "primaryRole": "NEUTRAL_SPECIES",
+      "associatedCompoundCode": null
+    },
+    {
+      "code": "SPEC-NH4-PLUS",
+      "name": "Ammonium",
+      "formula": "NH4+",
+      "kind": "CATION",
+      "charge": 1,
+      "primaryRole": "ACID",
+      "associatedCompoundCode": null
+    },
+    {
+      "code": "SPEC-NH3",
+      "name": "Ammonia",
+      "formula": "NH3",
+      "kind": "NEUTRAL_COMPOUND",
+      "charge": 0,
+      "primaryRole": "BASE",
+      "associatedCompoundCode": "COMP-NH3"
+    },
+    {
+      "code": "SPEC-HCL",
+      "name": "Hydrochloric Acid",
+      "formula": "HCl",
+      "kind": "NEUTRAL_COMPOUND",
+      "charge": 0,
+      "primaryRole": "STRONG_ELECTROLYTE",
+      "associatedCompoundCode": "COMP-HCL"
+    },
+    {
+      "code": "SPEC-HNO3",
+      "name": "Nitric Acid",
+      "formula": "HNO3",
+      "kind": "NEUTRAL_COMPOUND",
+      "charge": 0,
+      "primaryRole": "STRONG_ELECTROLYTE",
+      "associatedCompoundCode": "COMP-HNO3"
+    },
+    {
+      "code": "SPEC-H2SO4",
+      "name": "Sulfuric Acid",
+      "formula": "H2SO4",
+      "kind": "NEUTRAL_COMPOUND",
+      "charge": 0,
+      "primaryRole": "STRONG_ELECTROLYTE",
+      "associatedCompoundCode": "COMP-H2SO4"
+    },
+    {
+      "code": "SPEC-HSO4-MINUS",
+      "name": "Hydrogen Sulfate",
+      "formula": "HSO4-",
+      "kind": "ANION",
+      "charge": -1,
+      "primaryRole": "AMPHIPROTIC",
+      "associatedCompoundCode": null
+    },
+    {
+      "code": "SPEC-SO4-2MINUS",
+      "name": "Sulfate",
+      "formula": "SO4^2-",
+      "kind": "ANION",
+      "charge": -2,
+      "primaryRole": "BASE",
+      "associatedCompoundCode": null
+    },
+    {
+      "code": "SPEC-CH3COOH",
+      "name": "Acetic Acid",
+      "formula": "CH3COOH",
+      "kind": "NEUTRAL_COMPOUND",
+      "charge": 0,
+      "primaryRole": "ACID",
+      "associatedCompoundCode": "COMP-CH3COOH"
+    },
+    {
+      "code": "SPEC-CH3COO-MINUS",
+      "name": "Acetate",
+      "formula": "CH3COO-",
+      "kind": "ANION",
+      "charge": -1,
+      "primaryRole": "BASE",
+      "associatedCompoundCode": null
+    },
+    {
+      "code": "SPEC-H2CO3",
+      "name": "Carbonic Acid",
+      "formula": "H2CO3",
+      "kind": "NEUTRAL_COMPOUND",
+      "charge": 0,
+      "primaryRole": "ACID",
+      "associatedCompoundCode": "COMP-H2CO3"
+    },
+    {
+      "code": "SPEC-HCO3-MINUS",
+      "name": "Bicarbonate",
+      "formula": "HCO3-",
+      "kind": "ANION",
+      "charge": -1,
+      "primaryRole": "AMPHIPROTIC",
+      "associatedCompoundCode": null
+    },
+    {
+      "code": "SPEC-CO3-2MINUS",
+      "name": "Carbonate",
+      "formula": "CO3^2-",
+      "kind": "ANION",
+      "charge": -2,
+      "primaryRole": "BASE",
+      "associatedCompoundCode": null
+    }
+  ],
+  "conjugatePairs": [
+    {
+      "pairCode": "PAIR-H2O-OH",
+      "acidSpeciesCode": "SPEC-H2O",
+      "baseSpeciesCode": "SPEC-OH-MINUS"
+    },
+    {
+      "pairCode": "PAIR-H3O-H2O",
+      "acidSpeciesCode": "SPEC-H3O-PLUS",
+      "baseSpeciesCode": "SPEC-H2O"
+    },
+    {
+      "pairCode": "PAIR-NH4-NH3",
+      "acidSpeciesCode": "SPEC-NH4-PLUS",
+      "baseSpeciesCode": "SPEC-NH3"
+    },
+    {
+      "pairCode": "PAIR-CH3COOH-CH3COO",
+      "acidSpeciesCode": "SPEC-CH3COOH",
+      "baseSpeciesCode": "SPEC-CH3COO-MINUS"
+    },
+    {
+      "pairCode": "PAIR-H2CO3-HCO3",
+      "acidSpeciesCode": "SPEC-H2CO3",
+      "baseSpeciesCode": "SPEC-HCO3-MINUS"
+    },
+    {
+      "pairCode": "PAIR-HCO3-CO3",
+      "acidSpeciesCode": "SPEC-HCO3-MINUS",
+      "baseSpeciesCode": "SPEC-CO3-2MINUS"
+    },
+    {
+      "pairCode": "PAIR-H2SO4-HSO4",
+      "acidSpeciesCode": "SPEC-H2SO4",
+      "baseSpeciesCode": "SPEC-HSO4-MINUS"
+    },
+    {
+      "pairCode": "PAIR-HSO4-SO4",
+      "acidSpeciesCode": "SPEC-HSO4-MINUS",
+      "baseSpeciesCode": "SPEC-SO4-2MINUS"
+    }
+  ],
+  "dissociationSteps": [
+    {
+      "acidSpeciesCode": "SPEC-H2O",
+      "deprotonatedSpeciesCode": "SPEC-OH-MINUS",
+      "stepNumber": 1
+    },
+    {
+      "acidSpeciesCode": "SPEC-CH3COOH",
+      "deprotonatedSpeciesCode": "SPEC-CH3COO-MINUS",
+      "stepNumber": 1
+    },
+    {
+      "acidSpeciesCode": "SPEC-H2CO3",
+      "deprotonatedSpeciesCode": "SPEC-HCO3-MINUS",
+      "stepNumber": 1
+    },
+    {
+      "acidSpeciesCode": "SPEC-HCO3-MINUS",
+      "deprotonatedSpeciesCode": "SPEC-CO3-2MINUS",
+      "stepNumber": 2
+    },
+    {
+      "acidSpeciesCode": "SPEC-H2SO4",
+      "deprotonatedSpeciesCode": "SPEC-HSO4-MINUS",
+      "stepNumber": 1
+    },
+    {
+      "acidSpeciesCode": "SPEC-HSO4-MINUS",
+      "deprotonatedSpeciesCode": "SPEC-SO4-2MINUS",
+      "stepNumber": 2
+    },
+    {
+      "acidSpeciesCode": "SPEC-NH4-PLUS",
+      "deprotonatedSpeciesCode": "SPEC-NH3",
+      "stepNumber": 1
+    }
+  ],
+  "equilibriumConstants": [
+    {
+      "speciesCode": "SPEC-H2O",
+      "type": "KW",
+      "stepNumber": 1,
+      "value": "1.00e-14",
+      "temperatureCelsius": "25.0",
+      "solventCode": "COMP-H2O"
+    },
+    {
+      "speciesCode": "SPEC-CH3COOH",
+      "type": "KA",
+      "stepNumber": 1,
+      "value": "1.75e-5",
+      "temperatureCelsius": "25.0",
+      "solventCode": "COMP-H2O"
+    },
+    {
+      "speciesCode": "SPEC-CH3COO-MINUS",
+      "type": "KB",
+      "stepNumber": 1,
+      "value": "5.71e-10",
+      "temperatureCelsius": "25.0",
+      "solventCode": "COMP-H2O"
+    },
+    {
+      "speciesCode": "SPEC-H2CO3",
+      "type": "KA",
+      "stepNumber": 1,
+      "value": "4.45e-7",
+      "temperatureCelsius": "25.0",
+      "solventCode": "COMP-H2O"
+    },
+    {
+      "speciesCode": "SPEC-HCO3-MINUS",
+      "type": "KA",
+      "stepNumber": 2,
+      "value": "4.69e-11",
+      "temperatureCelsius": "25.0",
+      "solventCode": "COMP-H2O"
+    },
+    {
+      "speciesCode": "SPEC-HCO3-MINUS",
+      "type": "KB",
+      "stepNumber": 1,
+      "value": "2.25e-8",
+      "temperatureCelsius": "25.0",
+      "solventCode": "COMP-H2O"
+    },
+    {
+      "speciesCode": "SPEC-CO3-2MINUS",
+      "type": "KB",
+      "stepNumber": 1,
+      "value": "2.13e-4",
+      "temperatureCelsius": "25.0",
+      "solventCode": "COMP-H2O"
+    },
+    {
+      "speciesCode": "SPEC-NH4-PLUS",
+      "type": "KA",
+      "stepNumber": 1,
+      "value": "5.69e-10",
+      "temperatureCelsius": "25.0",
+      "solventCode": "COMP-H2O"
+    },
+    {
+      "speciesCode": "SPEC-NH3",
+      "type": "KB",
+      "stepNumber": 1,
+      "value": "1.76e-5",
+      "temperatureCelsius": "25.0",
+      "solventCode": "COMP-H2O"
+    },
+    {
+      "speciesCode": "SPEC-HSO4-MINUS",
+      "type": "KA",
+      "stepNumber": 2,
+      "value": "1.02e-2",
+      "temperatureCelsius": "25.0",
+      "solventCode": "COMP-H2O"
+    }
+  ]
+}

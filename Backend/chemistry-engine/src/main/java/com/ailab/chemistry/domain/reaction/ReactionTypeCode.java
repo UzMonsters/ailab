@@ -1,0 +1,20 @@
+package com.ailab.chemistry.domain.reaction;
+
+public enum ReactionTypeCode {
+    SYNTHESIS,
+    DECOMPOSITION,
+    COMBUSTION,
+    SINGLE_DISPLACEMENT,
+    DOUBLE_DISPLACEMENT,
+    ACID_BASE_NEUTRALIZATION,
+    PRECIPITATION,
+    GAS_EVOLUTION,
+    REDOX,
+    OXIDATION,
+    REDUCTION,
+    HYDRATION,
+    DEHYDRATION,
+    HYDROLYSIS,
+    REVERSIBLE_REACTION,
+    OTHER
+}

@@ -1,0 +1,87 @@
+{
+  "datasetId": "laboratory-container-reference-v1.1.0",
+  "version": "1.1.0",
+  "immutableSnapshot": true,
+  "supersedes": "laboratory-container-reference-v1.0.0",
+  "profiles": [
+    {
+      "profileId": "CON-DWK-KIMAX-28014B-100-VOLUMETRIC",
+      "containerType": "VOLUMETRIC_FLASK",
+      "material": "BOROSILICATE_GLASS",
+      "closureType": "STOPPER",
+      "closureMaterial": "BOROSILICATE_GLASS",
+      "nominalCapacityMl": "100",
+      "maximumWorkingVolumeMl": "100",
+      "minTemperatureC": "0",
+      "maxTemperatureC": "40",
+      "performanceQualified": true,
+      "sourceCode": "DWK-KIMAX-28014B-100-2026",
+      "sourceRecordId": "28014B-100-specifications"
+    },
+    {
+      "profileId": "CON-HDPE-NARROW-MOUTH-500",
+      "containerType": "BOTTLE",
+      "material": "HDPE",
+      "closureType": "SCREW_CAP",
+      "closureMaterial": "POLYPROPYLENE",
+      "nominalCapacityMl": "500",
+      "maximumWorkingVolumeMl": "450",
+      "minTemperatureC": "0",
+      "maxTemperatureC": "40",
+      "performanceQualified": true,
+      "sourceCode": "THERMO-NALGENE-N319-0500-2026",
+      "sourceRecordId": "N319-0500-specifications"
+    }
+  ],
+  "compatibilityRecords": [
+    {
+      "compatibilityId": "COMPAT-V11-BORO-WATER-AQ-48H",
+      "compoundOrFamily": "COMP-H2O",
+      "physicalState": "AQUEOUS",
+      "containerMaterial": "BOROSILICATE_GLASS",
+      "status": "COMPATIBLE",
+      "minTemperatureC": "0",
+      "maxTemperatureC": "22",
+      "contactDurationLimit": "48 hr exposure basis from compatibility source warning",
+      "sourceCode": "COLE-PARMER-CHEM-COMPAT",
+      "sourceRecordId": "chemical-compatibility-database-water-borosilicate-glass-48h",
+      "sourceDefinedBoundaries": true
+    },
+    {
+      "compatibilityId": "COMPAT-V11-HDPE-WATER-AQ-48H",
+      "compoundOrFamily": "COMP-H2O",
+      "physicalState": "AQUEOUS",
+      "containerMaterial": "HDPE",
+      "closureMaterial": "POLYPROPYLENE",
+      "status": "COMPATIBLE_WITH_LIMITS",
+      "minTemperatureC": "0",
+      "maxTemperatureC": "22",
+      "contactDurationLimit": "48 hr exposure basis from compatibility source warning",
+      "sourceCode": "COLE-PARMER-CHEM-COMPAT",
+      "sourceRecordId": "chemical-compatibility-database-water-hdpe-48h",
+      "sourceDefinedBoundaries": true
+    },
+    {
+      "compatibilityId": "COMPAT-V11-HDPE-AROMATIC-LIQ-48H",
+      "compoundOrFamily": "FAMILY-AROMATIC-HYDROCARBONS",
+      "physicalState": "LIQUID",
+      "containerMaterial": "HDPE",
+      "closureMaterial": "POLYPROPYLENE",
+      "status": "INCOMPATIBLE",
+      "minTemperatureC": "0",
+      "maxTemperatureC": "22",
+      "contactDurationLimit": "48 hr exposure basis from compatibility source warning",
+      "sourceCode": "COLE-PARMER-CHEM-COMPAT",
+      "sourceRecordId": "chemical-compatibility-database-aromatic-hydrocarbons-hdpe-48h",
+      "sourceDefinedBoundaries": true
+    }
+  ],
+  "policy": [
+    "V1.0 taxonomy profiles remain immutable in the database; V1.1 contains the active operational performance-qualified records.",
+    "Compatibility records are active only when source record, temperature bounds, contact-duration boundary, and source-defined-boundaries flag are present."
+  ],
+  "exclusions": [
+    "No container is treated as a pressure vessel.",
+    "No broad chemical-resistance family is inferred beyond the cited source-defined record and caller-provided state."
+  ]
+}

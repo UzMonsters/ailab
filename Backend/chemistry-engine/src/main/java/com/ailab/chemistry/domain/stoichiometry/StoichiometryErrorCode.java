@@ -1,0 +1,14 @@
+package com.ailab.chemistry.domain.stoichiometry;
+
+public enum StoichiometryErrorCode {
+    REACTION_NOT_FOUND,
+    COMPOUND_NOT_FOUND,
+    COMPOUND_NOT_IN_REACTION,
+    INVALID_QUANTITY,
+    INVALID_PURITY,
+    INVALID_YIELD,
+    INVALID_COEFFICIENT,
+    MISSING_REACTANTS,
+    PRODUCT_SUPPLIED_AS_REACTANT,
+    CALCULATION_ERROR
+}

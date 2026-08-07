@@ -1,0 +1,11 @@
+package com.ailab.chemistry.domain.thermodynamics;
+
+public enum TemperatureCorrectionErrorCode {
+    INVALID_CORRELATION,
+    INVALID_VALIDITY_RANGE,
+    TEMPERATURE_OUT_OF_RANGE,
+    MISSING_CORRELATION,
+    INCOMPLETE_COVERAGE,
+    UNSUPPORTED_CORRELATION_TYPE,
+    INVALID_TEMPERATURE_CORRECTION_REQUEST
+}

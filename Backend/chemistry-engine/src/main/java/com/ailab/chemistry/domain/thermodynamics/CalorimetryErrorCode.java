@@ -1,0 +1,13 @@
+package com.ailab.chemistry.domain.thermodynamics;
+
+public enum CalorimetryErrorCode {
+    INVALID_MASS_OR_AMOUNT,
+    INVALID_HEAT_CAPACITY,
+    INVALID_TEMPERATURE,
+    MISSING_CORRELATION,
+    CORRELATION_OUT_OF_RANGE,
+    UNSUPPORTED_PHASE_CHANGE,
+    UNKNOWN_REACTION,
+    NO_VALID_FINAL_TEMPERATURE,
+    SOLVER_FAILURE
+}

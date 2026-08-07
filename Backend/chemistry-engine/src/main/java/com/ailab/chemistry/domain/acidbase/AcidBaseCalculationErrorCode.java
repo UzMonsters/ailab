@@ -1,0 +1,10 @@
+package com.ailab.chemistry.domain.acidbase;
+
+public enum AcidBaseCalculationErrorCode {
+    INVALID_TEMPERATURE,
+    UNSUPPORTED_SOLVENT,
+    NON_POSITIVE_CONCENTRATION,
+    MISSING_EQUILIBRIUM_CONSTANT,
+    SPECIES_ROLE_MISMATCH,
+    SOLVER_CONVERGENCE_FAILED
+}

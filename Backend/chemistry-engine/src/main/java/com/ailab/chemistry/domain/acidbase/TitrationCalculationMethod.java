@@ -1,0 +1,8 @@
+package com.ailab.chemistry.domain.acidbase;
+
+public enum TitrationCalculationMethod {
+    STOICHIOMETRIC_STRONG_EXCESS_WITH_WATER_AUTOIONIZATION,
+    PURE_WATER_EQUIVALENCE,
+    CONTINUOUS_WEAK_ACID_CHARGE_BALANCE,
+    CONTINUOUS_WEAK_BASE_CHARGE_BALANCE
+}
