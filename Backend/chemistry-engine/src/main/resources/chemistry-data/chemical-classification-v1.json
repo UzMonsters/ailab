@@ -1,0 +1,2076 @@
+{
+  "version": "chemical-classification-v1.0.0",
+  "name": "Educational Chemical Classification Taxonomy",
+  "publicationDate": "2026-08-05",
+  "definitions": [
+    {
+      "code": "ELEMENTAL_SUBSTANCE",
+      "dimension": "SUBSTANCE_DOMAIN",
+      "name": "Elemental Substance",
+      "description": "Pure single-element substance",
+      "sortOrder": 1,
+      "parentCode": null
+    },
+    {
+      "code": "INORGANIC_COMPOUND",
+      "dimension": "SUBSTANCE_DOMAIN",
+      "name": "Inorganic Compound",
+      "description": "Chemical compound not classified as organic",
+      "sortOrder": 2,
+      "parentCode": null
+    },
+    {
+      "code": "ORGANIC_COMPOUND",
+      "dimension": "SUBSTANCE_DOMAIN",
+      "name": "Organic Compound",
+      "description": "Carbon-containing compound (excluding simple oxides/carbonates)",
+      "sortOrder": 3,
+      "parentCode": null
+    },
+    {
+      "code": "ORGANOMETALLIC_COMPOUND",
+      "dimension": "SUBSTANCE_DOMAIN",
+      "name": "Organometallic Compound",
+      "description": "Compound containing direct metal-carbon bond",
+      "sortOrder": 4,
+      "parentCode": null
+    },
+    {
+      "code": "COORDINATION_COMPOUND",
+      "dimension": "SUBSTANCE_DOMAIN",
+      "name": "Coordination Compound",
+      "description": "Complex compound with central metal atom and ligands",
+      "sortOrder": 5,
+      "parentCode": null
+    },
+    {
+      "code": "UNKNOWN",
+      "dimension": "SUBSTANCE_DOMAIN",
+      "name": "Unknown Domain",
+      "description": "Unclassified substance domain",
+      "sortOrder": 6,
+      "parentCode": null
+    },
+    {
+      "code": "MONOATOMIC_OR_ELEMENTAL",
+      "dimension": "COMPOSITION_PATTERN",
+      "name": "Monoatomic or Elemental",
+      "description": "Composed of atoms of a single element type",
+      "sortOrder": 10,
+      "parentCode": null
+    },
+    {
+      "code": "BINARY_COMPOSITION",
+      "dimension": "COMPOSITION_PATTERN",
+      "name": "Binary Composition",
+      "description": "Composed of exactly two distinct element types",
+      "sortOrder": 11,
+      "parentCode": null
+    },
+    {
+      "code": "TERNARY_COMPOSITION",
+      "dimension": "COMPOSITION_PATTERN",
+      "name": "Ternary Composition",
+      "description": "Composed of exactly three distinct element types",
+      "sortOrder": 12,
+      "parentCode": null
+    },
+    {
+      "code": "QUATERNARY_OR_HIGHER_COMPOSITION",
+      "dimension": "COMPOSITION_PATTERN",
+      "name": "Quaternary or Higher Composition",
+      "description": "Composed of four or more distinct element types",
+      "sortOrder": 13,
+      "parentCode": null
+    },
+    {
+      "code": "HYDRATE",
+      "dimension": "COMPOSITION_PATTERN",
+      "name": "Hydrate",
+      "description": "Compound containing bound water of crystallization",
+      "sortOrder": 14,
+      "parentCode": null
+    },
+    {
+      "code": "CHARGED_SPECIES",
+      "dimension": "COMPOSITION_PATTERN",
+      "name": "Charged Species",
+      "description": "Ion or charged chemical species",
+      "sortOrder": 15,
+      "parentCode": null
+    },
+    {
+      "code": "NEUTRAL_SPECIES",
+      "dimension": "COMPOSITION_PATTERN",
+      "name": "Neutral Species",
+      "description": "Electrically neutral molecule or formula unit",
+      "sortOrder": 16,
+      "parentCode": null
+    },
+    {
+      "code": "OXIDE",
+      "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+      "name": "Oxide",
+      "description": "Binary or complex oxygen-containing inorganic compound",
+      "sortOrder": 20,
+      "parentCode": "INORGANIC_COMPOUND"
+    },
+    {
+      "code": "PEROXIDE",
+      "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+      "name": "Peroxide",
+      "description": "Compound containing an oxygen-oxygen single bond (O2 2-)",
+      "sortOrder": 21,
+      "parentCode": "OXIDE"
+    },
+    {
+      "code": "HYDRIDE",
+      "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+      "name": "Hydride",
+      "description": "Compound of hydrogen with another element",
+      "sortOrder": 22,
+      "parentCode": "INORGANIC_COMPOUND"
+    },
+    {
+      "code": "HYDROXIDE",
+      "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+      "name": "Hydroxide",
+      "description": "Compound containing the hydroxide anion (OH-)",
+      "sortOrder": 23,
+      "parentCode": "INORGANIC_COMPOUND"
+    },
+    {
+      "code": "ACID",
+      "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+      "name": "Acid",
+      "description": "Proton donor (Brønsted-Lowry acid)",
+      "sortOrder": 24,
+      "parentCode": "INORGANIC_COMPOUND"
+    },
+    {
+      "code": "BASE",
+      "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+      "name": "Base",
+      "description": "Proton acceptor or hydroxide donor",
+      "sortOrder": 25,
+      "parentCode": "INORGANIC_COMPOUND"
+    },
+    {
+      "code": "SALT",
+      "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+      "name": "Salt",
+      "description": "Ionic compound composed of cations and anions",
+      "sortOrder": 26,
+      "parentCode": "INORGANIC_COMPOUND"
+    },
+    {
+      "code": "OTHER_INORGANIC",
+      "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+      "name": "Other Inorganic",
+      "description": "Inorganic compound not fitting primary classes",
+      "sortOrder": 27,
+      "parentCode": "INORGANIC_COMPOUND"
+    },
+    {
+      "code": "BINARY_ACID",
+      "dimension": "ACID_SUBTYPE",
+      "name": "Binary Acid",
+      "description": "Acid composed of hydrogen and one nonmetal element",
+      "sortOrder": 30,
+      "parentCode": "ACID"
+    },
+    {
+      "code": "OXYACID",
+      "dimension": "ACID_SUBTYPE",
+      "name": "Oxyacid",
+      "description": "Acid containing hydrogen, oxygen, and another element",
+      "sortOrder": 31,
+      "parentCode": "ACID"
+    },
+    {
+      "code": "OTHER_ACID",
+      "dimension": "ACID_SUBTYPE",
+      "name": "Other Acid",
+      "description": "Acid subtype not falling under binary acid or oxyacid",
+      "sortOrder": 32,
+      "parentCode": "ACID"
+    },
+    {
+      "code": "NORMAL_SALT",
+      "dimension": "SALT_SUBTYPE",
+      "name": "Normal Salt",
+      "description": "Salt formed by complete neutralization of an acid by a base",
+      "sortOrder": 40,
+      "parentCode": "SALT"
+    },
+    {
+      "code": "ACID_SALT",
+      "dimension": "SALT_SUBTYPE",
+      "name": "Acid Salt",
+      "description": "Salt containing replaceable hydrogen atoms from a polyprotic acid",
+      "sortOrder": 41,
+      "parentCode": "SALT"
+    },
+    {
+      "code": "BASIC_SALT",
+      "dimension": "SALT_SUBTYPE",
+      "name": "Basic Salt",
+      "description": "Salt containing hydroxide ions or basic anions",
+      "sortOrder": 42,
+      "parentCode": "SALT"
+    },
+    {
+      "code": "DOUBLE_SALT",
+      "dimension": "SALT_SUBTYPE",
+      "name": "Double Salt",
+      "description": "Salt containing more than one cation or anion",
+      "sortOrder": 43,
+      "parentCode": "SALT"
+    },
+    {
+      "code": "HYDRATED_SALT",
+      "dimension": "SALT_SUBTYPE",
+      "name": "Hydrated Salt",
+      "description": "Salt incorporating water molecules into its crystal lattice",
+      "sortOrder": 44,
+      "parentCode": "SALT"
+    },
+    {
+      "code": "OTHER_SALT",
+      "dimension": "SALT_SUBTYPE",
+      "name": "Other Salt",
+      "description": "Salt subtype not falling under primary categories",
+      "sortOrder": 45,
+      "parentCode": "SALT"
+    },
+    {
+      "code": "HYDROCARBON",
+      "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+      "name": "Hydrocarbon",
+      "description": "Organic compound composed entirely of hydrogen and carbon",
+      "sortOrder": 50,
+      "parentCode": "ORGANIC_COMPOUND"
+    },
+    {
+      "code": "ALCOHOL",
+      "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+      "name": "Alcohol",
+      "description": "Organic compound containing a hydroxyl group (-OH) bound to saturated carbon",
+      "sortOrder": 51,
+      "parentCode": "ORGANIC_COMPOUND"
+    },
+    {
+      "code": "ETHER",
+      "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+      "name": "Ether",
+      "description": "Organic compound containing an ether group (R-O-R)",
+      "sortOrder": 52,
+      "parentCode": "ORGANIC_COMPOUND"
+    },
+    {
+      "code": "ALDEHYDE",
+      "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+      "name": "Aldehyde",
+      "description": "Organic compound containing a carbonyl group (-CHO)",
+      "sortOrder": 53,
+      "parentCode": "ORGANIC_COMPOUND"
+    },
+    {
+      "code": "KETONE",
+      "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+      "name": "Ketone",
+      "description": "Organic compound containing a carbonyl group (R-CO-R)",
+      "sortOrder": 54,
+      "parentCode": "ORGANIC_COMPOUND"
+    },
+    {
+      "code": "CARBOXYLIC_ACID",
+      "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+      "name": "Carboxylic Acid",
+      "description": "Organic compound containing a carboxyl group (-COOH)",
+      "sortOrder": 55,
+      "parentCode": "ORGANIC_COMPOUND"
+    },
+    {
+      "code": "ESTER",
+      "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+      "name": "Ester",
+      "description": "Organic compound derived from an acid where OH is replaced by O-alkyl",
+      "sortOrder": 56,
+      "parentCode": "ORGANIC_COMPOUND"
+    },
+    {
+      "code": "AMINE",
+      "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+      "name": "Amine",
+      "description": "Organic compound derived from ammonia by replacing hydrogen with alkyl/aryl groups",
+      "sortOrder": 57,
+      "parentCode": "ORGANIC_COMPOUND"
+    },
+    {
+      "code": "AMIDE",
+      "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+      "name": "Amide",
+      "description": "Organic compound containing a carbonyl group bound to nitrogen",
+      "sortOrder": 58,
+      "parentCode": "ORGANIC_COMPOUND"
+    },
+    {
+      "code": "CARBOHYDRATE",
+      "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+      "name": "Carbohydrate",
+      "description": "Organic compound composed of carbon, hydrogen, and oxygen (polyhydroxy aldehydes/ketones)",
+      "sortOrder": 59,
+      "parentCode": "ORGANIC_COMPOUND"
+    },
+    {
+      "code": "OTHER_ORGANIC",
+      "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+      "name": "Other Organic",
+      "description": "Organic compound not fitting primary functional classes",
+      "sortOrder": 60,
+      "parentCode": "ORGANIC_COMPOUND"
+    }
+  ],
+  "profiles": [
+    {
+      "compoundId": "650b152a-3a54-334b-9006-627007c122b0",
+      "assignments": [
+        {
+          "code": "ELEMENTAL_SUBSTANCE",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "MONOATOMIC_OR_ELEMENTAL",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        }
+      ]
+    },
+    {
+      "compoundId": "6c11ca8c-0546-3a30-8558-92fb83efacb6",
+      "assignments": [
+        {
+          "code": "ELEMENTAL_SUBSTANCE",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "MONOATOMIC_OR_ELEMENTAL",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        }
+      ]
+    },
+    {
+      "compoundId": "9ee0626a-3425-3597-a497-5cbf32c8570f",
+      "assignments": [
+        {
+          "code": "ELEMENTAL_SUBSTANCE",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "MONOATOMIC_OR_ELEMENTAL",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        }
+      ]
+    },
+    {
+      "compoundId": "ef4b615a-9ecf-3a89-981d-b1f8b8fd72da",
+      "assignments": [
+        {
+          "code": "ELEMENTAL_SUBSTANCE",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "MONOATOMIC_OR_ELEMENTAL",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        }
+      ]
+    },
+    {
+      "compoundId": "31ac5183-783b-3ffd-bb92-7b247924a42f",
+      "assignments": [
+        {
+          "code": "ELEMENTAL_SUBSTANCE",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "MONOATOMIC_OR_ELEMENTAL",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        }
+      ]
+    },
+    {
+      "compoundId": "384ac66c-9749-3b89-8257-d665e1318c93",
+      "assignments": [
+        {
+          "code": "ELEMENTAL_SUBSTANCE",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "MONOATOMIC_OR_ELEMENTAL",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        }
+      ]
+    },
+    {
+      "compoundId": "6f1a0282-9bfa-350b-bcf4-1924eb58261c",
+      "assignments": [
+        {
+          "code": "ELEMENTAL_SUBSTANCE",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "MONOATOMIC_OR_ELEMENTAL",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        }
+      ]
+    },
+    {
+      "compoundId": "f38e4f83-fe95-3243-887e-f448d74ef717",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "OXIDE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "25aa9b6b-0e15-3c35-905d-9c056f332a8a",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "OXIDE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "PEROXIDE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "baa7a54f-9112-3a55-8cfe-8b400d31a0b6",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "OXIDE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "44d58472-c681-3f7e-b989-9b8730603a2b",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "OXIDE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "665185a5-e410-38fa-8e02-d4a2be56e2c7",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "BASE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "HYDRIDE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "095d8580-8beb-3e71-800d-add10b6590ae",
+      "assignments": [
+        {
+          "code": "ORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "HYDROCARBON",
+          "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "41536b4f-237a-38ae-9cf9-b0099a36b773",
+      "assignments": [
+        {
+          "code": "ORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "HYDROCARBON",
+          "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "dcaa9932-0ee6-37a4-be71-fb00655d1a14",
+      "assignments": [
+        {
+          "code": "ORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "HYDROCARBON",
+          "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "7589a123-6728-3310-b5f0-87d0d514cac5",
+      "assignments": [
+        {
+          "code": "ORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "HYDROCARBON",
+          "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "6b7fc3b3-25c0-3512-bd61-65bf96e79f67",
+      "assignments": [
+        {
+          "code": "ORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "HYDROCARBON",
+          "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "4d0d1768-0572-30f2-a1fb-6bc37b29090f",
+      "assignments": [
+        {
+          "code": "ORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "HYDROCARBON",
+          "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "fb70900a-3666-3cff-ad6d-4d827638a1b7",
+      "assignments": [
+        {
+          "code": "ORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "HYDROCARBON",
+          "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "3c7d0fda-9a6e-3b79-aebb-1a41aecc6c09",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "ACID",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_ACID",
+          "dimension": "ACID_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "e08d3f76-f638-368f-b699-ebb68ccad2cc",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "ACID",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "OXYACID",
+          "dimension": "ACID_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "025e3c8a-cba6-39cd-bf57-58218839b82e",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "ACID",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "OXYACID",
+          "dimension": "ACID_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "7c255813-eade-3fc6-be86-1935ac089ddd",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "ACID",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "OXYACID",
+          "dimension": "ACID_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "a1a20e49-bce3-39ac-98f8-162131991c48",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "ACID",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "OXYACID",
+          "dimension": "ACID_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "fc7272a0-e0f7-3e3f-8092-8404ddba723e",
+      "assignments": [
+        {
+          "code": "ORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "OXYACID",
+          "dimension": "ACID_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "CARBOXYLIC_ACID",
+          "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "c6258e3d-0693-3248-94bc-8d455560be75",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "BASE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "HYDROXIDE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "556b4fcf-2c70-3cd8-b4c5-9e79f120317b",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "BASE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "HYDROXIDE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "b0e1b520-700c-3136-a849-6fb348890d68",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "BASE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "HYDROXIDE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "8c611aaa-209c-3fe5-942e-6b2777fc75c7",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "BASE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "HYDROXIDE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "c47aaa91-83ae-37da-a7c8-2c85c2b2a2c2",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "BASE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "HYDROXIDE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "95b7e3d3-ce4a-3239-b362-8a2bd4252950",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NORMAL_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "99b9b775-d82e-39ce-ad60-26b7ae2490ac",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NORMAL_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "5294140a-5234-3cb6-ae81-635a2260a114",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NORMAL_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "e7ccb540-00ab-3c13-8397-06fc3bded8ef",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NORMAL_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "1c7585e5-613d-3411-a3e5-cf08960aae4a",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NORMAL_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "ca1f3c39-3ecd-3bc7-9758-ddf0513e504d",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NORMAL_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "41ad250b-399a-344c-94b2-13a3a63bc28d",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "QUATERNARY_OR_HIGHER_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "ACID_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "5c5ee053-0520-3976-85d9-78b89adff2e9",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NORMAL_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "afc3cd4b-bab8-379c-91fe-d13594d7bbde",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NORMAL_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "b77d9820-d830-3461-902b-bbe170a40038",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NORMAL_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "f8a18806-7192-35ec-af10-9bd0afabcd91",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NORMAL_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "f57d2b69-d3e5-3f85-908e-3a5648015836",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "OXIDE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "b5497acf-a111-3d7e-8a2a-7e315764a440",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "OXIDE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "73d6dd57-d6ed-3fa5-8580-b636040b00a1",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "OXIDE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "d3e7fd9b-1962-3e0a-ab37-bc677cfc4b69",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "OXIDE",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "6a5ccf10-c302-3c07-a19f-f345106ca4a4",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NORMAL_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "60927ca1-04ea-3bc8-a7dd-fc0131ff9f0b",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "HYDRATE",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "QUATERNARY_OR_HIGHER_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "HYDRATED_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "059ab99e-36b8-33f7-b2a0-4fa80d57df6c",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NORMAL_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "1d618f24-ee51-3dcc-b281-b5b7afe54bf4",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "BINARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NORMAL_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "e10c4399-2bd8-351d-87e5-752acf2b27d7",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NORMAL_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "de46be3c-3f03-3c24-b32b-d51b403aea4a",
+      "assignments": [
+        {
+          "code": "INORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "SALT",
+          "dimension": "INORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NORMAL_SALT",
+          "dimension": "SALT_SUBTYPE",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "10b0b074-d84b-3e34-8392-20f74663472d",
+      "assignments": [
+        {
+          "code": "ORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "ALCOHOL",
+          "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "d1461121-ac57-31a4-bb71-8ae345d27f33",
+      "assignments": [
+        {
+          "code": "ORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "ETHER",
+          "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "e3b456f2-9873-3a9a-aba2-e1606ffd5f5b",
+      "assignments": [
+        {
+          "code": "ORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "CARBOHYDRATE",
+          "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    },
+    {
+      "compoundId": "af05f4c0-9722-3faf-8ad8-8ecbebc9ff19",
+      "assignments": [
+        {
+          "code": "ORGANIC_COMPOUND",
+          "dimension": "SUBSTANCE_DOMAIN",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        },
+        {
+          "code": "NEUTRAL_SPECIES",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "TERNARY_COMPOSITION",
+          "dimension": "COMPOSITION_PATTERN",
+          "basis": "SAFE_RULE_DERIVED",
+          "evidenceStatus": "DERIVED"
+        },
+        {
+          "code": "CARBOHYDRATE",
+          "dimension": "ORGANIC_FUNCTIONAL_CLASS",
+          "basis": "CURATED_REFERENCE",
+          "evidenceStatus": "CURATED"
+        }
+      ]
+    }
+  ]
+}

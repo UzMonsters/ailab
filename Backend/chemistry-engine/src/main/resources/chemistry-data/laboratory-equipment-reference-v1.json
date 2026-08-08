@@ -1,0 +1,124 @@
+{
+  "datasetId": "laboratory-equipment-reference-v1.1.0",
+  "version": "1.1.0",
+  "immutableSnapshot": true,
+  "supersedes": "laboratory-equipment-reference-v1.0.0",
+  "profiles": [
+    {
+      "profileId": "EQ-OHAUS-PX224-MASS",
+      "equipmentType": "ANALYTICAL_BALANCE",
+      "displayName": "OHAUS PX224 Pioneer Analytical Balance",
+      "manufacturer": "OHAUS",
+      "modelIdentifier": "PX224 item 30428792",
+      "performanceQualified": true,
+      "sourceCode": "OHAUS-PX224-2026",
+      "capabilities": [
+        {
+          "capabilityId": "CAP-OHAUS-PX224-MASS",
+          "capabilityType": "MEASURE",
+          "quantity": "MASS",
+          "unit": "g",
+          "minimumValue": "0",
+          "maximumValue": "220",
+          "resolutionValue": "0.0001",
+          "accuracyValue": "0.0002",
+          "capacityValue": "220",
+          "sourceRecordId": "PX224-specifications"
+        }
+      ]
+    },
+    {
+      "profileId": "EQ-THERMO-ORION-A211-PH-METER",
+      "equipmentType": "PH_METER",
+      "displayName": "Thermo Scientific Orion Star A211 pH Benchtop Meter",
+      "manufacturer": "Thermo Scientific",
+      "modelIdentifier": "Orion Star A211",
+      "performanceQualified": true,
+      "sourceCode": "THERMO-ORION-A211-REVD",
+      "capabilities": [
+        {
+          "capabilityId": "CAP-THERMO-A211-PH",
+          "capabilityType": "MEASURE",
+          "quantity": "PH",
+          "unit": "pH",
+          "minimumValue": "-2",
+          "maximumValue": "20",
+          "resolutionValue": "0.001",
+          "accuracyValue": "0.002",
+          "sourceRecordId": "A211-pH-specifications"
+        },
+        {
+          "capabilityId": "CAP-THERMO-A211-TEMP",
+          "capabilityType": "MEASURE",
+          "quantity": "TEMPERATURE",
+          "unit": "degC",
+          "minimumValue": "-5",
+          "maximumValue": "105",
+          "resolutionValue": "0.1",
+          "accuracyValue": "0.1",
+          "sourceRecordId": "A211-temperature-specifications"
+        }
+      ]
+    },
+    {
+      "profileId": "EQ-DWK-KIMAX-28014B-100-VOLUMETRIC",
+      "equipmentType": "VOLUMETRIC_FLASK",
+      "displayName": "DWK KIMBLE KIMAX Class A 100 mL Volumetric Flask",
+      "manufacturer": "DWK Life Sciences",
+      "modelIdentifier": "28014B-100",
+      "performanceQualified": true,
+      "sourceCode": "DWK-KIMAX-28014B-100-2026",
+      "capabilities": [
+        {
+          "capabilityId": "CAP-DWK-28014B-100-VOLUME",
+          "capabilityType": "MEASURE",
+          "quantity": "VOLUME",
+          "unit": "mL",
+          "minimumValue": "100",
+          "maximumValue": "100",
+          "resolutionValue": "0.08",
+          "accuracyValue": "0.08",
+          "capacityValue": "100",
+          "sourceRecordId": "28014B-100-specifications"
+        }
+      ]
+    },
+    {
+      "profileId": "EQ-IKA-CMAG-HS7",
+      "equipmentType": "HOT_PLATE",
+      "displayName": "IKA C-MAG HS 7 magnetic stirrer with heating plate",
+      "manufacturer": "IKA",
+      "modelIdentifier": "C-MAG HS 7",
+      "performanceQualified": true,
+      "sourceCode": "IKA-CMAG-HS7-2024",
+      "capabilities": [
+        {
+          "capabilityId": "CAP-IKA-HS7-HEAT",
+          "capabilityType": "HEAT",
+          "quantity": "TEMPERATURE",
+          "unit": "degC",
+          "minimumValue": "50",
+          "maximumValue": "500",
+          "sourceRecordId": "C-MAG-HS7-heating-range"
+        },
+        {
+          "capabilityId": "CAP-IKA-HS7-STIR",
+          "capabilityType": "STIR",
+          "quantity": "SPEED",
+          "unit": "rpm",
+          "minimumValue": "100",
+          "maximumValue": "1500",
+          "sourceRecordId": "C-MAG-HS7-speed-range"
+        }
+      ]
+    }
+  ],
+  "policy": [
+    "Calibration completion records are never seeded as source truth; services require caller-supplied calibration records when internal policy marks a capability as calibration-required.",
+    "V1.0 taxonomy rows remain immutable in the database and are not used as performance-qualified operational profiles."
+  ],
+  "exclusions": [
+    "No pressure rating, runtime sensor reading, IoT event, simulation state, or safety-control actuator is inferred.",
+    "No manufacturer claim is generalized beyond the cited model, capability, unit, and source record."
+  ]
+}

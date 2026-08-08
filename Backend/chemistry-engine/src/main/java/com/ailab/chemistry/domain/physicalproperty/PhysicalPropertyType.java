@@ -1,0 +1,22 @@
+package com.ailab.chemistry.domain.physicalproperty;
+
+public enum PhysicalPropertyType {
+    STANDARD_STATE,
+    DENSITY,
+    MELTING,
+    BOILING,
+    SUBLIMATION,
+    SOLUBILITY,
+    MOLAR_HEAT_CAPACITY,
+    SPECIFIC_HEAT_CAPACITY,
+    THERMAL_CONDUCTIVITY,
+    ELECTRICAL_CONDUCTIVITY,
+    VISCOSITY,
+    REFRACTIVE_INDEX,
+    SURFACE_TENSION,
+    VAPOR_PRESSURE,
+    APPEARANCE,
+    ODOR,
+    POLARITY,
+    PH_OBSERVATION
+}

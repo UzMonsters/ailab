@@ -1,0 +1,114 @@
+{
+  "datasetId": "phase-behavior-reference-v1.0.0",
+  "version": "1.0.0",
+  "immutableSnapshot": true,
+  "sources": [
+    {
+      "sourceCode": "NIST-WEBBOOK-PHASE",
+      "title": "NIST Chemistry WebBook phase-change and boundary data",
+      "citation": "NIST Chemistry WebBook, SRD 69, phase-change, triple-point and critical-point records.",
+      "reuseTerms": "NIST SRD data; cite NIST Chemistry WebBook."
+    },
+    {
+      "sourceCode": "YAWS-ANTOINE",
+      "title": "Yaws Handbook Antoine coefficient subset",
+      "citation": "Yaws, C. L. The Yaws Handbook of Vapor Pressure: Antoine Coefficients.",
+      "reuseTerms": "Citation required; coefficients stored with declared unit convention."
+    }
+  ],
+  "transitionRecords": [
+    {
+      "recordId": "PT-H2O-FUSION-1ATM",
+      "compoundCode": "COMP-H2O",
+      "transitionType": "FUSION",
+      "initialPhase": "SOLID",
+      "finalPhase": "LIQUID",
+      "temperatureK": "273.15",
+      "pressurePa": "101325",
+      "originalValue": "6.011",
+      "originalUnit": "kJ/mol",
+      "normalizedEnthalpyJMol": "6011"
+    },
+    {
+      "recordId": "PT-H2O-VAPORIZATION-1ATM",
+      "compoundCode": "COMP-H2O",
+      "transitionType": "VAPORIZATION",
+      "initialPhase": "LIQUID",
+      "finalPhase": "GAS",
+      "temperatureK": "373.15",
+      "pressurePa": "101325",
+      "originalValue": "40.65",
+      "originalUnit": "kJ/mol",
+      "normalizedEnthalpyJMol": "40650"
+    },
+    {
+      "recordId": "PT-ETHANOL-VAPORIZATION-1ATM",
+      "compoundCode": "COMP-ETHANOL",
+      "transitionType": "VAPORIZATION",
+      "initialPhase": "LIQUID",
+      "finalPhase": "GAS",
+      "temperatureK": "351.44",
+      "pressurePa": "101325",
+      "originalValue": "38.56",
+      "originalUnit": "kJ/mol",
+      "normalizedEnthalpyJMol": "38560"
+    },
+    {
+      "recordId": "PT-CO2-SUBLIMATION-1ATM",
+      "compoundCode": "COMP-CO2",
+      "transitionType": "SUBLIMATION",
+      "initialPhase": "SOLID",
+      "finalPhase": "GAS",
+      "temperatureK": "194.67",
+      "pressurePa": "101325",
+      "originalValue": "25.2",
+      "originalUnit": "kJ/mol",
+      "normalizedEnthalpyJMol": "25200"
+    }
+  ],
+  "antoineCorrelations": [
+    {
+      "correlationId": "VP-H2O-ANTOINE-1-100C",
+      "compoundCode": "COMP-H2O",
+      "initialPhase": "LIQUID",
+      "finalPhase": "GAS",
+      "a": "8.07131",
+      "b": "1730.63",
+      "c": "233.426",
+      "temperatureUnit": "degC",
+      "pressureUnit": "mmHg",
+      "minTemperatureK": "274.15",
+      "maxTemperatureK": "373.15",
+      "convention": "log10(P_mmHg)=A-B/(C+T_degC)"
+    },
+    {
+      "correlationId": "VP-ETHANOL-ANTOINE--57-80C",
+      "compoundCode": "COMP-ETHANOL",
+      "initialPhase": "LIQUID",
+      "finalPhase": "GAS",
+      "a": "8.20417",
+      "b": "1642.89",
+      "c": "230.300",
+      "temperatureUnit": "degC",
+      "pressureUnit": "mmHg",
+      "minTemperatureK": "216.15",
+      "maxTemperatureK": "353.15",
+      "convention": "log10(P_mmHg)=A-B/(C+T_degC)"
+    }
+  ],
+  "boundaryPoints": [
+    { "boundaryId": "PB-H2O-TRIPLE", "compoundCode": "COMP-H2O", "boundaryType": "TRIPLE_POINT", "temperatureK": "273.16", "pressurePa": "611.657" },
+    { "boundaryId": "PB-H2O-CRITICAL", "compoundCode": "COMP-H2O", "boundaryType": "CRITICAL_POINT", "temperatureK": "647.096", "pressurePa": "22064000" },
+    { "boundaryId": "PB-H2O-NBP", "compoundCode": "COMP-H2O", "boundaryType": "NORMAL_BOILING_POINT", "temperatureK": "373.15", "pressurePa": "101325" },
+    { "boundaryId": "PB-H2O-NMP", "compoundCode": "COMP-H2O", "boundaryType": "NORMAL_MELTING_POINT", "temperatureK": "273.15", "pressurePa": "101325" },
+    { "boundaryId": "PB-ETHANOL-CRITICAL", "compoundCode": "COMP-ETHANOL", "boundaryType": "CRITICAL_POINT", "temperatureK": "514.0", "pressurePa": "6140000" },
+    { "boundaryId": "PB-ETHANOL-NBP", "compoundCode": "COMP-ETHANOL", "boundaryType": "NORMAL_BOILING_POINT", "temperatureK": "351.44", "pressurePa": "101325" },
+    { "boundaryId": "PB-CO2-TRIPLE", "compoundCode": "COMP-CO2", "boundaryType": "TRIPLE_POINT", "temperatureK": "216.592", "pressurePa": "518500" },
+    { "boundaryId": "PB-CO2-CRITICAL", "compoundCode": "COMP-CO2", "boundaryType": "CRITICAL_POINT", "temperatureK": "304.1282", "pressurePa": "7377300" }
+  ],
+  "exclusions": [
+    "No real-gas equation of state",
+    "No VLE, flash calculation or phase diagram API",
+    "No extrapolation outside Antoine validity ranges"
+  ]
+}

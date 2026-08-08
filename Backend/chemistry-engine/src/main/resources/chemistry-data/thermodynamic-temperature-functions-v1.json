@@ -1,0 +1,71 @@
+{
+  "datasetVersion": "thermodynamic-temperature-functions-v1.0.0",
+  "sourceIdentifier": "NIST-WEBBOOK-SHOMATE",
+  "sourceUrls": [
+    "https://webbook.nist.gov/chemistry/",
+    "https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Mask=1&Type=JANAFG",
+    "https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Mask=2&Type=JANAFG"
+  ],
+  "correlationType": "SHOMATE",
+  "equations": {
+    "scaling": "t = T / 1000",
+    "heatCapacity": "Cp = A + B*t + C*t^2 + D*t^3 + E/t^2, J/(mol*K)",
+    "enthalpyIncrement": "H(T)-H(298.15 K) = A*t + B*t^2/2 + C*t^3/3 + D*t^4/4 - E/t + F - H, kJ/mol",
+    "entropy": "S(T) = A*ln(t) + B*t + C*t^2/2 + D*t^3/3 - E/(2*t^2) + G, J/(mol*K)"
+  },
+  "coverage": [
+    {
+      "compoundCode": "COMP-H2",
+      "state": "GAS",
+      "temperatureRangeKelvin": [298.0, 1000.0],
+      "coefficients": [33.066178, -11.363417, 11.432816, -2.772874, -0.158558, -9.980797, 172.707974, 0.0]
+    },
+    {
+      "compoundCode": "COMP-O2",
+      "state": "GAS",
+      "temperatureRangeKelvin": [100.0, 700.0],
+      "coefficients": [31.32234, -20.23531, 57.86644, -36.50624, -0.007374, -8.903471, 246.7945, 0.0]
+    },
+    {
+      "compoundCode": "COMP-O2",
+      "state": "GAS",
+      "temperatureRangeKelvin": [700.0, 2000.0],
+      "coefficients": [30.03235, 8.772972, -3.988133, 0.788313, -0.741599, -11.32468, 236.1663, 0.0]
+    },
+    {
+      "compoundCode": "COMP-H2O",
+      "state": "GAS",
+      "temperatureRangeKelvin": [500.0, 1700.0],
+      "coefficients": [30.092, 6.832514, 6.793435, -2.53448, 0.082139, -250.881, 223.3967, -241.8264]
+    },
+    {
+      "compoundCode": "COMP-H2O",
+      "state": "LIQUID",
+      "temperatureRangeKelvin": [298.0, 500.0],
+      "coefficients": [-203.606, 1523.29, -3196.413, 2474.455, 3.855326, -256.5478, -488.7163, -285.8304]
+    },
+    {
+      "compoundCode": "COMP-CO2",
+      "state": "GAS",
+      "temperatureRangeKelvin": [298.0, 1200.0],
+      "coefficients": [24.99735, 55.18696, -33.69137, 7.948387, -0.136638, -403.6075, 228.2431, -393.5224]
+    },
+    {
+      "compoundCode": "COMP-CO",
+      "state": "GAS",
+      "temperatureRangeKelvin": [298.0, 1300.0],
+      "coefficients": [25.56759, 6.09613, 4.054656, -2.671301, 0.131021, -118.0089, 227.3665, -110.5271]
+    },
+    {
+      "compoundCode": "COMP-CH4",
+      "state": "GAS",
+      "temperatureRangeKelvin": [298.0, 1300.0],
+      "coefficients": [-0.703029, 108.4773, -42.52157, 5.862788, 0.678565, -76.84376, 158.7163, -74.8731]
+    }
+  ],
+  "limits": {
+    "extrapolation": "Forbidden; target temperature must be inside an explicit inclusive range.",
+    "phaseSubstitution": "Forbidden; gas, liquid, and solid records are distinct.",
+    "constantCp": "Not automatically applied in Phase 8C."
+  }
+}

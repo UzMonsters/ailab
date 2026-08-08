@@ -1,0 +1,9 @@
+package com.ailab.chemistry.domain.element;
+
+public enum AtomicMassKind {
+    STANDARD_ATOMIC_WEIGHT,
+    CONVENTIONAL_STANDARD_VALUE,
+    INTERVAL_STANDARD_ATOMIC_WEIGHT,
+    RADIOACTIVE_ISOTOPE_MASS_NUMBER,
+    PREDICTED_OR_PROVISIONAL
+}

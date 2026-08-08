@@ -1,0 +1,10 @@
+package com.ailab.chemistry.domain.thermodynamics;
+
+public enum EquilibriumErrorCode {
+    INVALID_TEMPERATURE,
+    INVALID_ACTIVITY,
+    MISSING_PARTICIPANT_ACTIVITY,
+    CONFLICTING_ACTIVITY_BASIS,
+    INCOMPLETE_THERMODYNAMIC_COVERAGE,
+    NUMERICAL_RANGE_EXCEEDED
+}

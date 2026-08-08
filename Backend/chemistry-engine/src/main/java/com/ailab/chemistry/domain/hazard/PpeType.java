@@ -1,0 +1,14 @@
+package com.ailab.chemistry.domain.hazard;
+
+public enum PpeType {
+    SAFETY_GLASSES,
+    CHEMICAL_SPLASH_GOGGLES,
+    FACE_SHIELD,
+    LAB_COAT,
+    CHEMICAL_RESISTANT_APRON,
+    PROTECTIVE_GLOVES,
+    RESPIRATORY_PROTECTION,
+    PROTECTIVE_FOOTWEAR,
+    FLAME_RESISTANT_CLOTHING,
+    OTHER
+}

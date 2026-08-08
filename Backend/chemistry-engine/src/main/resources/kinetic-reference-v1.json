@@ -1,0 +1,112 @@
+{
+  "datasetVersion": "kinetic-reference-v1.0.0",
+  "evidenceStatus": "EXPERIMENTAL",
+  "provenanceSourceId": "NIST-CHEMICAL-KINETICS",
+  "provenanceDescription": "NIST Chemical Kinetics Database compiled experimental shock tube records",
+  "profiles": [
+    {
+      "profileId": "KP-ELEM-H-O2-PIRRAGLIA-1989-REC3",
+      "reactionCode": "RXN-ELEM-H-O2-PROPAGATION",
+      "overallOrder": 2.0,
+      "referenceRateConstant": {
+        "value": 73470117.272,
+        "dimension": "SECOND_ORDER"
+      },
+      "arrheniusParameters": {
+        "preExponentialFactorA": 168017727204.0,
+        "temperatureExponentN": 0.0,
+        "referenceTemperatureK": 1050.0,
+        "activationEnergyKjMol": 67.514,
+        "minTemperatureK": 962.0,
+        "maxTemperatureK": 1700.0,
+        "expressionForm": "STANDARD_ARRHENIUS"
+      },
+      "rateLaw": {
+        "terms": [
+          { "compoundCode": "COMP-RAD-H", "physicalState": "GAS", "order": 1.0 },
+          { "compoundCode": "COMP-O2", "physicalState": "GAS", "order": 1.0 }
+        ]
+      },
+      "conditions": {
+        "refTemperatureK": 1050.0,
+        "refPressureBar": 0.0413,
+        "minPressureBar": 0.0133,
+        "maxPressureBar": 0.0413,
+        "bathGas": "Ar",
+        "solvent": "GAS_PHASE (Ar bath)"
+      },
+      "provenance": {
+        "sourceId": "NIST-CHEMICAL-KINETICS",
+        "description": "NIST Chemical Kinetics Database record 1989PIR/MIC282:3",
+        "citation": "Pirraglia et al., J. Phys. Chem. 93, 282 (1989)",
+        "nistSquib": "1989PIR/MIC282:3",
+        "paperTitle": "A shock tube study of the reaction H + O2 -> OH + O",
+        "authors": "Pirraglia, P. V.; Michael, J. V.; Sutherland, J. W.; Klemm, R. B.",
+        "journalName": "J. Phys. Chem.",
+        "publicationYear": 1989,
+        "pages": "282-291",
+        "recordUrl": "https://kinetics.nist.gov/kinetics/Detail?id=1989PIR/MIC282:3",
+        "dataType": "EXPERIMENTAL",
+        "experimentalMethod": "SHOCK_TUBE",
+        "uncertainty": "+/-15%",
+        "originalAValue": "2.79E-10",
+        "originalAUnit": "cm3 molecule-1 s-1",
+        "originalKValue": "1.22E-13",
+        "originalKUnit": "cm3 molecule-1 s-1",
+        "conversionFactor": "6.02214076E20"
+      }
+    },
+    {
+      "profileId": "KP-ELEM-CO-OH-WOOLDRIDGE-1994-REC1",
+      "reactionCode": "RXN-ELEM-CO-OH-PROPAGATION",
+      "overallOrder": 2.0,
+      "referenceRateConstant": {
+        "value": 190356900.0,
+        "dimension": "SECOND_ORDER"
+      },
+      "arrheniusParameters": {
+        "preExponentialFactorA": 2119793547.52,
+        "temperatureExponentN": 0.0,
+        "referenceTemperatureK": 1090.0,
+        "activationEnergyKjMol": 21.867,
+        "minTemperatureK": 1090.0,
+        "maxTemperatureK": 2370.0,
+        "expressionForm": "STANDARD_ARRHENIUS"
+      },
+      "rateLaw": {
+        "terms": [
+          { "compoundCode": "COMP-CO", "physicalState": "GAS", "order": 1.0 },
+          { "compoundCode": "COMP-RAD-OH", "physicalState": "GAS", "order": 1.0 }
+        ]
+      },
+      "conditions": {
+        "refTemperatureK": 1090.0,
+        "refPressureBar": 0.83,
+        "minPressureBar": 0.19,
+        "maxPressureBar": 0.83,
+        "bathGas": "Ar",
+        "solvent": "GAS_PHASE (Ar bath)"
+      },
+      "provenance": {
+        "sourceId": "NIST-CHEMICAL-KINETICS",
+        "description": "NIST Chemical Kinetics Database record 1994WOO/HAN741-748:1",
+        "citation": "Wooldridge et al., Int. J. Chem. Kinet. 26, 741 (1994)",
+        "nistSquib": "1994WOO/HAN741-748:1",
+        "paperTitle": "A shock tube study of the reaction CO + OH -> CO2 + H",
+        "authors": "Wooldridge, M. S.; Hanson, R. K.; Bowman, C. T.",
+        "journalName": "Int. J. Chem. Kinet.",
+        "publicationYear": 1994,
+        "pages": "741-748",
+        "recordUrl": "https://kinetics.nist.gov/kinetics/Detail?id=1994WOO/HAN741-748:1",
+        "dataType": "DIRECT_ABSOLUTE_EXPERIMENTAL_VALUE",
+        "experimentalMethod": "SHOCK_TUBE",
+        "uncertainty": "+/-10%",
+        "originalAValue": "3.52E-12",
+        "originalAUnit": "cm3 molecule-1 s-1",
+        "originalKValue": "3.16E-13",
+        "originalKUnit": "cm3 molecule-1 s-1",
+        "conversionFactor": "6.02214076E20"
+      }
+    }
+  ]
+}

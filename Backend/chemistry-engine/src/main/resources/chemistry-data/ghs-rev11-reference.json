@@ -1,0 +1,19 @@
+{
+  "systemCode": "UN_GHS",
+  "revisionNumber": 11,
+  "publicationYear": 2025,
+  "publisher": "United Nations",
+  "sourceIdentifier": "UN-GHS-REV11-2025",
+  "status": "ACTIVE",
+  "pictograms": [
+    {"code": "GHS01", "name": "Exploding Bomb"},
+    {"code": "GHS02", "name": "Flame"},
+    {"code": "GHS03", "name": "Flame Over Circle"},
+    {"code": "GHS04", "name": "Gas Cylinder"},
+    {"code": "GHS05", "name": "Corrosion"},
+    {"code": "GHS06", "name": "Skull and Crossbones"},
+    {"code": "GHS07", "name": "Exclamation Mark"},
+    {"code": "GHS08", "name": "Health Hazard"},
+    {"code": "GHS09", "name": "Environment"}
+  ]
+}

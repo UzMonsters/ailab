@@ -1,0 +1,9 @@
+package com.ailab.chemistry.domain.thermodynamics;
+
+public enum CalorimetryMethod {
+    CONSTANT_SPECIFIC_HEAT_CAPACITY,
+    CONSTANT_MOLAR_HEAT_CAPACITY,
+    TEMPERATURE_DEPENDENT_SHOMATE,
+    MIXED_SAMPLE_THERMAL_BALANCING,
+    ADIABATIC_REACTION_CALORIMETRY
+}
