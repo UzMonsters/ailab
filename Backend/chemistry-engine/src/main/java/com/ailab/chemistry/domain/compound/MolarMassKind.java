@@ -1,0 +1,10 @@
+package com.ailab.chemistry.domain.compound;
+
+public enum MolarMassKind {
+    EXACT_FROM_FIXED_VALUES,
+    REPRESENTATIVE_FROM_CONVENTIONAL_VALUES,
+    INTERVAL,
+    RADIOACTIVE_MASS_NUMBER_BASED,
+    PREDICTED_OR_PROVISIONAL,
+    MIXED_BASIS
+}

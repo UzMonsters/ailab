@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package ailab.chemistry.v1;
+
+option java_multiple_files = true;
+option java_package = "com.ailab.chemistry.api.grpc.v1";
+
+service ChemistryEngineService {
+  rpc GetEngineInfo(GetEngineInfoRequest)
+      returns (GetEngineInfoResponse);
+}
+
+message GetEngineInfoRequest {
+}
+
+message GetEngineInfoResponse {
+  string service_name = 1;
+  string engine_version = 2;
+  string status = 3;
+}

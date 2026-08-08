@@ -1,0 +1,37 @@
+{
+  "datasetVersion": "thermodynamic-reference-v1.0.0",
+  "referenceTemperatureK": "298.15",
+  "referencePressurePa": "100000",
+  "sourceIdentifier": "NIST-WEBBOOK",
+  "profileCount": 16,
+  "propertyRecordCount": 68,
+  "conditionGroups": [
+    {"state": "GAS", "standardStateConvention": "IDEAL_GAS_STANDARD_STATE", "groups": 8},
+    {"state": "LIQUID", "standardStateConvention": "PURE_SUBSTANCE_STANDARD_STATE", "groups": 4},
+    {"state": "SOLID", "standardStateConvention": "SOLID_REFERENCE_STATE", "groups": 5}
+  ],
+  "propertyCounts": {
+    "STANDARD_ENTHALPY_OF_FORMATION": 17,
+    "STANDARD_GIBBS_ENERGY_OF_FORMATION": 17,
+    "STANDARD_MOLAR_ENTROPY": 17,
+    "MOLAR_HEAT_CAPACITY": 17
+  },
+  "profiles": [
+    {"compoundCode": "COMP-H2", "states": ["GAS"]},
+    {"compoundCode": "COMP-O2", "states": ["GAS"]},
+    {"compoundCode": "COMP-H2O", "states": ["LIQUID", "GAS"]},
+    {"compoundCode": "COMP-CO2", "states": ["GAS"]},
+    {"compoundCode": "COMP-CO", "states": ["GAS"]},
+    {"compoundCode": "COMP-CH4", "states": ["GAS"]},
+    {"compoundCode": "COMP-HCL", "states": ["GAS"]},
+    {"compoundCode": "COMP-NH3", "states": ["GAS"]},
+    {"compoundCode": "COMP-H2O2", "states": ["LIQUID"]},
+    {"compoundCode": "COMP-ETHANOL", "states": ["LIQUID"]},
+    {"compoundCode": "COMP-CH3COOH", "states": ["LIQUID"]},
+    {"compoundCode": "COMP-NAOH", "states": ["SOLID"]},
+    {"compoundCode": "COMP-NACL", "states": ["SOLID"]},
+    {"compoundCode": "COMP-CACO3", "states": ["SOLID"]},
+    {"compoundCode": "COMP-NAHCO3", "states": ["SOLID"]},
+    {"compoundCode": "COMP-NA2CO3", "states": ["SOLID"]}
+  ]
+}

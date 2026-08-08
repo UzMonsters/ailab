@@ -1,0 +1,951 @@
+{
+  "datasetVersion": "extended-properties-v1.0.0",
+  "generatedAt": "2026-08-04",
+  "totalProfiles": 118,
+  "elements": [
+    {
+      "atomicNumber": 1,
+      "symbol": "H",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 3,
+      "electronegativitiesCount": 1,
+      "radiiCount": 3
+    },
+    {
+      "atomicNumber": 2,
+      "symbol": "He",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 2
+    },
+    {
+      "atomicNumber": 3,
+      "symbol": "Li",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 3
+    },
+    {
+      "atomicNumber": 4,
+      "symbol": "Be",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 5,
+      "symbol": "B",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 6,
+      "symbol": "C",
+      "valenciesCount": 2,
+      "oxidationStatesCount": 5,
+      "electronegativitiesCount": 1,
+      "radiiCount": 3
+    },
+    {
+      "atomicNumber": 7,
+      "symbol": "N",
+      "valenciesCount": 2,
+      "oxidationStatesCount": 3,
+      "electronegativitiesCount": 1,
+      "radiiCount": 3
+    },
+    {
+      "atomicNumber": 8,
+      "symbol": "O",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 4,
+      "electronegativitiesCount": 1,
+      "radiiCount": 4
+    },
+    {
+      "atomicNumber": 9,
+      "symbol": "F",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 10,
+      "symbol": "Ne",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 11,
+      "symbol": "Na",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 3
+    },
+    {
+      "atomicNumber": 12,
+      "symbol": "Mg",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 13,
+      "symbol": "Al",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 14,
+      "symbol": "Si",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 15,
+      "symbol": "P",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 16,
+      "symbol": "S",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 17,
+      "symbol": "Cl",
+      "valenciesCount": 4,
+      "oxidationStatesCount": 5,
+      "electronegativitiesCount": 1,
+      "radiiCount": 4
+    },
+    {
+      "atomicNumber": 18,
+      "symbol": "Ar",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 19,
+      "symbol": "K",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 20,
+      "symbol": "Ca",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 21,
+      "symbol": "Sc",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 22,
+      "symbol": "Ti",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 23,
+      "symbol": "V",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 24,
+      "symbol": "Cr",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 25,
+      "symbol": "Mn",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 26,
+      "symbol": "Fe",
+      "valenciesCount": 3,
+      "oxidationStatesCount": 3,
+      "electronegativitiesCount": 1,
+      "radiiCount": 4
+    },
+    {
+      "atomicNumber": 27,
+      "symbol": "Co",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 28,
+      "symbol": "Ni",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 29,
+      "symbol": "Cu",
+      "valenciesCount": 2,
+      "oxidationStatesCount": 2,
+      "electronegativitiesCount": 1,
+      "radiiCount": 4
+    },
+    {
+      "atomicNumber": 30,
+      "symbol": "Zn",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 31,
+      "symbol": "Ga",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 32,
+      "symbol": "Ge",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 33,
+      "symbol": "As",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 34,
+      "symbol": "Se",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 35,
+      "symbol": "Br",
+      "valenciesCount": 2,
+      "oxidationStatesCount": 3,
+      "electronegativitiesCount": 1,
+      "radiiCount": 3
+    },
+    {
+      "atomicNumber": 36,
+      "symbol": "Kr",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 37,
+      "symbol": "Rb",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 38,
+      "symbol": "Sr",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 39,
+      "symbol": "Y",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 40,
+      "symbol": "Zr",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 41,
+      "symbol": "Nb",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 42,
+      "symbol": "Mo",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 43,
+      "symbol": "Tc",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 44,
+      "symbol": "Ru",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 45,
+      "symbol": "Rh",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 46,
+      "symbol": "Pd",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 47,
+      "symbol": "Ag",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 3
+    },
+    {
+      "atomicNumber": 48,
+      "symbol": "Cd",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 49,
+      "symbol": "In",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 50,
+      "symbol": "Sn",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 51,
+      "symbol": "Sb",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 52,
+      "symbol": "Te",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 53,
+      "symbol": "I",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 54,
+      "symbol": "Xe",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 55,
+      "symbol": "Cs",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 56,
+      "symbol": "Ba",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 57,
+      "symbol": "La",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 58,
+      "symbol": "Ce",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 59,
+      "symbol": "Pr",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 60,
+      "symbol": "Nd",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 61,
+      "symbol": "Pm",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 62,
+      "symbol": "Sm",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 63,
+      "symbol": "Eu",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 64,
+      "symbol": "Gd",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 65,
+      "symbol": "Tb",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 66,
+      "symbol": "Dy",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 67,
+      "symbol": "Ho",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 68,
+      "symbol": "Er",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 69,
+      "symbol": "Tm",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 70,
+      "symbol": "Yb",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 71,
+      "symbol": "Lu",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 72,
+      "symbol": "Hf",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 73,
+      "symbol": "Ta",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 74,
+      "symbol": "W",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 75,
+      "symbol": "Re",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 76,
+      "symbol": "Os",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 77,
+      "symbol": "Ir",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 78,
+      "symbol": "Pt",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 79,
+      "symbol": "Au",
+      "valenciesCount": 2,
+      "oxidationStatesCount": 2,
+      "electronegativitiesCount": 1,
+      "radiiCount": 3
+    },
+    {
+      "atomicNumber": 80,
+      "symbol": "Hg",
+      "valenciesCount": 2,
+      "oxidationStatesCount": 2,
+      "electronegativitiesCount": 1,
+      "radiiCount": 3
+    },
+    {
+      "atomicNumber": 81,
+      "symbol": "Tl",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 82,
+      "symbol": "Pb",
+      "valenciesCount": 2,
+      "oxidationStatesCount": 2,
+      "electronegativitiesCount": 1,
+      "radiiCount": 4
+    },
+    {
+      "atomicNumber": 83,
+      "symbol": "Bi",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 84,
+      "symbol": "Po",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 85,
+      "symbol": "At",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 86,
+      "symbol": "Rn",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 87,
+      "symbol": "Fr",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 88,
+      "symbol": "Ra",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 89,
+      "symbol": "Ac",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 90,
+      "symbol": "Th",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 91,
+      "symbol": "Pa",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 92,
+      "symbol": "U",
+      "valenciesCount": 3,
+      "oxidationStatesCount": 4,
+      "electronegativitiesCount": 1,
+      "radiiCount": 3
+    },
+    {
+      "atomicNumber": 93,
+      "symbol": "Np",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 94,
+      "symbol": "Pu",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 95,
+      "symbol": "Am",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 96,
+      "symbol": "Cm",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 1,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 97,
+      "symbol": "Bk",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 98,
+      "symbol": "Cf",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 99,
+      "symbol": "Es",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 100,
+      "symbol": "Fm",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 101,
+      "symbol": "Md",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 102,
+      "symbol": "No",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 103,
+      "symbol": "Lr",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 104,
+      "symbol": "Rf",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 105,
+      "symbol": "Db",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 106,
+      "symbol": "Sg",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 107,
+      "symbol": "Bh",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 108,
+      "symbol": "Hs",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 109,
+      "symbol": "Mt",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 110,
+      "symbol": "Ds",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 111,
+      "symbol": "Rg",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 112,
+      "symbol": "Cn",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 113,
+      "symbol": "Nh",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 114,
+      "symbol": "Fl",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 115,
+      "symbol": "Mc",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 116,
+      "symbol": "Lv",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 117,
+      "symbol": "Ts",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 1,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    },
+    {
+      "atomicNumber": 118,
+      "symbol": "Og",
+      "valenciesCount": 1,
+      "oxidationStatesCount": 3,
+      "electronegativitiesCount": 0,
+      "radiiCount": 1
+    }
+  ]
+}

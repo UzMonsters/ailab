@@ -1,0 +1,832 @@
+{
+  "version": "compound-core-v1.0.0",
+  "description": "Core Educational Compound Catalogue",
+  "publicationDate": "2026-08-04",
+  "compounds": [
+    {
+      "id": "650b152a-3a54-334b-9006-627007c122b0",
+      "compoundCode": "COMP-H2",
+      "primaryName": "Hydrogen gas",
+      "originalFormula": "H2",
+      "normalizedFormula": "H2",
+      "compositionFormula": "H2",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "2.016",
+        "lowerBound": "2.01568",
+        "upperBound": "2.01622",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "6c11ca8c-0546-3a30-8558-92fb83efacb6",
+      "compoundCode": "COMP-O2",
+      "primaryName": "Oxygen gas",
+      "originalFormula": "O2",
+      "normalizedFormula": "O2",
+      "compositionFormula": "O2",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "31.998",
+        "lowerBound": "31.98982",
+        "upperBound": "31.99954",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "9ee0626a-3425-3597-a497-5cbf32c8570f",
+      "compoundCode": "COMP-N2",
+      "primaryName": "Nitrogen gas",
+      "originalFormula": "N2",
+      "normalizedFormula": "N2",
+      "compositionFormula": "N2",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "28.014",
+        "lowerBound": "28.01286",
+        "upperBound": "28.01456",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "ef4b615a-9ecf-3a89-981d-b1f8b8fd72da",
+      "compoundCode": "COMP-F2",
+      "primaryName": "Fluorine gas",
+      "originalFormula": "F2",
+      "normalizedFormula": "F2",
+      "compositionFormula": "F2",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "37.996",
+        "lowerBound": null,
+        "upperBound": null,
+        "kind": "EXACT_FROM_FIXED_VALUES"
+      }
+    },
+    {
+      "id": "31ac5183-783b-3ffd-bb92-7b247924a42f",
+      "compoundCode": "COMP-CL2",
+      "primaryName": "Chlorine gas",
+      "originalFormula": "Cl2",
+      "normalizedFormula": "Cl2",
+      "compositionFormula": "Cl2",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "70.9",
+        "lowerBound": "70.892",
+        "upperBound": "70.914",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "384ac66c-9749-3b89-8257-d665e1318c93",
+      "compoundCode": "COMP-BR2",
+      "primaryName": "Bromine liquid",
+      "originalFormula": "Br2",
+      "normalizedFormula": "Br2",
+      "compositionFormula": "Br2",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "159.808",
+        "lowerBound": "159.802",
+        "upperBound": "159.814",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "6f1a0282-9bfa-350b-bcf4-1924eb58261c",
+      "compoundCode": "COMP-I2",
+      "primaryName": "Iodine solid",
+      "originalFormula": "I2",
+      "normalizedFormula": "I2",
+      "compositionFormula": "I2",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "253.8",
+        "lowerBound": null,
+        "upperBound": null,
+        "kind": "EXACT_FROM_FIXED_VALUES"
+      }
+    },
+    {
+      "id": "f38e4f83-fe95-3243-887e-f448d74ef717",
+      "compoundCode": "COMP-H2O",
+      "primaryName": "Water",
+      "originalFormula": "H2O",
+      "normalizedFormula": "H2O",
+      "compositionFormula": "H2O",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "18.015",
+        "lowerBound": "18.01059",
+        "upperBound": "18.01599",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "25aa9b6b-0e15-3c35-905d-9c056f332a8a",
+      "compoundCode": "COMP-H2O2",
+      "primaryName": "Hydrogen peroxide",
+      "originalFormula": "H2O2",
+      "normalizedFormula": "H2O2",
+      "compositionFormula": "H2O2",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "34.014",
+        "lowerBound": "34.0055",
+        "upperBound": "34.01576",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "baa7a54f-9112-3a55-8cfe-8b400d31a0b6",
+      "compoundCode": "COMP-CO2",
+      "primaryName": "Carbon dioxide",
+      "originalFormula": "CO2",
+      "normalizedFormula": "CO2",
+      "compositionFormula": "CO2",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "44.009",
+        "lowerBound": "43.99942",
+        "upperBound": "44.01114",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "44d58472-c681-3f7e-b989-9b8730603a2b",
+      "compoundCode": "COMP-CO",
+      "primaryName": "Carbon monoxide",
+      "originalFormula": "CO",
+      "normalizedFormula": "CO",
+      "compositionFormula": "CO",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "28.01",
+        "lowerBound": "28.00451",
+        "upperBound": "28.01137",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "665185a5-e410-38fa-8e02-d4a2be56e2c7",
+      "compoundCode": "COMP-NH3",
+      "primaryName": "Ammonia",
+      "originalFormula": "NH3",
+      "normalizedFormula": "NH3",
+      "compositionFormula": "H3N",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "17.031",
+        "lowerBound": "17.02995",
+        "upperBound": "17.03161",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "095d8580-8beb-3e71-800d-add10b6590ae",
+      "compoundCode": "COMP-CH4",
+      "primaryName": "Methane",
+      "originalFormula": "CH4",
+      "normalizedFormula": "CH4",
+      "compositionFormula": "CH4",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "16.043",
+        "lowerBound": "16.04096",
+        "upperBound": "16.04404",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "41536b4f-237a-38ae-9cf9-b0099a36b773",
+      "compoundCode": "COMP-C2H6",
+      "primaryName": "Ethane",
+      "originalFormula": "C2H6",
+      "normalizedFormula": "C2H6",
+      "compositionFormula": "C2H6",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "30.07",
+        "lowerBound": "30.06624",
+        "upperBound": "30.07186",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "dcaa9932-0ee6-37a4-be71-fb00655d1a14",
+      "compoundCode": "COMP-C3H8",
+      "primaryName": "Propane",
+      "originalFormula": "C3H8",
+      "normalizedFormula": "C3H8",
+      "compositionFormula": "C3H8",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "44.097",
+        "lowerBound": "44.09152",
+        "upperBound": "44.09968",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "7589a123-6728-3310-b5f0-87d0d514cac5",
+      "compoundCode": "COMP-C4H10",
+      "primaryName": "Butane",
+      "originalFormula": "C4H10",
+      "normalizedFormula": "C4H10",
+      "compositionFormula": "C4H10",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "58.124",
+        "lowerBound": "58.1168",
+        "upperBound": "58.1275",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "6b7fc3b3-25c0-3512-bd61-65bf96e79f67",
+      "compoundCode": "COMP-C2H4",
+      "primaryName": "Ethylene",
+      "originalFormula": "C2H4",
+      "normalizedFormula": "C2H4",
+      "compositionFormula": "C2H4",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "28.054",
+        "lowerBound": "28.05056",
+        "upperBound": "28.05564",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "4d0d1768-0572-30f2-a1fb-6bc37b29090f",
+      "compoundCode": "COMP-C2H2",
+      "primaryName": "Acetylene",
+      "originalFormula": "C2H2",
+      "normalizedFormula": "C2H2",
+      "compositionFormula": "C2H2",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "26.038",
+        "lowerBound": "26.03488",
+        "upperBound": "26.03942",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "fb70900a-3666-3cff-ad6d-4d827638a1b7",
+      "compoundCode": "COMP-C6H6",
+      "primaryName": "Benzene",
+      "originalFormula": "C6H6",
+      "normalizedFormula": "C6H6",
+      "compositionFormula": "C6H6",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "78.114",
+        "lowerBound": "78.10464",
+        "upperBound": "78.11826",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "3c7d0fda-9a6e-3b79-aebb-1a41aecc6c09",
+      "compoundCode": "COMP-HCL",
+      "primaryName": "Hydrochloric acid",
+      "originalFormula": "HCl",
+      "normalizedFormula": "HCl",
+      "compositionFormula": "ClH",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "36.458",
+        "lowerBound": "36.45384",
+        "upperBound": "36.46511",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "e08d3f76-f638-368f-b699-ebb68ccad2cc",
+      "compoundCode": "COMP-HNO3",
+      "primaryName": "Nitric acid",
+      "originalFormula": "HNO3",
+      "normalizedFormula": "HNO3",
+      "compositionFormula": "HNO3",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "63.012",
+        "lowerBound": "62.999",
+        "upperBound": "63.0147",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "025e3c8a-cba6-39cd-bf57-58218839b82e",
+      "compoundCode": "COMP-H2SO4",
+      "primaryName": "Sulfuric acid",
+      "originalFormula": "H2SO4",
+      "normalizedFormula": "H2SO4",
+      "compositionFormula": "H2O4S",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "98.072",
+        "lowerBound": "98.05432",
+        "upperBound": "98.0913",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "7c255813-eade-3fc6-be86-1935ac089ddd",
+      "compoundCode": "COMP-H3PO4",
+      "primaryName": "Phosphoric acid",
+      "originalFormula": "H3PO4",
+      "normalizedFormula": "H3PO4",
+      "compositionFormula": "H3O4P",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "97.994",
+        "lowerBound": "97.97716",
+        "upperBound": "97.99741",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "a1a20e49-bce3-39ac-98f8-162131991c48",
+      "compoundCode": "COMP-H2CO3",
+      "primaryName": "Carbonic acid",
+      "originalFormula": "H2CO3",
+      "normalizedFormula": "H2CO3",
+      "compositionFormula": "CH2O3",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "62.024",
+        "lowerBound": "62.01001",
+        "upperBound": "62.02713",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "fc7272a0-e0f7-3e3f-8092-8404ddba723e",
+      "compoundCode": "COMP-CH3COOH",
+      "primaryName": "Acetic acid",
+      "originalFormula": "CH3COOH",
+      "normalizedFormula": "CH3COOH",
+      "compositionFormula": "C2H4O2",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "60.052",
+        "lowerBound": "60.04038",
+        "upperBound": "60.05518",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "c6258e3d-0693-3248-94bc-8d455560be75",
+      "compoundCode": "COMP-NAOH",
+      "primaryName": "Sodium hydroxide",
+      "originalFormula": "NaOH",
+      "normalizedFormula": "NaOH",
+      "compositionFormula": "HNaO",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "39.997",
+        "lowerBound": "39.99275",
+        "upperBound": "39.99788",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "556b4fcf-2c70-3cd8-b4c5-9e79f120317b",
+      "compoundCode": "COMP-KOH",
+      "primaryName": "Potassium hydroxide",
+      "originalFormula": "KOH",
+      "normalizedFormula": "KOH",
+      "compositionFormula": "HKO",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "56.105",
+        "lowerBound": "56.10075",
+        "upperBound": "56.10588",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "b0e1b520-700c-3136-a849-6fb348890d68",
+      "compoundCode": "COMP-CA-OH-2",
+      "primaryName": "Calcium hydroxide",
+      "originalFormula": "Ca(OH)2",
+      "normalizedFormula": "Ca(OH)2",
+      "compositionFormula": "CaH2O2",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "74.092",
+        "lowerBound": "74.0835",
+        "upperBound": "74.09376",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "8c611aaa-209c-3fe5-942e-6b2777fc75c7",
+      "compoundCode": "COMP-MG-OH-2",
+      "primaryName": "Magnesium hydroxide",
+      "originalFormula": "Mg(OH)2",
+      "normalizedFormula": "Mg(OH)2",
+      "compositionFormula": "H2MgO2",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "58.319",
+        "lowerBound": "58.3095",
+        "upperBound": "58.32276",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "c47aaa91-83ae-37da-a7c8-2c85c2b2a2c2",
+      "compoundCode": "COMP-AL-OH-3",
+      "primaryName": "Aluminium hydroxide",
+      "originalFormula": "Al(OH)3",
+      "normalizedFormula": "Al(OH)3",
+      "compositionFormula": "AlH3O3",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "78.003",
+        "lowerBound": "77.99025",
+        "upperBound": "78.00564",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "95b7e3d3-ce4a-3239-b362-8a2bd4252950",
+      "compoundCode": "COMP-NACL",
+      "primaryName": "Sodium chloride",
+      "originalFormula": "NaCl",
+      "normalizedFormula": "NaCl",
+      "compositionFormula": "ClNa",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "58.44",
+        "lowerBound": "58.436",
+        "upperBound": "58.447",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "99b9b775-d82e-39ce-ad60-26b7ae2490ac",
+      "compoundCode": "COMP-KCL",
+      "primaryName": "Potassium chloride",
+      "originalFormula": "KCl",
+      "normalizedFormula": "KCl",
+      "compositionFormula": "ClK",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "74.548",
+        "lowerBound": "74.544",
+        "upperBound": "74.555",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "5294140a-5234-3cb6-ae81-635a2260a114",
+      "compoundCode": "COMP-NABR",
+      "primaryName": "Sodium bromide",
+      "originalFormula": "NaBr",
+      "normalizedFormula": "NaBr",
+      "compositionFormula": "BrNa",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "102.894",
+        "lowerBound": "102.891",
+        "upperBound": "102.897",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "e7ccb540-00ab-3c13-8397-06fc3bded8ef",
+      "compoundCode": "COMP-KI",
+      "primaryName": "Potassium iodide",
+      "originalFormula": "KI",
+      "normalizedFormula": "KI",
+      "compositionFormula": "IK",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "165.998",
+        "lowerBound": null,
+        "upperBound": null,
+        "kind": "EXACT_FROM_FIXED_VALUES"
+      }
+    },
+    {
+      "id": "1c7585e5-613d-3411-a3e5-cf08960aae4a",
+      "compoundCode": "COMP-CACL2",
+      "primaryName": "Calcium chloride",
+      "originalFormula": "CaCl2",
+      "normalizedFormula": "CaCl2",
+      "compositionFormula": "CaCl2",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "110.978",
+        "lowerBound": "110.97",
+        "upperBound": "110.992",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "ca1f3c39-3ecd-3bc7-9758-ddf0513e504d",
+      "compoundCode": "COMP-MGCL2",
+      "primaryName": "Magnesium chloride",
+      "originalFormula": "MgCl2",
+      "normalizedFormula": "MgCl2",
+      "compositionFormula": "Cl2Mg",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "95.205",
+        "lowerBound": "95.196",
+        "upperBound": "95.221",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "41ad250b-399a-344c-94b2-13a3a63bc28d",
+      "compoundCode": "COMP-NAHCO3",
+      "primaryName": "Sodium bicarbonate",
+      "originalFormula": "NaHCO3",
+      "normalizedFormula": "NaHCO3",
+      "compositionFormula": "CHNaO3",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "84.006",
+        "lowerBound": "83.99217",
+        "upperBound": "84.00902",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "5c5ee053-0520-3976-85d9-78b89adff2e9",
+      "compoundCode": "COMP-NA2CO3",
+      "primaryName": "Sodium carbonate",
+      "originalFormula": "Na2CO3",
+      "normalizedFormula": "Na2CO3",
+      "compositionFormula": "CNa2O3",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "105.988",
+        "lowerBound": "105.97433",
+        "upperBound": "105.99091",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "afc3cd4b-bab8-379c-91fe-d13594d7bbde",
+      "compoundCode": "COMP-CACO3",
+      "primaryName": "Calcium carbonate",
+      "originalFormula": "CaCO3",
+      "normalizedFormula": "CaCO3",
+      "compositionFormula": "CCaO3",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "100.086",
+        "lowerBound": "100.07233",
+        "upperBound": "100.08891",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "b77d9820-d830-3461-902b-bbe170a40038",
+      "compoundCode": "COMP-NA2SO4",
+      "primaryName": "Sodium sulfate",
+      "originalFormula": "Na2SO4",
+      "normalizedFormula": "Na2SO4",
+      "compositionFormula": "Na2O4S",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "142.036",
+        "lowerBound": "142.01864",
+        "upperBound": "142.05508",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "f8a18806-7192-35ec-af10-9bd0afabcd91",
+      "compoundCode": "COMP-MGSO4",
+      "primaryName": "Magnesium sulfate",
+      "originalFormula": "MgSO4",
+      "normalizedFormula": "MgSO4",
+      "compositionFormula": "MgO4S",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "120.361",
+        "lowerBound": "120.34264",
+        "upperBound": "120.38208",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "f57d2b69-d3e5-3f85-908e-3a5648015836",
+      "compoundCode": "COMP-AL2O3",
+      "primaryName": "Aluminium oxide",
+      "originalFormula": "Al2O3",
+      "normalizedFormula": "Al2O3",
+      "compositionFormula": "Al2O3",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "101.961",
+        "lowerBound": "101.94873",
+        "upperBound": "101.96331",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "b5497acf-a111-3d7e-8a2a-7e315764a440",
+      "compoundCode": "COMP-FE2O3",
+      "primaryName": "Iron(III) oxide",
+      "originalFormula": "Fe2O3",
+      "normalizedFormula": "Fe2O3",
+      "compositionFormula": "Fe2O3",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "159.687",
+        "lowerBound": "159.67473",
+        "upperBound": "159.68931",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "73d6dd57-d6ed-3fa5-8580-b636040b00a1",
+      "compoundCode": "COMP-FE3O4",
+      "primaryName": "Magnetite",
+      "originalFormula": "Fe3O4",
+      "normalizedFormula": "Fe3O4",
+      "compositionFormula": "Fe3O4",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "231.531",
+        "lowerBound": "231.51464",
+        "upperBound": "231.53408",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "d3e7fd9b-1962-3e0a-ab37-bc677cfc4b69",
+      "compoundCode": "COMP-CUO",
+      "primaryName": "Copper(II) oxide",
+      "originalFormula": "CuO",
+      "normalizedFormula": "CuO",
+      "compositionFormula": "CuO",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "79.545",
+        "lowerBound": "79.54091",
+        "upperBound": "79.54577",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "6a5ccf10-c302-3c07-a19f-f345106ca4a4",
+      "compoundCode": "COMP-CUSO4",
+      "primaryName": "Copper(II) sulfate",
+      "originalFormula": "CuSO4",
+      "normalizedFormula": "CuSO4",
+      "compositionFormula": "CuO4S",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "159.602",
+        "lowerBound": "159.58464",
+        "upperBound": "159.62108",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "60927ca1-04ea-3bc8-a7dd-fc0131ff9f0b",
+      "compoundCode": "COMP-CUSO4-5H2O",
+      "primaryName": "Copper(II) sulfate pentahydrate",
+      "originalFormula": "CuSO4.5H2O",
+      "normalizedFormula": "CuSO4·5H2O",
+      "compositionFormula": "CuH10O9S",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "249.677",
+        "lowerBound": "249.63759",
+        "upperBound": "249.70103",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "059ab99e-36b8-33f7-b2a0-4fa80d57df6c",
+      "compoundCode": "COMP-AGNO3",
+      "primaryName": "Silver nitrate",
+      "originalFormula": "AgNO3",
+      "normalizedFormula": "AgNO3",
+      "compositionFormula": "AgNO3",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "169.874",
+        "lowerBound": "169.86116",
+        "upperBound": "169.87659",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "1d618f24-ee51-3dcc-b281-b5b7afe54bf4",
+      "compoundCode": "COMP-BACL2",
+      "primaryName": "Barium chloride",
+      "originalFormula": "BaCl2",
+      "normalizedFormula": "BaCl2",
+      "compositionFormula": "BaCl2",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "208.23",
+        "lowerBound": "208.222",
+        "upperBound": "208.244",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "e10c4399-2bd8-351d-87e5-752acf2b27d7",
+      "compoundCode": "COMP-KMNO4",
+      "primaryName": "Potassium permanganate",
+      "originalFormula": "KMnO4",
+      "normalizedFormula": "KMnO4",
+      "compositionFormula": "KMnO4",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "158.032",
+        "lowerBound": "158.01564",
+        "upperBound": "158.03508",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "de46be3c-3f03-3c24-b32b-d51b403aea4a",
+      "compoundCode": "COMP-K2CR2O7",
+      "primaryName": "Potassium dichromate",
+      "originalFormula": "K2Cr2O7",
+      "normalizedFormula": "K2Cr2O7",
+      "compositionFormula": "Cr2K2O7",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "294.181",
+        "lowerBound": "294.15237",
+        "upperBound": "294.18639",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "10b0b074-d84b-3e34-8392-20f74663472d",
+      "compoundCode": "COMP-ETHANOL",
+      "primaryName": "Ethanol",
+      "originalFormula": "C2H5OH",
+      "normalizedFormula": "C2H5OH",
+      "compositionFormula": "C2H6O",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "46.069",
+        "lowerBound": "46.06115",
+        "upperBound": "46.07163",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "d1461121-ac57-31a4-bb71-8ae345d27f33",
+      "compoundCode": "COMP-DIMETHYL-ETHER",
+      "primaryName": "Dimethyl ether",
+      "originalFormula": "CH3OCH3",
+      "normalizedFormula": "CH3OCH3",
+      "compositionFormula": "C2H6O",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "46.069",
+        "lowerBound": "46.06115",
+        "upperBound": "46.07163",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "e3b456f2-9873-3a9a-aba2-e1606ffd5f5b",
+      "compoundCode": "COMP-GLUCOSE",
+      "primaryName": "Glucose",
+      "originalFormula": "C6H12O6",
+      "normalizedFormula": "C6H12O6",
+      "compositionFormula": "C6H12O6",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "180.156",
+        "lowerBound": "180.12114",
+        "upperBound": "180.16554",
+        "kind": "INTERVAL"
+      }
+    },
+    {
+      "id": "af05f4c0-9722-3faf-8ad8-8ecbebc9ff19",
+      "compoundCode": "COMP-SUCROSE",
+      "primaryName": "Sucrose",
+      "originalFormula": "C12H22O11",
+      "normalizedFormula": "C12H22O11",
+      "compositionFormula": "C12H22O11",
+      "netCharge": 0,
+      "molarMass": {
+        "representativeValue": "342.297",
+        "lowerBound": "342.23169",
+        "upperBound": "342.31509",
+        "kind": "INTERVAL"
+      }
+    }
+  ]
+}

@@ -1,0 +1,613 @@
+{
+  "version": "reaction-core-v1.0.0",
+  "description": "Core Educational Reaction Database Catalogue",
+  "publicationDate": "2026-08-06",
+  "sourceDocuments": [
+    {
+      "sourceId": "CRC-HANDBOOK-104",
+      "sourceType": "TEXTBOOK",
+      "issuer": "CRC Press",
+      "title": "CRC Handbook of Chemistry and Physics, 104th Edition",
+      "edition": "104th",
+      "publicationDate": "2023",
+      "accessDate": "2026-08-06",
+      "coverage": "Standard inorganic and organic chemical reactions",
+      "fieldsSupplied": ["equation", "reactionName", "catalysts", "conditions", "directionality"],
+      "language": "en",
+      "sourceReference": "CRC-104-RXN-CATALOG",
+      "licensingNote": "Public scientific reference metadata"
+    },
+    {
+      "sourceId": "NIST-WEBBOOK-2025",
+      "sourceType": "AUTHORITATIVE_DATABASE",
+      "issuer": "National Institute of Standards and Technology (NIST)",
+      "title": "NIST Chemistry WebBook, SRD 69",
+      "edition": "2025",
+      "publicationDate": "2025",
+      "accessDate": "2026-08-06",
+      "coverage": "Thermochemical and kinetic reference reactions",
+      "fieldsSupplied": ["equation", "directionality", "speciesStates"],
+      "language": "en",
+      "sourceReference": "NIST-SRD-69",
+      "licensingNote": "US Government open reference dataset"
+    }
+  ],
+  "reactionTypes": [
+    { "typeCode": "SYNTHESIS", "name": "Synthesis / Combination", "description": "Two or more substances combine to form a single product", "displayOrder": 1 },
+    { "typeCode": "DECOMPOSITION", "name": "Decomposition", "description": "A single compound breaks down into two or more simpler substances", "displayOrder": 2 },
+    { "typeCode": "COMBUSTION", "name": "Combustion", "description": "Reaction with oxygen gas releasing energy and oxides", "displayOrder": 3 },
+    { "typeCode": "SINGLE_DISPLACEMENT", "name": "Single Displacement", "description": "One element replaces another in a compound", "displayOrder": 4 },
+    { "typeCode": "DOUBLE_DISPLACEMENT", "name": "Double Displacement", "description": "Exchange of ions between two compounds", "displayOrder": 5 },
+    { "typeCode": "ACID_BASE_NEUTRALIZATION", "name": "Acid-Base Neutralization", "description": "Acid reacts with a base producing water and a salt", "displayOrder": 6 },
+    { "typeCode": "PRECIPITATION", "name": "Precipitation", "description": "Formation of an insoluble solid precipitate in solution", "displayOrder": 7 },
+    { "typeCode": "GAS_EVOLUTION", "name": "Gas Evolution", "description": "Reaction producing one or more gas products", "displayOrder": 8 },
+    { "typeCode": "REDOX", "name": "Redox", "description": "Oxidation-reduction electron transfer reaction", "displayOrder": 9 },
+    { "typeCode": "OXIDATION", "name": "Oxidation", "description": "Gain of oxygen or loss of electrons", "displayOrder": 10 },
+    { "typeCode": "REDUCTION", "name": "Reduction", "description": "Loss of oxygen or gain of electrons", "displayOrder": 11 },
+    { "typeCode": "HYDRATION", "name": "Hydration", "description": "Addition of water molecules to a chemical entity", "displayOrder": 12 },
+    { "typeCode": "DEHYDRATION", "name": "Dehydration", "description": "Removal of water molecules from a chemical entity", "displayOrder": 13 },
+    { "typeCode": "HYDROLYSIS", "name": "Hydrolysis", "description": "Cleavage of chemical bonds by addition of water", "displayOrder": 14 },
+    { "typeCode": "REVERSIBLE_REACTION", "name": "Reversible Reaction", "description": "Reaction capable of proceeding in both forward and reverse directions", "displayOrder": 15 },
+    { "typeCode": "OTHER", "name": "Other / Unclassified", "description": "General or unclassified chemical reaction", "displayOrder": 16 }
+  ],
+  "reactions": [
+    {
+      "id": "11111111-1111-1111-1111-111111111101",
+      "reactionCode": "RXN-WATER-SYNTHESIS",
+      "primaryName": "Synthesis of Water",
+      "aliases": [ { "aliasName": "Hydrogen Combustion", "aliasType": "COMMON" } ],
+      "originalEquation": "2H2 + O2 -> 2H2O",
+      "normalizedEquation": "2H2 + O2 -> 2H2O",
+      "canonicalBalancedEquation": "2H2 + O2 -> 2H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-H2", "formula": "H2", "side": "REACTANT", "coefficient": 2, "speciesState": "GAS", "termOrder": 1 },
+        { "compoundCode": "COMP-O2", "formula": "O2", "side": "REACTANT", "coefficient": 1, "speciesState": "GAS", "termOrder": 2 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 2, "speciesState": "GAS", "termOrder": 3 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "SYNTHESIS", "derivationBasis": "CURATED_REFERENCE", "explanation": "Combination of elemental hydrogen and oxygen to form water" },
+        { "typeCode": "COMBUSTION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Exothermic oxidation of hydrogen in oxygen atmosphere" },
+        { "typeCode": "REDOX", "derivationBasis": "CURATED_REFERENCE", "explanation": "Oxidation state change of H (0 to +1) and O (0 to -2)" }
+      ],
+      "conditionSets": [
+        { "energyInput": "HEAT", "atmosphere": "OXYGEN", "description": "Triggered by spark or thermal ignition source" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "reactionName", "directionality"], "notes": "Standard thermochemical reference reaction" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111102",
+      "reactionCode": "RXN-H2O2-DECOMP",
+      "primaryName": "Decomposition of Hydrogen Peroxide",
+      "aliases": [ { "aliasName": "Hydrogen Peroxide Disproportionation", "aliasType": "SCIENTIFIC" } ],
+      "originalEquation": "2H2O2 -> 2H2O + O2",
+      "normalizedEquation": "2H2O2 -> 2H2O + O2",
+      "canonicalBalancedEquation": "2H2O2 -> 2H2O + O2",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-H2O2", "formula": "H2O2", "side": "REACTANT", "coefficient": 2, "speciesState": "AQUEOUS", "termOrder": 1 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 2, "speciesState": "LIQUID", "termOrder": 2 },
+        { "compoundCode": "COMP-O2", "formula": "O2", "side": "PRODUCT", "coefficient": 1, "speciesState": "GAS", "termOrder": 3 }
+      ],
+      "catalysts": [
+        { "referenceType": "COMPOUND", "referenceCode": "COMP-CUO", "role": "CATALYST", "physicalForm": "Solid powder", "loadingDescription": "Heterogeneous catalytic decomposition" }
+      ],
+      "typeAssignments": [
+        { "typeCode": "DECOMPOSITION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Single reactant breaks down into water and oxygen gas" },
+        { "typeCode": "REDOX", "derivationBasis": "CURATED_REFERENCE", "explanation": "Oxygen disproportionation from -1 to -2 and 0" },
+        { "typeCode": "GAS_EVOLUTION", "derivationBasis": "SAFE_RULE_DERIVED", "explanation": "RULE-EXPLICIT-GAS-PRODUCT: Gas state product formed from non-gaseous reactants" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "catalysts", "directionality"], "notes": "Catalyzed decomposition reaction" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111103",
+      "reactionCode": "RXN-METHANE-COMBUSTION",
+      "primaryName": "Combustion of Methane",
+      "aliases": [ { "aliasName": "Natural Gas Combustion", "aliasType": "COMMON" } ],
+      "originalEquation": "CH4 + 2O2 -> CO2 + 2H2O",
+      "normalizedEquation": "CH4 + 2O2 -> CO2 + 2H2O",
+      "canonicalBalancedEquation": "CH4 + 2O2 -> CO2 + 2H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-CH4", "formula": "CH4", "side": "REACTANT", "coefficient": 1, "speciesState": "GAS", "termOrder": 1 },
+        { "compoundCode": "COMP-O2", "formula": "O2", "side": "REACTANT", "coefficient": 2, "speciesState": "GAS", "termOrder": 2 },
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "PRODUCT", "coefficient": 1, "speciesState": "GAS", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 2, "speciesState": "GAS", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "COMBUSTION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Hydrocarbon oxidation with oxygen producing carbon dioxide and water" },
+        { "typeCode": "REDOX", "derivationBasis": "CURATED_REFERENCE", "explanation": "Complete carbon oxidation from -4 to +4" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "directionality"], "notes": "Complete hydrocarbon combustion" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111104",
+      "reactionCode": "RXN-NEUT-HCL-NAOH",
+      "primaryName": "Hydrochloric Acid Neutralization by Sodium Hydroxide",
+      "aliases": [ { "aliasName": "Strong Acid Strong Base Neutralization", "aliasType": "SCIENTIFIC" } ],
+      "originalEquation": "HCl + NaOH -> NaCl + H2O",
+      "normalizedEquation": "HCl + NaOH -> NaCl + H2O",
+      "canonicalBalancedEquation": "HCl + NaOH -> NaCl + H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-HCL", "formula": "HCl", "side": "REACTANT", "coefficient": 1, "speciesState": "AQUEOUS", "termOrder": 1 },
+        { "compoundCode": "COMP-NAOH", "formula": "NaOH", "side": "REACTANT", "coefficient": 1, "speciesState": "AQUEOUS", "termOrder": 2 },
+        { "compoundCode": "COMP-NACL", "formula": "NaCl", "side": "PRODUCT", "coefficient": 1, "speciesState": "AQUEOUS", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 1, "speciesState": "LIQUID", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "ACID_BASE_NEUTRALIZATION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Reaction between aqueous hydrochloric acid and sodium hydroxide base" },
+        { "typeCode": "DOUBLE_DISPLACEMENT", "derivationBasis": "CURATED_REFERENCE", "explanation": "Metathesis exchange of hydrogen and sodium ions" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "directionality"], "notes": "Standard acid-base titration benchmark" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111105",
+      "reactionCode": "RXN-NAHCO3-DECOMP",
+      "primaryName": "Thermal Decomposition of Sodium Bicarbonate",
+      "aliases": [ { "aliasName": "Baking Soda Thermal Breakdown", "aliasType": "COMMON" } ],
+      "originalEquation": "2NaHCO3 -> Na2CO3 + CO2 + H2O",
+      "normalizedEquation": "2NaHCO3 -> Na2CO3 + CO2 + H2O",
+      "canonicalBalancedEquation": "2NaHCO3 -> Na2CO3 + CO2 + H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-NAHCO3", "formula": "NaHCO3", "side": "REACTANT", "coefficient": 2, "speciesState": "SOLID", "termOrder": 1 },
+        { "compoundCode": "COMP-NA2CO3", "formula": "Na2CO3", "side": "PRODUCT", "coefficient": 1, "speciesState": "SOLID", "termOrder": 2 },
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "PRODUCT", "coefficient": 1, "speciesState": "GAS", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 1, "speciesState": "GAS", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "DECOMPOSITION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Solid bicarbonate decomposes under heat into sodium carbonate, carbon dioxide, and water" },
+        { "typeCode": "GAS_EVOLUTION", "derivationBasis": "SAFE_RULE_DERIVED", "explanation": "RULE-EXPLICIT-GAS-PRODUCT: Gas state product formed from non-gaseous reactants" }
+      ],
+      "conditionSets": [
+        { "energyInput": "HEAT", "description": "Requires heating above 80 degrees C" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "conditions", "directionality"], "notes": "Thermal decomposition benchmark" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111106",
+      "reactionCode": "RXN-CA-OH-2-CO2",
+      "primaryName": "Reaction of Calcium Hydroxide with Carbon Dioxide",
+      "aliases": [ { "aliasName": "Limewater Test for Carbon Dioxide", "aliasType": "COMMON" } ],
+      "originalEquation": "Ca(OH)2 + CO2 -> CaCO3 + H2O",
+      "normalizedEquation": "Ca(OH)2 + CO2 -> CaCO3 + H2O",
+      "canonicalBalancedEquation": "Ca(OH)2 + CO2 -> CaCO3 + H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-CA-OH-2", "formula": "Ca(OH)2", "side": "REACTANT", "coefficient": 1, "speciesState": "AQUEOUS", "termOrder": 1 },
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "REACTANT", "coefficient": 1, "speciesState": "GAS", "termOrder": 2 },
+        { "compoundCode": "COMP-CACO3", "formula": "CaCO3", "side": "PRODUCT", "coefficient": 1, "speciesState": "SOLID", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 1, "speciesState": "LIQUID", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "ACID_BASE_NEUTRALIZATION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Basic calcium hydroxide reacts with acidic carbon dioxide gas" },
+        { "typeCode": "PRECIPITATION", "derivationBasis": "SAFE_RULE_DERIVED", "explanation": "RULE-EXPLICIT-PRECIPITATE-STATE: Solid calcium carbonate precipitate formed from aqueous solution" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "directionality"], "notes": "Limewater test benchmark" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111107",
+      "reactionCode": "RXN-ETHANOL-COMBUSTION",
+      "primaryName": "Combustion of Ethanol",
+      "aliases": [ { "aliasName": "Ethanol Oxidation", "aliasType": "COMMON" } ],
+      "originalEquation": "C2H5OH + 3O2 -> 2CO2 + 3H2O",
+      "normalizedEquation": "C2H5OH + 3O2 -> 2CO2 + 3H2O",
+      "canonicalBalancedEquation": "C2H5OH + 3O2 -> 2CO2 + 3H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-ETHANOL", "formula": "C2H5OH", "side": "REACTANT", "coefficient": 1, "speciesState": "LIQUID", "termOrder": 1 },
+        { "compoundCode": "COMP-O2", "formula": "O2", "side": "REACTANT", "coefficient": 3, "speciesState": "GAS", "termOrder": 2 },
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "PRODUCT", "coefficient": 2, "speciesState": "GAS", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 3, "speciesState": "GAS", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "COMBUSTION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Combustion of ethanol alcohol yielding carbon dioxide and water" },
+        { "typeCode": "REDOX", "derivationBasis": "CURATED_REFERENCE", "explanation": "Oxidation of ethanol organic substrate" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "directionality"], "notes": "Isomer specific reaction for ethanol" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111108",
+      "reactionCode": "RXN-DIMETHYL-ETHER-COMBUSTION",
+      "primaryName": "Combustion of Dimethyl Ether",
+      "aliases": [ { "aliasName": "DME Combustion", "aliasType": "COMMON" } ],
+      "originalEquation": "CH3OCH3 + 3O2 -> 2CO2 + 3H2O",
+      "normalizedEquation": "CH3OCH3 + 3O2 -> 2CO2 + 3H2O",
+      "canonicalBalancedEquation": "CH3OCH3 + 3O2 -> 2CO2 + 3H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-DIMETHYL-ETHER", "formula": "CH3OCH3", "side": "REACTANT", "coefficient": 1, "speciesState": "GAS", "termOrder": 1 },
+        { "compoundCode": "COMP-O2", "formula": "O2", "side": "REACTANT", "coefficient": 3, "speciesState": "GAS", "termOrder": 2 },
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "PRODUCT", "coefficient": 2, "speciesState": "GAS", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 3, "speciesState": "GAS", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "COMBUSTION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Combustion of dimethyl ether isomer yielding carbon dioxide and water" },
+        { "typeCode": "REDOX", "derivationBasis": "CURATED_REFERENCE", "explanation": "Oxidation of ether substrate" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "directionality"], "notes": "Isomer specific reaction for dimethyl ether" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111109",
+      "reactionCode": "RXN-CUSO4-HYDRATION",
+      "primaryName": "Hydration of Copper(II) Sulfate",
+      "aliases": [ { "aliasName": "Anhydrous Copper Sulfate Hydration", "aliasType": "COMMON" } ],
+      "originalEquation": "CuSO4 + 5H2O -> CuSO4·5H2O",
+      "normalizedEquation": "CuSO4 + 5H2O -> CuSO4·5H2O",
+      "canonicalBalancedEquation": "CuSO4 + 5H2O -> CuSO4·5H2O",
+      "directionality": "REVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-CUSO4", "formula": "CuSO4", "side": "REACTANT", "coefficient": 1, "speciesState": "SOLID", "termOrder": 1 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "REACTANT", "coefficient": 5, "speciesState": "LIQUID", "termOrder": 2 },
+        { "compoundCode": "COMP-CUSO4-5H2O", "formula": "CuSO4·5H2O", "side": "PRODUCT", "coefficient": 1, "speciesState": "SOLID", "termOrder": 3 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "HYDRATION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Addition of 5 water molecules to anhydrous copper sulfate" },
+        { "typeCode": "SYNTHESIS", "derivationBasis": "CURATED_REFERENCE", "explanation": "Combination of salt and water to form crystalline hydrate" },
+        { "typeCode": "REVERSIBLE_REACTION", "derivationBasis": "SAFE_RULE_DERIVED", "explanation": "RULE-DIRECTIONALITY: Reaction marked as reversible in reference catalogue" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "directionality"], "notes": "Hydrate formation benchmark" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111110",
+      "reactionCode": "RXN-CUSO4-DEHYDRATION",
+      "primaryName": "Dehydration of Copper(II) Sulfate Pentahydrate",
+      "aliases": [ { "aliasName": "Blue Vitriol Dehydration", "aliasType": "COMMON" } ],
+      "originalEquation": "CuSO4·5H2O -> CuSO4 + 5H2O",
+      "normalizedEquation": "CuSO4·5H2O -> CuSO4 + 5H2O",
+      "canonicalBalancedEquation": "CuSO4·5H2O -> CuSO4 + 5H2O",
+      "directionality": "REVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-CUSO4-5H2O", "formula": "CuSO4·5H2O", "side": "REACTANT", "coefficient": 1, "speciesState": "SOLID", "termOrder": 1 },
+        { "compoundCode": "COMP-CUSO4", "formula": "CuSO4", "side": "PRODUCT", "coefficient": 1, "speciesState": "SOLID", "termOrder": 2 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 5, "speciesState": "GAS", "termOrder": 3 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "DEHYDRATION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Removal of 5 water molecules from copper sulfate pentahydrate" },
+        { "typeCode": "DECOMPOSITION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Hydrate breakdown into anhydrous salt and water vapor" },
+        { "typeCode": "REVERSIBLE_REACTION", "derivationBasis": "SAFE_RULE_DERIVED", "explanation": "RULE-DIRECTIONALITY: Reaction marked as reversible in reference catalogue" }
+      ],
+      "conditionSets": [
+        { "energyInput": "HEAT", "description": "Thermal dehydration above 110 degrees C" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "conditions", "directionality"], "notes": "Thermal dehydration benchmark" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111111",
+      "reactionCode": "RXN-HABER-PROCESS",
+      "primaryName": "Synthesis of Ammonia (Haber-Bosch Process)",
+      "aliases": [ { "aliasName": "Ammonia Synthesis", "aliasType": "COMMON" } ],
+      "originalEquation": "N2 + 3H2 -> 2NH3",
+      "normalizedEquation": "N2 + 3H2 -> 2NH3",
+      "canonicalBalancedEquation": "N2 + 3H2 -> 2NH3",
+      "directionality": "REVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-N2", "formula": "N2", "side": "REACTANT", "coefficient": 1, "speciesState": "GAS", "termOrder": 1 },
+        { "compoundCode": "COMP-H2", "formula": "H2", "side": "REACTANT", "coefficient": 3, "speciesState": "GAS", "termOrder": 2 },
+        { "compoundCode": "COMP-NH3", "formula": "NH3", "side": "PRODUCT", "coefficient": 2, "speciesState": "GAS", "termOrder": 3 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "SYNTHESIS", "derivationBasis": "CURATED_REFERENCE", "explanation": "Combination of nitrogen and hydrogen gases to produce ammonia" },
+        { "typeCode": "REVERSIBLE_REACTION", "derivationBasis": "SAFE_RULE_DERIVED", "explanation": "RULE-DIRECTIONALITY: Reaction marked as reversible in reference catalogue" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "directionality"], "notes": "Haber-Bosch reversible industrial reaction" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111112",
+      "reactionCode": "RXN-ETHANE-COMBUSTION",
+      "primaryName": "Combustion of Ethane",
+      "aliases": [ { "aliasName": "Ethane Oxidation", "aliasType": "COMMON" } ],
+      "originalEquation": "2C2H6 + 7O2 -> 4CO2 + 6H2O",
+      "normalizedEquation": "2C2H6 + 7O2 -> 4CO2 + 6H2O",
+      "canonicalBalancedEquation": "2C2H6 + 7O2 -> 4CO2 + 6H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-C2H6", "formula": "C2H6", "side": "REACTANT", "coefficient": 2, "speciesState": "GAS", "termOrder": 1 },
+        { "compoundCode": "COMP-O2", "formula": "O2", "side": "REACTANT", "coefficient": 7, "speciesState": "GAS", "termOrder": 2 },
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "PRODUCT", "coefficient": 4, "speciesState": "GAS", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 6, "speciesState": "GAS", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "COMBUSTION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Complete combustion of ethane gas" },
+        { "typeCode": "REDOX", "derivationBasis": "CURATED_REFERENCE", "explanation": "Ethane carbon oxidation" }
+      ],
+      "provenance": { "sourceDocumentId": "NIST-WEBBOOK-2025", "fieldsSupplied": ["equation", "directionality"], "notes": "Hydrocarbon oxidation" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111113",
+      "reactionCode": "RXN-PROPANE-COMBUSTION",
+      "primaryName": "Combustion of Propane",
+      "aliases": [ { "aliasName": "Propane Oxidation", "aliasType": "COMMON" } ],
+      "originalEquation": "C3H8 + 5O2 -> 3CO2 + 4H2O",
+      "normalizedEquation": "C3H8 + 5O2 -> 3CO2 + 4H2O",
+      "canonicalBalancedEquation": "C3H8 + 5O2 -> 3CO2 + 4H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-C3H8", "formula": "C3H8", "side": "REACTANT", "coefficient": 1, "speciesState": "GAS", "termOrder": 1 },
+        { "compoundCode": "COMP-O2", "formula": "O2", "side": "REACTANT", "coefficient": 5, "speciesState": "GAS", "termOrder": 2 },
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "PRODUCT", "coefficient": 3, "speciesState": "GAS", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 4, "speciesState": "GAS", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "COMBUSTION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Complete combustion of propane gas" },
+        { "typeCode": "REDOX", "derivationBasis": "CURATED_REFERENCE", "explanation": "Propane oxidation" }
+      ],
+      "provenance": { "sourceDocumentId": "NIST-WEBBOOK-2025", "fieldsSupplied": ["equation", "directionality"], "notes": "Alcane combustion" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111114",
+      "reactionCode": "RXN-BUTANE-COMBUSTION",
+      "primaryName": "Combustion of Butane",
+      "aliases": [ { "aliasName": "Butane Oxidation", "aliasType": "COMMON" } ],
+      "originalEquation": "2C4H10 + 13O2 -> 8CO2 + 10H2O",
+      "normalizedEquation": "2C4H10 + 13O2 -> 8CO2 + 10H2O",
+      "canonicalBalancedEquation": "2C4H10 + 13O2 -> 8CO2 + 10H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-C4H10", "formula": "C4H10", "side": "REACTANT", "coefficient": 2, "speciesState": "GAS", "termOrder": 1 },
+        { "compoundCode": "COMP-O2", "formula": "O2", "side": "REACTANT", "coefficient": 13, "speciesState": "GAS", "termOrder": 2 },
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "PRODUCT", "coefficient": 8, "speciesState": "GAS", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 10, "speciesState": "GAS", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "COMBUSTION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Complete combustion of butane gas" },
+        { "typeCode": "REDOX", "derivationBasis": "CURATED_REFERENCE", "explanation": "Butane oxidation" }
+      ],
+      "provenance": { "sourceDocumentId": "NIST-WEBBOOK-2025", "fieldsSupplied": ["equation", "directionality"], "notes": "Alcane combustion" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111115",
+      "reactionCode": "RXN-ETHYLENE-COMBUSTION",
+      "primaryName": "Combustion of Ethylene",
+      "aliases": [ { "aliasName": "Ethene Combustion", "aliasType": "SCIENTIFIC" } ],
+      "originalEquation": "C2H4 + 3O2 -> 2CO2 + 2H2O",
+      "normalizedEquation": "C2H4 + 3O2 -> 2CO2 + 2H2O",
+      "canonicalBalancedEquation": "C2H4 + 3O2 -> 2CO2 + 2H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-C2H4", "formula": "C2H4", "side": "REACTANT", "coefficient": 1, "speciesState": "GAS", "termOrder": 1 },
+        { "compoundCode": "COMP-O2", "formula": "O2", "side": "REACTANT", "coefficient": 3, "speciesState": "GAS", "termOrder": 2 },
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "PRODUCT", "coefficient": 2, "speciesState": "GAS", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 2, "speciesState": "GAS", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "COMBUSTION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Combustion of unsaturated alkene hydrocarbon" },
+        { "typeCode": "REDOX", "derivationBasis": "CURATED_REFERENCE", "explanation": "Ethylene oxidation" }
+      ],
+      "provenance": { "sourceDocumentId": "NIST-WEBBOOK-2025", "fieldsSupplied": ["equation", "directionality"], "notes": "Alkene oxidation" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111116",
+      "reactionCode": "RXN-ACETYLENE-COMBUSTION",
+      "primaryName": "Combustion of Acetylene",
+      "aliases": [ { "aliasName": "Ethyne Combustion", "aliasType": "SCIENTIFIC" } ],
+      "originalEquation": "2C2H2 + 5O2 -> 4CO2 + 2H2O",
+      "normalizedEquation": "2C2H2 + 5O2 -> 4CO2 + 2H2O",
+      "canonicalBalancedEquation": "2C2H2 + 5O2 -> 4CO2 + 2H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-C2H2", "formula": "C2H2", "side": "REACTANT", "coefficient": 2, "speciesState": "GAS", "termOrder": 1 },
+        { "compoundCode": "COMP-O2", "formula": "O2", "side": "REACTANT", "coefficient": 5, "speciesState": "GAS", "termOrder": 2 },
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "PRODUCT", "coefficient": 4, "speciesState": "GAS", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 2, "speciesState": "GAS", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "COMBUSTION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Combustion of alkyne gas" },
+        { "typeCode": "REDOX", "derivationBasis": "CURATED_REFERENCE", "explanation": "Acetylene oxidation" }
+      ],
+      "provenance": { "sourceDocumentId": "NIST-WEBBOOK-2025", "fieldsSupplied": ["equation", "directionality"], "notes": "Oxy-acetylene torch reaction" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111117",
+      "reactionCode": "RXN-BENZENE-COMBUSTION",
+      "primaryName": "Combustion of Benzene",
+      "aliases": [ { "aliasName": "Benzene Oxidation", "aliasType": "COMMON" } ],
+      "originalEquation": "2C6H6 + 15O2 -> 12CO2 + 6H2O",
+      "normalizedEquation": "2C6H6 + 15O2 -> 12CO2 + 6H2O",
+      "canonicalBalancedEquation": "2C6H6 + 15O2 -> 12CO2 + 6H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-C6H6", "formula": "C6H6", "side": "REACTANT", "coefficient": 2, "speciesState": "LIQUID", "termOrder": 1 },
+        { "compoundCode": "COMP-O2", "formula": "O2", "side": "REACTANT", "coefficient": 15, "speciesState": "GAS", "termOrder": 2 },
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "PRODUCT", "coefficient": 12, "speciesState": "GAS", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 6, "speciesState": "GAS", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "COMBUSTION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Combustion of aromatic benzene" },
+        { "typeCode": "REDOX", "derivationBasis": "CURATED_REFERENCE", "explanation": "Benzene oxidation" }
+      ],
+      "provenance": { "sourceDocumentId": "NIST-WEBBOOK-2025", "fieldsSupplied": ["equation", "directionality"], "notes": "Aromatic hydrocarbon combustion" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111118",
+      "reactionCode": "RXN-H2SO4-NAOH-NEUT",
+      "primaryName": "Neutralization of Sulfuric Acid with Sodium Hydroxide",
+      "aliases": [ { "aliasName": "Sulfuric Acid Neutralization", "aliasType": "COMMON" } ],
+      "originalEquation": "H2SO4 + 2NaOH -> Na2SO4 + 2H2O",
+      "normalizedEquation": "H2SO4 + 2NaOH -> Na2SO4 + 2H2O",
+      "canonicalBalancedEquation": "H2SO4 + 2NaOH -> Na2SO4 + 2H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-H2SO4", "formula": "H2SO4", "side": "REACTANT", "coefficient": 1, "speciesState": "AQUEOUS", "termOrder": 1 },
+        { "compoundCode": "COMP-NAOH", "formula": "NaOH", "side": "REACTANT", "coefficient": 2, "speciesState": "AQUEOUS", "termOrder": 2 },
+        { "compoundCode": "COMP-NA2SO4", "formula": "Na2SO4", "side": "PRODUCT", "coefficient": 1, "speciesState": "AQUEOUS", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 2, "speciesState": "LIQUID", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "ACID_BASE_NEUTRALIZATION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Diprotic acid neutralization with strong base" },
+        { "typeCode": "DOUBLE_DISPLACEMENT", "derivationBasis": "CURATED_REFERENCE", "explanation": "Metathesis of sulfate and hydroxide ions" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "directionality"], "notes": "Acid-base neutralization" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111119",
+      "reactionCode": "RXN-H2SO4-MGOH2-NEUT",
+      "primaryName": "Neutralization of Sulfuric Acid with Magnesium Hydroxide",
+      "aliases": [ { "aliasName": "Milk of Magnesia Acid Reaction", "aliasType": "COMMON" } ],
+      "originalEquation": "H2SO4 + Mg(OH)2 -> MgSO4 + 2H2O",
+      "normalizedEquation": "H2SO4 + Mg(OH)2 -> MgSO4 + 2H2O",
+      "canonicalBalancedEquation": "H2SO4 + Mg(OH)2 -> MgSO4 + 2H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-H2SO4", "formula": "H2SO4", "side": "REACTANT", "coefficient": 1, "speciesState": "AQUEOUS", "termOrder": 1 },
+        { "compoundCode": "COMP-MG-OH-2", "formula": "Mg(OH)2", "side": "REACTANT", "coefficient": 1, "speciesState": "SOLID", "termOrder": 2 },
+        { "compoundCode": "COMP-MGSO4", "formula": "MgSO4", "side": "PRODUCT", "coefficient": 1, "speciesState": "AQUEOUS", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 2, "speciesState": "LIQUID", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "ACID_BASE_NEUTRALIZATION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Acid reaction with insoluble metal hydroxide base" },
+        { "typeCode": "DOUBLE_DISPLACEMENT", "derivationBasis": "CURATED_REFERENCE", "explanation": "Salt formation metathesis" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "directionality"], "notes": "Insoluble base neutralization" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111120",
+      "reactionCode": "RXN-CACO3-HCL",
+      "primaryName": "Reaction of Calcium Carbonate with Hydrochloric Acid",
+      "aliases": [ { "aliasName": "Limestone Acid Dissolution", "aliasType": "COMMON" } ],
+      "originalEquation": "CaCO3 + 2HCl -> CaCl2 + CO2 + H2O",
+      "normalizedEquation": "CaCO3 + 2HCl -> CaCl2 + CO2 + H2O",
+      "canonicalBalancedEquation": "CaCO3 + 2HCl -> CaCl2 + CO2 + H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-CACO3", "formula": "CaCO3", "side": "REACTANT", "coefficient": 1, "speciesState": "SOLID", "termOrder": 1 },
+        { "compoundCode": "COMP-HCL", "formula": "HCl", "side": "REACTANT", "coefficient": 2, "speciesState": "AQUEOUS", "termOrder": 2 },
+        { "compoundCode": "COMP-CACL2", "formula": "CaCl2", "side": "PRODUCT", "coefficient": 1, "speciesState": "AQUEOUS", "termOrder": 3 },
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "PRODUCT", "coefficient": 1, "speciesState": "GAS", "termOrder": 4 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 1, "speciesState": "LIQUID", "termOrder": 5 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "DOUBLE_DISPLACEMENT", "derivationBasis": "CURATED_REFERENCE", "explanation": "Metathesis producing carbonic acid intermediate" },
+        { "typeCode": "GAS_EVOLUTION", "derivationBasis": "SAFE_RULE_DERIVED", "explanation": "RULE-EXPLICIT-GAS-PRODUCT: Gas state carbon dioxide produced from solid/aqueous reactants" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "directionality"], "notes": "Effervescence gas evolution reaction" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111121",
+      "reactionCode": "RXN-MGOH2-HCL",
+      "primaryName": "Reaction of Magnesium Hydroxide with Hydrochloric Acid",
+      "aliases": [ { "aliasName": "Antacid Neutralization", "aliasType": "COMMON" } ],
+      "originalEquation": "Mg(OH)2 + 2HCl -> MgCl2 + 2H2O",
+      "normalizedEquation": "Mg(OH)2 + 2HCl -> MgCl2 + 2H2O",
+      "canonicalBalancedEquation": "Mg(OH)2 + 2HCl -> MgCl2 + 2H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-MG-OH-2", "formula": "Mg(OH)2", "side": "REACTANT", "coefficient": 1, "speciesState": "SOLID", "termOrder": 1 },
+        { "compoundCode": "COMP-HCL", "formula": "HCl", "side": "REACTANT", "coefficient": 2, "speciesState": "AQUEOUS", "termOrder": 2 },
+        { "compoundCode": "COMP-MGCL2", "formula": "MgCl2", "side": "PRODUCT", "coefficient": 1, "speciesState": "AQUEOUS", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 2, "speciesState": "LIQUID", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "ACID_BASE_NEUTRALIZATION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Stomach acid neutralization by magnesia base" },
+        { "typeCode": "DOUBLE_DISPLACEMENT", "derivationBasis": "CURATED_REFERENCE", "explanation": "Magnesium chloride salt formation metathesis" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "directionality"], "notes": "Antacid stomach reaction model" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111122",
+      "reactionCode": "RXN-GLUCOSE-COMBUSTION",
+      "primaryName": "Combustion of Glucose",
+      "aliases": [ { "aliasName": "Glucose Oxidation", "aliasType": "COMMON" } ],
+      "originalEquation": "C6H12O6 + 6O2 -> 6CO2 + 6H2O",
+      "normalizedEquation": "C6H12O6 + 6O2 -> 6CO2 + 6H2O",
+      "canonicalBalancedEquation": "C6H12O6 + 6O2 -> 6CO2 + 6H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-GLUCOSE", "formula": "C6H12O6", "side": "REACTANT", "coefficient": 1, "speciesState": "SOLID", "termOrder": 1 },
+        { "compoundCode": "COMP-O2", "formula": "O2", "side": "REACTANT", "coefficient": 6, "speciesState": "GAS", "termOrder": 2 },
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "PRODUCT", "coefficient": 6, "speciesState": "GAS", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 6, "speciesState": "LIQUID", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "COMBUSTION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Complete combustion of monosaccharide sugar" },
+        { "typeCode": "REDOX", "derivationBasis": "CURATED_REFERENCE", "explanation": "Cellular respiration chemical stoichiometry model" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "directionality"], "notes": "Carbohydrate oxidation" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111123",
+      "reactionCode": "RXN-SUCROSE-COMBUSTION",
+      "primaryName": "Combustion of Sucrose",
+      "aliases": [ { "aliasName": "Table Sugar Oxidation", "aliasType": "COMMON" } ],
+      "originalEquation": "C12H22O11 + 12O2 -> 12CO2 + 11H2O",
+      "normalizedEquation": "C12H22O11 + 12O2 -> 12CO2 + 11H2O",
+      "canonicalBalancedEquation": "C12H22O11 + 12O2 -> 12CO2 + 11H2O",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-SUCROSE", "formula": "C12H22O11", "side": "REACTANT", "coefficient": 1, "speciesState": "SOLID", "termOrder": 1 },
+        { "compoundCode": "COMP-O2", "formula": "O2", "side": "REACTANT", "coefficient": 12, "speciesState": "GAS", "termOrder": 2 },
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "PRODUCT", "coefficient": 12, "speciesState": "GAS", "termOrder": 3 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 11, "speciesState": "LIQUID", "termOrder": 4 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "COMBUSTION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Combustion of disaccharide sucrose" },
+        { "typeCode": "REDOX", "derivationBasis": "CURATED_REFERENCE", "explanation": "Sucrose carbon oxidation" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "directionality"], "notes": "Disaccharide oxidation" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111124",
+      "reactionCode": "RXN-CO2-H2O-SYNTHESIS",
+      "primaryName": "Formation of Carbonic Acid",
+      "aliases": [ { "aliasName": "Carbon Dioxide Hydration", "aliasType": "COMMON" } ],
+      "originalEquation": "CO2 + H2O -> H2CO3",
+      "normalizedEquation": "CO2 + H2O -> H2CO3",
+      "canonicalBalancedEquation": "CO2 + H2O -> H2CO3",
+      "directionality": "REVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "REACTANT", "coefficient": 1, "speciesState": "GAS", "termOrder": 1 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "REACTANT", "coefficient": 1, "speciesState": "LIQUID", "termOrder": 2 },
+        { "compoundCode": "COMP-H2CO3", "formula": "H2CO3", "side": "PRODUCT", "coefficient": 1, "speciesState": "AQUEOUS", "termOrder": 3 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "SYNTHESIS", "derivationBasis": "CURATED_REFERENCE", "explanation": "Acidic oxide reaction with water" },
+        { "typeCode": "HYDRATION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Gas dissolution and hydration" },
+        { "typeCode": "REVERSIBLE_REACTION", "derivationBasis": "SAFE_RULE_DERIVED", "explanation": "RULE-DIRECTIONALITY: Reaction marked as reversible in reference catalogue" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "directionality"], "notes": "Carbonated water equilibrium" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111125",
+      "reactionCode": "RXN-H2CO3-DECOMP",
+      "primaryName": "Decomposition of Carbonic Acid",
+      "aliases": [ { "aliasName": "Carbonic Acid Breakdown", "aliasType": "COMMON" } ],
+      "originalEquation": "H2CO3 -> CO2 + H2O",
+      "normalizedEquation": "H2CO3 -> CO2 + H2O",
+      "canonicalBalancedEquation": "H2CO3 -> CO2 + H2O",
+      "directionality": "REVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-H2CO3", "formula": "H2CO3", "side": "REACTANT", "coefficient": 1, "speciesState": "AQUEOUS", "termOrder": 1 },
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "PRODUCT", "coefficient": 1, "speciesState": "GAS", "termOrder": 2 },
+        { "compoundCode": "COMP-H2O", "formula": "H2O", "side": "PRODUCT", "coefficient": 1, "speciesState": "LIQUID", "termOrder": 3 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "DECOMPOSITION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Unstable acid breakdown into gas and water" },
+        { "typeCode": "GAS_EVOLUTION", "derivationBasis": "SAFE_RULE_DERIVED", "explanation": "RULE-EXPLICIT-GAS-PRODUCT: Gas state carbon dioxide produced" },
+        { "typeCode": "REVERSIBLE_REACTION", "derivationBasis": "SAFE_RULE_DERIVED", "explanation": "RULE-DIRECTIONALITY: Reaction marked as reversible in reference catalogue" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "directionality"], "notes": "Effervescence decomposition" }
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111126",
+      "reactionCode": "RXN-CO-OXIDATION",
+      "primaryName": "Oxidation of Carbon Monoxide",
+      "aliases": [ { "aliasName": "Carbon Monoxide Combustion", "aliasType": "COMMON" } ],
+      "originalEquation": "2CO + O2 -> 2CO2",
+      "normalizedEquation": "2CO + O2 -> 2CO2",
+      "canonicalBalancedEquation": "2CO + O2 -> 2CO2",
+      "directionality": "IRREVERSIBLE",
+      "terms": [
+        { "compoundCode": "COMP-CO", "formula": "CO", "side": "REACTANT", "coefficient": 2, "speciesState": "GAS", "termOrder": 1 },
+        { "compoundCode": "COMP-O2", "formula": "O2", "side": "REACTANT", "coefficient": 1, "speciesState": "GAS", "termOrder": 2 },
+        { "compoundCode": "COMP-CO2", "formula": "CO2", "side": "PRODUCT", "coefficient": 2, "speciesState": "GAS", "termOrder": 3 }
+      ],
+      "typeAssignments": [
+        { "typeCode": "SYNTHESIS", "derivationBasis": "CURATED_REFERENCE", "explanation": "Combination of carbon monoxide and oxygen gas" },
+        { "typeCode": "COMBUSTION", "derivationBasis": "CURATED_REFERENCE", "explanation": "Exothermic gas oxidation" },
+        { "typeCode": "REDOX", "derivationBasis": "CURATED_REFERENCE", "explanation": "Carbon oxidation state increase from +2 to +4" }
+      ],
+      "provenance": { "sourceDocumentId": "CRC-HANDBOOK-104", "fieldsSupplied": ["equation", "directionality"], "notes": "Carbon monoxide oxidation" }
+    }
+  ]
+}

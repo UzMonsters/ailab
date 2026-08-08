@@ -1,0 +1,10 @@
+package com.ailab.chemistry.domain.kinetics;
+
+public enum KineticCalculationMethod {
+    EMPIRICAL_RATE_LAW,
+    ZERO_ORDER_INTEGRATED,
+    FIRST_ORDER_INTEGRATED,
+    SECOND_ORDER_INTEGRATED,
+    ARRHENIUS_TEMPERATURE_DEPENDENCE,
+    ADAPTIVE_NUMERICAL_PROGRESS
+}

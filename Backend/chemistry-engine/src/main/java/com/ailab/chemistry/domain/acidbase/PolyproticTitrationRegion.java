@@ -1,0 +1,12 @@
+package com.ailab.chemistry.domain.acidbase;
+
+public enum PolyproticTitrationRegion {
+    INITIAL,
+    BEFORE_FIRST_EQUIVALENCE,
+    FIRST_HALF_EQUIVALENCE,
+    FIRST_EQUIVALENCE,
+    BETWEEN_EQUIVALENCE_POINTS,
+    SECOND_HALF_EQUIVALENCE,
+    SECOND_EQUIVALENCE,
+    AFTER_SECOND_EQUIVALENCE
+}
