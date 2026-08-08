@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Laboratory — Authentication Workspace</title>
+    
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* ==========================================================================
+           1. CORE SYSTEM & VARIABLES
+           ========================================================================== */
+        :root {
+            --bg-void: #050508;
+            --bg-card: rgba(15, 16, 26, 0.75);
+            --bg-input: rgba(255, 255, 255, 0.03);
+            
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-focus: rgba(139, 92, 246, 0.6);
+            
+            --purple-primary: #8B5CF6;
+            --purple-glow: rgba(139, 92, 246, 0.4);
+            --violet-accent: #A855F7;
+            --teal-accent: #14F195;
+            
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --text-dim: #64748B;
+            
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            
+            --radius-lg: 24px;
+            --radius-md: 14px;
+            --radius-sm: 8px;
+            
+            --transition-smooth: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-void);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* Ambient Glow Background */
+        .ambient-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            background: 
+                radial-gradient(circle at 15% 25%, rgba(139, 92, 246, 0.15) 0%, transparent 45%),
+                radial-gradient(circle at 85% 75%, rgba(168, 85, 247, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(20, 241, 149, 0.03) 0%, transparent 60%);
+        }
+
+        #canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* ==========================================================================
+           2. MAIN CONTAINER LAYOUT (RESPONSIVE SPLIT)
+           ========================================================================== */
+        .page-wrapper {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 1100px;
+            min-height: 680px;
+            background: var(--bg-card);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6),
+                        0 0 80px rgba(139, 92, 246, 0.08);
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            overflow: hidden;
+            animation: cardAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardAppear {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ==========================================================================
+           3. LEFT BRAND PANEL (Visual & Taglines)
+           ========================================================================== */
+        .brand-panel {
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(139,92,246,0.05) 100%);
+            border-right: 1px solid var(--border-glass);
+            overflow: hidden;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .brand-logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--purple-primary), var(--violet-accent));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #fff;
+            box-shadow: 0 0 20px var(--purple-glow);
+            animation: pulseGlow 4s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); }
+            100% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.7); }
+        }
+
+        .brand-title {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-title span {
+            color: var(--purple-primary);
+        }
+
+        .brand-body {
+            margin: 40px 0;
+        }
+
+        .badge-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(139, 92, 246, 0.12);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 20px;
+            font-size: 12px;
+            font-family: var(--font-mono);
+            color: #C084FC;
+            margin-bottom: 24px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .badge-tag i {
+            font-size: 10px;
+        }
+
+        .hero-heading {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+            margin-bottom: 16px;
+            background: linear-gradient(180deg, #FFFFFF 0%, #CBD5E1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-heading .highlight {
+            background: linear-gradient(135deg, var(--purple-primary), var(--teal-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtext {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text-muted);
+            max-width: 420px;
+        }
+
+        .feature-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-top: 30px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .feature-item i {
+            color: var(--teal-accent);
+            font-size: 14px;
+            background: rgba(20, 241, 149, 0.1);
+            padding: 6px;
+            border-radius: 50%;
+        }
+
+        .brand-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--teal-accent);
+            font-family: var(--font-mono);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--teal-accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--teal-accent);
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* ==========================================================================
+           4. RIGHT FORM PANEL (Interactive Forms)
+           ========================================================================== */
+        .form-panel {
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Tab Navigation */
+        .tab-switcher {
+            display: flex;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            padding: 4px;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 0;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: var(--transition-smooth);
+            z-index: 2;
+        }
+
+        .tab-btn.active {
+            color: #fff;
+        }
+
+        .tab-indicator {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: calc(50% - 4px);
+            height: calc(100% - 8px);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.8), rgba(168, 85, 247, 0.8));
+            border-radius: 10px;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1;
+            box-shadow: 0 4px 15px var(--purple-glow);
+        }
+
+        .tab-switcher[data-active="register"] .tab-indicator {
+            transform: translateX(100%);
+        }
+
+        /* Forms Wrapper with Slide Transition */
+        .forms-container {
+            position: relative;
+            overflow: hidden;
+            min-height: 400px;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+            width: 100%;
+        }
+
+        .auth-form.hidden {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(30px);
+        }
+
+        .auth-form.active {
+            position: relative;
+            opacity: 1;
+            pointer-events: all;
+            transform: translateX(0);
+        }
+
+        /* Input Groups */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+
+        .input-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .input-field-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-field-wrapper i.field-icon {
+            position: absolute;
+            left: 16px;
+            color: var(--text-dim);
+            font-size: 16px;
+            transition: var(--transition-smooth);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 16px 14px 46px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition-smooth);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-dim);
+        }
+
+        .input-field:focus {
+            border-color: var(--border-focus);
+            background: rgba(139, 92, 246, 0.05);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+        }
+
+        .input-field:focus + i.field-icon {
+            color: var(--purple-primary);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 16px;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 4px;
+            transition: var(--transition-smooth);
+        }
+
+        .toggle-password:hover {
+            color: var(--text-main);
+        }
+
+        /* Select Dropdown */
+        select.input-field {
+            appearance: none;
+            cursor: pointer;
+        }
+
+        /* Password Strength Meter */
+        .password-strength {
+            height: 4px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .strength-bar {
+            height: 100%;
+            width: 0%;
+            background: #EF4444;
+            transition: var(--transition-smooth);
+            border-radius: 2px;
+        }
+
+        /* Options Row (Remember & Forgot) */
+        .form-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .remember-me input[type="checkbox"] {
+            accent-color: var(--purple-primary);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: #C084FC;
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition-smooth);
+        }
+
+        .forgot-link:hover {
+            color: var(--text-main);
+            text-shadow: 0 0 10px var(--purple-glow);
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--purple-primary), var(--violet-accent));
+            border: none;
+            border-radius: var(--radius-md);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 10px 25px var(--purple-glow);
+            transition: var(--transition-smooth);
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(139, 92, 246, 0.6);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn i {
+            transition: transform 0.3s ease;
+        }
+
+        .submit-btn:hover i {
+            transform: translateX(4px);
+        }
+
+        /* OAuth Dividers */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 10px 0;
+            color: var(--text-dim);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-glass);
+        }
+
+        /* Social OAuth Buttons */
+        .oauth-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .oauth-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-size: 16px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .oauth-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Footer terms notice */
+        .terms-notice {
+            font-size: 12px;
+            color: var(--text-dim);
+            text-align: center;
+            line-height: 1.5;
+            margin-top: 15px;
+        }
+
+        .terms-notice a {
+            color: var(--text-muted);
+            text-decoration: underline;
+        }
+
+        /* Loading Spinner State */
+        .btn-spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ==========================================================================
+           5. MEDIA QUERIES (TABLET & MOBILE RESPONSIVENESS)
+           ========================================================================== */
+        
+        /* TABLET LANDSCAPE & PORTRAIT (max-width: 1024px) */
+        @media (max-width: 1024px) {
+            .auth-card {
+                grid-template-columns: 1fr;
+                max-width: 600px;
+                min-height: auto;
+            }
+
+            .brand-panel {
+                padding: 35px 35px 25px 35px;
+                border-right: none;
+                border-bottom: 1px solid var(--border-glass);
+            }
+
+            .hero-heading {
+                font-size: 32px;
+            }
+
+            .feature-list {
+                display: none; /* Hide feature bullets on tablet/mobile to keep layout tight */
+            }
+
+            .form-panel {
+                padding: 35px;
+            }
+        }
+
+        /* MOBILE PHONES (max-width: 640px) */
+        @media (max-width: 640px) {
+            .page-wrapper {
+                padding: 16px;
+            }
+
+            .auth-card {
+                border-radius: 18px;
+            }
+
+            .brand-panel {
+                padding: 24px 20px 20px 20px;
+            }
+
+            .hero-heading {
+                font-size: 26px;
+                margin-bottom: 8px;
+            }
+
+            .hero-subtext {
+                font-size: 13px;
+            }
+
+            .badge-tag {
+                margin-bottom: 12px;
+                font-size: 11px;
+            }
+
+            .form-panel {
+                padding: 24px 20px;
+            }
+
+            .tab-switcher {
+                margin-bottom: 24px;
+            }
+
+            .input-field {
+                padding: 12px 14px 12px 42px;
+                font-size: 14px;
+            }
+
+            .input-field-wrapper i.field-icon {
+                left: 14px;
+            }
+
+            .oauth-grid {
+                gap: 8px;
+            }
+
+            .oauth-btn {
+                padding: 10px;
+            }
+
+            .brand-footer {
+                display: none; /* Hide footer timestamp on small mobiles */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Glowing Background Grid -->
+    <div class="ambient-glow"></div>
+    
+    <!-- Animated Interactive Particle Canvas -->
+    <canvas id="canvas-bg"></canvas>
+
+    <!-- Main Responsive Layout -->
+    <div class="page-wrapper">
+        <main class="auth-card">
+            
+            <!-- LEFT PANEL: Brand Story & Science Visuals -->
+            <section class="brand-panel">
+                <div>
+                    <a href="#" class="brand-header">
+                        <div class="brand-logo-icon">
+                            <i class="fa-solid fa-atom"></i>
+                        </div>
+                        <div class="brand-title">AI <span>Laboratory</span></div>
+                    </a>
+
+                    <div class="brand-body">
+                        <div class="badge-tag">
+                            <i class="fa-solid fa-sparkles"></i> The Scientific OS
+                        </div>
+                        <h1 class="hero-heading">
+                            Experiment.<br>
+                            Simulate. <span class="highlight">Discover.</span>
+                        </h1>
+                        <p class="hero-subtext">
+                            Access real-time quantum simulations, molecular modeling, and autonomous AI copilots in one secure environment.
+                        </p>
+
+                        <div class="feature-list">
+                            <div class="feature-item">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Real-time protein folding & molecular dynamics</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Multi-node GPU acceleration & cloud workspaces</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Enterprise-grade encryption for research data</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="brand-footer">
+                    <div class="status-pill">
+                        <div class="status-dot"></div>
+                        <span>Core v4.8 Active</span>
+                    </div>
+                    <span>© 2026 AI Laboratory Inc.</span>
+                </div>
+            </section>
+
+            <!-- RIGHT PANEL: Authentication Interactive Forms -->
+            <section class="form-panel">
+                
+                <!-- Tab Switcher (Login vs Register) -->
+                <div class="tab-switcher" id="tabSwitcher" data-active="login">
+                    <div class="tab-indicator"></div>
+                    <button class="tab-btn active" onclick="switchTab('login')">Sign In</button>
+                    <button class="tab-btn" onclick="switchTab('register')">Create Account</button>
+                </div>
+
+                <div class="forms-container">
+                    
+                    <!-- ================= LOGIN FORM ================= -->
+                    <form class="auth-form active" id="loginForm" onsubmit="handleFormSubmit(event, 'Login')">
+                        <div class="input-group">
+                            <label class="input-label" for="loginEmail">Academic or Work Email</label>
+                            <div class="input-field-wrapper">
+                                <input type="email" id="loginEmail" class="input-field" placeholder="researcher@institution.edu" required>
+                                <i class="fa-regular fa-envelope field-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label class="input-label" for="loginPassword">
+                                <span>Password</span>
+                            </label>
+                            <div class="input-field-wrapper">
+                                <input type="password" id="loginPassword" class="input-field" placeholder="••••••••••••" required>
+                                <i class="fa-solid fa-lock field-icon"></i>
+                                <i class="fa-regular fa-eye toggle-password" onclick="togglePasswordVisibility('loginPassword', this)"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-options">
+                            <label class="remember-me">
+                                <input type="checkbox" id="rememberMe">
+                                <span>Keep session active</span>
+                            </label>
+                            <a href="#" class="forgot-link">Forgot password?</a>
+                        </div>
+
+                        <button type="submit" class="submit-btn">
+                            <span class="btn-text">Open Workspace</span>
+                            <div class="btn-spinner"></div>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+
+                        <div class="divider">Or authenticate with</div>
+
+                        <div class="oauth-grid">
+                            <button type="button" class="oauth-btn" title="Sign in with ORCID">
+                                <i class="fa-brands fa-orcid" style="color:#A6CE39;"></i>
+                            </button>
+                            <button type="button" class="oauth-btn" title="Sign in with GitHub">
+                                <i class="fa-brands fa-github"></i>
+                            </button>
+                            <button type="button" class="oauth-btn" title="Sign in with Google">
+                                <i class="fa-brands fa-google"></i>
+                            </button>
+                        </div>
+                    </form>
+
+
+                    <!-- ================= REGISTER FORM ================= -->
+                    <form class="auth-form hidden" id="registerForm" onsubmit="handleFormSubmit(event, 'Registration')">
+                        <div class="input-group">
+                            <label class="input-label" for="regName">Full Name & Title</label>
+                            <div class="input-field-wrapper">
+                                <input type="text" id="regName" class="input-field" placeholder="Dr. Elena Rostova" required>
+                                <i class="fa-regular fa-user field-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label class="input-label" for="regEmail">Institutional Email</label>
+                            <div class="input-field-wrapper">
+                                <input type="email" id="regEmail" class="input-field" placeholder="elena@lab.mit.edu" required>
+                                <i class="fa-regular fa-envelope field-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label class="input-label" for="regField">Primary Research Discipline</label>
+                            <div class="input-field-wrapper">
+                                <select id="regField" class="input-field" required style="color: var(--text-main);">
+                                    <option value="" disabled selected style="background:#0F101A;">Select Discipline...</option>
+                                    <option value="quantum" style="background:#0F101A;">Quantum Mechanics & Physics</option>
+                                    <option value="molecular" style="background:#0F101A;">Molecular Biology & Genetics</option>
+                                    <option value="chemistry" style="background:#0F101A;">Computational Chemistry</option>
+                                    <option value="materials" style="background:#0F101A;">Materials Science & Nanotech</option>
+                                    <option value="ai" style="background:#0F101A;">AI/ML Algorithm Engineering</option>
+                                </select>
+                                <i class="fa-solid fa-flask field-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label class="input-label" for="regPassword">Create Password</label>
+                            <div class="input-field-wrapper">
+                                <input type="password" id="regPassword" class="input-field" placeholder="Min. 8 characters" oninput="checkPasswordStrength(this.value)" required>
+                                <i class="fa-solid fa-key field-icon"></i>
+                                <i class="fa-regular fa-eye toggle-password" onclick="togglePasswordVisibility('regPassword', this)"></i>
+                            </div>
+                            <div class="password-strength">
+                                <div class="strength-bar" id="strengthBar"></div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="submit-btn">
+                            <span class="btn-text">Create Researcher Account</span>
+                            <div class="btn-spinner"></div>
+                            <i class="fa-solid fa-sparkles"></i>
+                        </button>
+
+                        <p class="terms-notice">
+                            By registering, you agree to our <a href="#">Terms of Service</a> and <a href="#">Data Privacy Protocol</a>.
+                        </p>
+                    </form>
+
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ==========================================================================
+       6. INTERACTIVE JAVASCRIPT (ANIMATIONS, CANVAS, TABS)
+       ========================================================================== -->
+    <script>
+        /* --- 1. Interactive Animated WebGL-style Canvas Particles --- */
+        const canvas = document.getElementById('canvas-bg');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 150 };
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+        });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.radius = Math.random() * 2 + 1;
+                this.vx = (Math.random() - 0.5) * 0.8;
+                this.vy = (Math.random() - 0.5) * 0.8;
+                this.color = Math.random() > 0.4 ? 'rgba(139, 92, 246, ' : 'rgba(20, 241, 149, ';
+                this.alpha = Math.random() * 0.5 + 0.2;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color + this.alpha + ')';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = 'rgba(139, 92, 246, 0.5)';
+                ctx.fill();
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+
+                // Mouse interaction distance check
+                if (mouse.x && mouse.y) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < mouse.radius) {
+                        const angle = Math.atan2(dy, dx);
+                        const force = (mouse.radius - dist) / mouse.radius;
+                        this.x -= Math.cos(angle) * force * 3;
+                        this.y -= Math.sin(angle) * force * 3;
+                    }
+                }
+            }
+        }
+
+        // Initialize Particles
+        const particleCount = Math.min(Math.floor(window.innerWidth / 15), 80);
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        // Connect nearby particles with glowing lines
+        function connectParticles() {
+            for (let a = 0; a < particles.length; a++) {
+                for (let b = a + 1; b < particles.length; b++) {
+                    let dx = particles[a].x - particles[b].x;
+                    let dy = particles[a].y - particles[b].y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 130) {
+                        let opacity = (1 - dist / 130) * 0.25;
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(139, 92, 246, ${opacity})`;
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[a].x, particles[a].y);
+                        ctx.lineTo(particles[b].x, particles[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        // Animation Loop
+        function animateCanvas() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            connectParticles();
+            requestAnimationFrame(animateCanvas);
+        }
+        animateCanvas();
+
+
+        /* --- 2. Tab Switcher Logic --- */
+        function switchTab(tab) {
+            const switcher = document.getElementById('tabSwitcher');
+            const loginForm = document.getElementById('loginForm');
+            const regForm = document.getElementById('registerForm');
+            const buttons = document.querySelectorAll('.tab-btn');
+
+            switcher.setAttribute('data-active', tab);
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            if (tab === 'login') {
+                buttons[0].classList.add('active');
+                loginForm.classList.remove('hidden');
+                loginForm.classList.add('active');
+                regForm.classList.remove('active');
+                regForm.classList.add('hidden');
+            } else {
+                buttons[1].classList.add('active');
+                regForm.classList.remove('hidden');
+                regForm.classList.add('active');
+                loginForm.classList.remove('active');
+                loginForm.classList.add('hidden');
+            }
+        }
+
+
+        /* --- 3. Password Visibility Toggle --- */
+        function togglePasswordVisibility(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+
+        /* --- 4. Live Password Strength Checker --- */
+        function checkPasswordStrength(val) {
+            const bar = document.getElementById('strengthBar');
+            let score = 0;
+
+            if (val.length >= 8) score += 25;
+            if (/[A-Z]/.test(val)) score += 25;
+            if (/[0-9]/.test(val)) score += 25;
+            if (/[^A-Za-z0-9]/.test(val)) score += 25;
+
+            bar.style.width = score + '%';
+
+            if (score <= 25) bar.style.background = '#EF4444'; // Weak
+            else if (score <= 50) bar.style.background = '#F59E0B'; // Medium
+            else if (score <= 75) bar.style.background = '#3B82F6'; // Good
+            else bar.style.background = '#14F195'; // Strong
+        }
+
+
+        /* --- 5. Form Submit Simulation with Button Animations --- */
+        function handleFormSubmit(event, formName) {
+            event.preventDefault();
+            const form = event.target;
+            const btn = form.querySelector('.submit-btn');
+            const btnText = btn.querySelector('.btn-text');
+            const spinner = btn.querySelector('.btn-spinner');
+            const icon = btn.querySelector('i');
+
+            // Show Spinner State
+            btnText.textContent = 'Authenticating...';
+            spinner.style.display = 'block';
+            if (icon) icon.style.display = 'none';
+            btn.style.opacity = '0.85';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                // Success Simulation
+                btnText.textContent = `${formName} Successful! Redirecting...`;
+                spinner.style.display = 'none';
+                btn.style.background = 'linear-gradient(135deg, #14F195, #10B981)';
+                btn.style.opacity = '1';
+
+                setTimeout(() => {
+                    // Reset or Redirect simulation
+                    btn.disabled = false;
+                    btnText.textContent = formName === 'Login' ? 'Open Workspace' : 'Create Researcher Account';
+                    if (icon) icon.style.display = 'inline-block';
+                    btn.style.background = 'linear-gradient(135deg, var(--purple-primary), var(--violet-accent))';
+                }, 2000);
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
