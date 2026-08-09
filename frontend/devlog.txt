@@ -1,15 +1,26 @@
 ▲ Next.js 16.3.0 (Turbopack)
 - Local:         http://localhost:3000
 - Network:       http://192.168.0.112:3000
-✓ Ready in 1631ms
+✓ Ready in 1320ms
 ⚠ Warning: Next.js ignored pnpm-workspace.yaml in D:\web-sites because it is outside the current Git repository (D:\web-sites\заказ\aichemistry).
  To use this directory, set `turbopack.root` in your Next.js config.
 
-✓ Running next.config.mjs took 138ms
+✓ Running next.config.mjs took 124ms
 
- GET /en 200 in 3.2s (next.js: 1883ms, proxy.ts: 502ms, application-code: 820ms)
- GET /en/workspace/sandbox 200 in 1853ms (next.js: 1510ms, proxy.ts: 16ms, application-code: 326ms)
- GET /ru 200 in 359ms (next.js: 53ms, proxy.ts: 16ms, application-code: 290ms)
+ GET /ru/dashboard 200 in 4.1s (next.js: 3.3s, proxy.ts: 18ms, application-code: 722ms)
+ GET /en 200 in 4.5s (next.js: 3.8s, proxy.ts: 369ms, application-code: 243ms)
+ GET /en 200 in 171ms (next.js: 20ms, proxy.ts: 7ms, application-code: 143ms)
+ GET /en 200 in 177ms (next.js: 12ms, proxy.ts: 6ms, application-code: 158ms)
+ GET /en/dashboard 200 in 132ms (next.js: 24ms, proxy.ts: 6ms, application-code: 102ms)
+ GET /en/workspace/sandbox 200 in 1144ms (next.js: 998ms, proxy.ts: 6ms, application-code: 140ms)
+ GET /en 200 in 220ms (next.js: 26ms, proxy.ts: 7ms, application-code: 187ms)
+✓ Compiled in 243ms
+ GET /en 200 in 148ms (next.js: 33ms, proxy.ts: 12ms, application-code: 102ms)
+ GET /ru/dashboard 200 in 133ms (next.js: 43ms, proxy.ts: 12ms, application-code: 79ms)
+ GET /ru/dashboard 200 in 55ms (next.js: 26ms, proxy.ts: 8ms, application-code: 21ms)
+ GET /ru/dashboard 200 in 76ms (next.js: 16ms, proxy.ts: 8ms, application-code: 52ms)
+ GET /ru/dashboard 200 in 75ms (next.js: 17ms, proxy.ts: 8ms, application-code: 50ms)
+ GET /ru 200 in 266ms (next.js: 38ms, proxy.ts: 9ms, application-code: 219ms)
 [browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
 - A server/client branch `if (typeof window !== 'undefined')`.
@@ -306,26 +317,11 @@ https://react.dev/link/hydration-mismatch
             ...
           ...
  
- GET /ru/auth 200 in 1347ms (next.js: 1255ms, proxy.ts: 17ms, application-code: 76ms)
-[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
- GET /ru/dashboard 200 in 1242ms (next.js: 1167ms, proxy.ts: 14ms, application-code: 61ms)
- GET /ru/workspace/sandbox 200 in 119ms (next.js: 38ms, proxy.ts: 17ms, application-code: 64ms)
- GET /ru/dashboard 200 in 92ms (next.js: 30ms, proxy.ts: 12ms, application-code: 50ms)
- GET /ru/workspace/sandbox 200 in 78ms (next.js: 28ms, proxy.ts: 9ms, application-code: 41ms)
- GET /ru/dashboard 200 in 89ms (next.js: 29ms, proxy.ts: 8ms, application-code: 52ms)
- GET /ru/dashboard?view=favorites 200 in 77ms (next.js: 31ms, proxy.ts: 9ms, application-code: 36ms)
- GET /ru/dashboard?view=recent 200 in 59ms (next.js: 18ms, proxy.ts: 6ms, application-code: 35ms)
- GET /ru/dashboard 200 in 67ms (next.js: 18ms, proxy.ts: 6ms, application-code: 42ms)
- GET /ru/dashboard 200 in 75ms (next.js: 26ms, proxy.ts: 7ms, application-code: 42ms)
- GET /ru/profile 200 in 1120ms (next.js: 1054ms, proxy.ts: 9ms, application-code: 57ms)
- GET /ru/profile 200 in 77ms (next.js: 27ms, proxy.ts: 9ms, application-code: 41ms)
- GET /ru/dashboard 200 in 83ms (next.js: 31ms, proxy.ts: 9ms, application-code: 42ms)
- GET /ru/dashboard?view=recent 200 in 71ms (next.js: 19ms, proxy.ts: 7ms, application-code: 45ms)
- GET /ru/dashboard?view=favorites 200 in 71ms (next.js: 29ms, proxy.ts: 7ms, application-code: 34ms)
- GET /ru/dashboard 200 in 69ms (next.js: 15ms, proxy.ts: 10ms, application-code: 44ms)
- GET /ru/workspace/sandbox 200 in 80ms (next.js: 25ms, proxy.ts: 6ms, application-code: 49ms)
- GET /ru/dashboard 200 in 81ms (next.js: 26ms, proxy.ts: 8ms, application-code: 47ms)
- GET /ru 200 in 281ms (next.js: 27ms, proxy.ts: 7ms, application-code: 247ms)
+✓ Compiled in 206ms
+ GET /en 200 in 255ms (next.js: 154ms, proxy.ts: 17ms, application-code: 85ms)
+ GET /ru 200 in 253ms (next.js: 64ms, proxy.ts: 16ms, application-code: 173ms)
+✓ Compiled in 790ms
+ GET /ru 200 in 297ms (next.js: 29ms, proxy.ts: 9ms, application-code: 259ms)
 [browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
 - A server/client branch `if (typeof window !== 'undefined')`.
@@ -339,21 +335,21 @@ It can also happen if the client has a browser extension installed which messes 
 https://react.dev/link/hydration-mismatch
 
   ...
-    <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
-      <RedirectBoundary>
-        <RedirectErrorBoundary router={{...}}>
-          <InnerLayoutRouter url="/ru" tree={[...]} params={{locale:"ru"}} cacheNode={{rsc:{...}, ...}} ...>
-            <SegmentViewNode type="page" pagePath="[locale]/p...">
-              <SegmentTrieNode>
-              <Home>
-                <LandingPage>
-                  <main className="site-shell" id="home">
-                    <header>
-                    <section className="hero secti..." id="platform" style={{...}}>
-                      <Reveal>
-                      <ScientificCore size={620} accentColor="#7c3aed">
+    <RedirectBoundary>
+      <RedirectErrorBoundary router={{...}}>
+        <InnerLayoutRouter url="/ru" tree={[...]} params={{locale:"ru"}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+          <SegmentViewNode type="page" pagePath="[locale]/p...">
+            <SegmentTrieNode>
+            <Home>
+              <LandingPage>
+                <main className="site-shell" id="home">
+                  <header>
+                  <section className="hero secti..." id="platform" style={{...}}>
+                    <Reveal>
+                    <div className="hero-core">
+                      <ScientificCore size={800} accentColor="#7c3aed">
                         <div className="scientific..." aria-hidden="true">
-                          <svg ref={{current:null}} viewBox="0 0 620 620" width="100%" height="100%" ...>
+                          <svg ref={{current:null}} viewBox="0 0 800 800" width="100%" height="100%" ...>
                             <defs>
                             <g className="scientific...">
                               <circle>
@@ -369,41 +365,49 @@ https://react.dev/link/hydration-mismatch
                               <circle>
                               <circle>
                               <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
                               <circle
-                                cx={432.5811638765982}
-+                               cy={25.1302865542591}
--                               cy="25.130286554259044"
-                                r={2.852}
-                                fill="#3e1d7c"
+                                cx={601.3961114215053}
++                               cy={165.06869109397823}
+-                               cy="165.0686910939782"
+                                r={2.88}
+                                fill="#fff"
                               >
                               <circle>
                               <circle>
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle>
                               <circle
-+                               cx={432.38498699975946}
--                               cx="432.3849869997594"
-                                cy={368.5189310656707}
-                                r={2.2319999999999998}
-                                fill="#ae85f4"
-                              >
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle
-+                               cx={206.5602280932172}
--                               cx="206.56022809321723"
-                                cy={505.9628927421535}
-                                r={1.6119999999999999}
+                                cx={331.75370275022794}
++                               cy={739.610663719053}
+-                               cy="739.6106637190532"
+                                r={1.28}
                                 fill="#8649ee"
                               >
                               <circle>
@@ -413,23 +417,163 @@ https://react.dev/link/hydration-mismatch
                               <circle>
                               <circle>
                               <circle>
+                              <circle
+                                cx={132.75450252700824}
++                               cy={598.6006185297849}
+-                               cy="598.600618529785"
+                                r={3.6799999999999997}
+                                fill="#7034d6"
+                              >
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
                               <circle>
                               <circle>
                               <circle>
                               <circle
-                                cx={466.0819863516666}
-+                               cy={127.92823559783312}
--                               cy="127.9282355978331"
-                                r={2.2319999999999998}
++                               cx={171.36664803424162}
+-                               cx="171.3666480342416"
+                                cy={480.0437878220518}
+                                r={2.88}
+                                fill="#5729a9"
+                              >
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle
+                                cx={518.194181061439}
++                               cy={551.10500045735}
+-                               cy="551.1050004573501"
+                                r={2.88}
+                                fill="#8649ee"
+                              >
+                              ...
+                            ...
+                            ...
+                  ...
+          ...
+        ...
+ 
+✓ Compiled in 1390ms
+ GET /en 200 in 278ms (next.js: 93ms, proxy.ts: 20ms, application-code: 165ms)
+ GET /ru 200 in 289ms (next.js: 181ms, proxy.ts: 15ms, application-code: 92ms)
+✓ Compiled in 298ms
+ GET /ru 200 in 175ms (next.js: 101ms, proxy.ts: 13ms, application-code: 61ms)
+ GET /en 200 in 184ms (next.js: 52ms, proxy.ts: 16ms, application-code: 116ms)
+✓ Compiled in 293ms
+ GET /en 200 in 256ms (next.js: 50ms, proxy.ts: 9ms, application-code: 197ms)
+ GET /ru 200 in 250ms (next.js: 150ms, proxy.ts: 11ms, application-code: 89ms)
+ GET /ru 200 in 329ms (next.js: 29ms, proxy.ts: 10ms, application-code: 290ms)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <RedirectBoundary>
+      <RedirectErrorBoundary router={{...}}>
+        <InnerLayoutRouter url="/ru" tree={[...]} params={{locale:"ru"}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+          <SegmentViewNode type="page" pagePath="[locale]/p...">
+            <SegmentTrieNode>
+            <Home>
+              <LandingPage>
+                <main className="site-shell" id="home">
+                  <header>
+                  <section className="hero secti..." id="platform" style={{...}}>
+                    <Reveal>
+                    <div className="hero-core">
+                      <ScientificCore size={800} accentColor="#7c3aed">
+                        <div className="scientific..." aria-hidden="true">
+                          <svg ref={{current:null}} viewBox="0 0 800 800" width="100%" height="100%" ...>
+                            <defs>
+                            <g className="scientific...">
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle
+                                cx={601.3961114215053}
++                               cy={165.06869109397823}
+-                               cy="165.0686910939782"
+                                r={2.88}
                                 fill="#fff"
                               >
                               <circle>
+                              <circle>
                               <circle
-+                               cx={418.05657727224406}
--                               cx="418.0565772722441"
-                                cy={443.9638632326179}
-                                r={3.472}
-                                fill="#9a67f1"
+                                cx={331.75370275022794}
++                               cy={739.610663719053}
+-                               cy="739.6106637190532"
+                                r={1.28}
+                                fill="#8649ee"
                               >
                               <circle>
                               <circle>
@@ -438,211 +582,618 @@ https://react.dev/link/hydration-mismatch
                               <circle>
                               <circle>
                               <circle>
-                              <circle>
                               <circle
-                                cx={102.88473945843143}
-+                               cy={463.9154793605833}
--                               cy="463.91547936058333"
-                                r={2.852}
+                                cx={132.75450252700824}
++                               cy={598.6006185297849}
+-                               cy="598.600618529785"
+                                r={3.6799999999999997}
                                 fill="#7034d6"
                               >
-                              ...
-                            <g>
-                            <g className="scientific...">
-                              <line>
-                              <line>
-                              <line>
-                              <line>
-                              <line>
-                              <line>
-                              <line>
-                              <line
-                                x1={70.13305555508371}
-                                y1={251.23102899383179}
-                                x2={188.56746653598006}
-+                               y2={219.75963517383238}
--                               y2="219.75963517383235"
-                                stroke="#7c3aed"
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle
++                               cx={171.36664803424162}
+-                               cx="171.3666480342416"
+                                cy={480.0437878220518}
+                                r={2.88}
+                                fill="#5729a9"
                               >
-                              <line
-                                x1={188.56746653598006}
-+                               y1={219.75963517383238}
--                               y1="219.75963517383235"
-                                x2={364.8514227314045}
-                                y2={220.71374109732693}
-                                stroke="#fff"
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle
+                                cx={518.194181061439}
++                               cy={551.10500045735}
+-                               cy="551.1050004573501"
+                                r={2.88}
+                                fill="#8649ee"
                               >
-                              <line
-                                x1={188.56746653598006}
-+                               y1={219.75963517383238}
--                               y1="219.75963517383235"
-+                               x2={120.9014953932262}
--                               x2="120.90149539322623"
-+                               y2={244.27226196206436}
--                               y2="244.2722619620644"
-                                stroke="#7c3aed"
-                              >
-                              <line>
-                              <line>
-                              <line>
-                              <line>
-                              <line>
-                              <line>
-                              <line
-                                x1={134.63158184698108}
-                                y1={355.22930041849105}
-+                               x2={120.9014953932262}
--                               x2="120.90149539322623"
-+                               y2={244.27226196206436}
--                               y2="244.2722619620644"
-                                stroke="#fff"
-                              >
-                              <line>
-                              <line
-+                               x1={120.9014953932262}
--                               x1="120.90149539322623"
-+                               y1={244.27226196206436}
--                               y1="244.2722619620644"
-                                x2={150.65991947321982}
-                                y2={156.53676822403466}
-                                stroke="#7c3aed"
-                              >
-                              ...
-                            <g className="scientific...">
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle r={2.356} fill="#7c3aed">
-                                <animateMotion
-                                  dur="3.8s"
-                                  begin="1.26s"
-                                  repeatCount="indefinite"
-+                                 path="M 70.13305555508371 251.23102899383179 L 188.56746653598006 219.75963517383238"
--                                 path="M 70.13305555508371 251.23102899383179 L 188.56746653598006 219.75963517383235"
-                                >
-                                ...
-                              <circle r={2.356} fill="#7c3aed">
-                                <animateMotion
-                                  dur="4.4s"
-                                  begin="1.44s"
-                                  repeatCount="indefinite"
-+                                 path="M 188.56746653598006 219.75963517383238 L 364.8514227314045 220.71374109732693"
--                                 path="M 188.56746653598006 219.75963517383235 L 364.8514227314045 220.71374109732693"
-                                >
-                                ...
-                              <circle r={2.356} fill="#7c3aed">
-                                <animateMotion
-                                  dur="5s"
-                                  begin="1.6199999999999999s"
-                                  repeatCount="indefinite"
-+                                 path="M 188.56746653598006 219.75963517383238 L 120.9014953932262 244.27226196206436"
--                                 path="M 188.56746653598006 219.75963517383235 L 120.90149539322623 244.2722619620644"
-                                >
-                                ...
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle>
-                              <circle r={2.356} fill="#7c3aed">
-                                <animateMotion
-                                  dur="3.2s"
-                                  begin="2.88s"
-                                  repeatCount="indefinite"
-+                                 path="M 134.63158184698108 355.22930041849105 L 120.9014953932262 244.27226196206436"
--                                 path="M 134.63158184698108 355.22930041849105 L 120.90149539322623 244.2722619620644"
-                                >
-                                ...
-                              <circle>
-                              <circle r={2.356} fill="#7c3aed">
-                                <animateMotion
-                                  dur="4.4s"
-                                  begin="3.2399999999999998s"
-                                  repeatCount="indefinite"
-+                                 path="M 120.9014953932262 244.27226196206436 L 150.65991947321982 156.53676822403466"
--                                 path="M 120.90149539322623 244.2722619620644 L 150.65991947321982 156.53676822403466"
-                                >
-                                ...
-                              ...
-                            <g className="scientific...">
-                              <g>
-                              <g>
-                              <g>
-                              <g>
-                              <g>
-                              <g>
-                              <g>
-                                <circle
-                                  cx={188.56746653598006}
-+                                 cy={219.75963517383238}
--                                 cy="219.75963517383235"
-                                  r={2.2319999999999998}
-                                  fill="#ffffff"
-                                >
-                                <circle
-                                  cx={188.56746653598006}
-+                                 cy={219.75963517383238}
--                                 cy="219.75963517383235"
-                                  r={2.0088}
-                                  fill="#ffffff"
-                                  opacity=".3"
-                                >
-                              <g>
-                              <g>
-                              <g>
-                              <g>
-                              <g>
-                              <g>
-                              <g>
-                                <circle
-+                                 cx={120.9014953932262}
--                                 cx="120.90149539322623"
-+                                 cy={244.27226196206436}
--                                 cy="244.2722619620644"
-                                  r={2.914}
-                                  fill="#b995f5"
-                                >
-                                <circle
-+                                 cx={120.9014953932262}
--                                 cx="120.90149539322623"
-+                                 cy={244.27226196206436}
--                                 cy="244.2722619620644"
-                                  r={2.6226000000000003}
-                                  fill="#b995f5"
-                                  opacity=".3"
-                                >
                               ...
                             ...
-                    ...
-            ...
+                            ...
+                  ...
           ...
+        ...
  
- GET /ru/auth 200 in 114ms (next.js: 33ms, proxy.ts: 11ms, application-code: 70ms)
- GET /ru/auth 200 in 73ms (next.js: 19ms, proxy.ts: 8ms, application-code: 47ms)
+ GET /ru 200 in 818ms (next.js: 318ms, proxy.ts: 180ms, application-code: 319ms)
+ GET /en 200 in 820ms (next.js: 467ms, proxy.ts: 189ms, application-code: 164ms)
+ GET /ru 200 in 329ms (next.js: 80ms, proxy.ts: 33ms, application-code: 217ms)
+ GET /en 200 in 319ms (next.js: 156ms, proxy.ts: 31ms, application-code: 132ms)
+ GET /ru 200 in 428ms (next.js: 60ms, proxy.ts: 21ms, application-code: 347ms)
+ GET /en 200 in 431ms (next.js: 145ms, proxy.ts: 26ms, application-code: 261ms)
+ GET /ru 200 in 802ms (next.js: 222ms, proxy.ts: 188ms, application-code: 392ms)
+ GET /en 200 in 720ms (next.js: 334ms, proxy.ts: 48ms, application-code: 339ms)
+ GET /ru 200 in 545ms (next.js: 129ms, proxy.ts: 162ms, application-code: 253ms)
+ GET /en 200 in 388ms (next.js: 170ms, proxy.ts: 53ms, application-code: 165ms)
+ GET /ru 200 in 344ms (next.js: 88ms, proxy.ts: 41ms, application-code: 215ms)
+ GET /en 200 in 336ms (next.js: 148ms, proxy.ts: 38ms, application-code: 150ms)
+ GET /en 200 in 314ms (next.js: 158ms, proxy.ts: 34ms, application-code: 122ms)
+ GET /ru 200 in 318ms (next.js: 83ms, proxy.ts: 28ms, application-code: 207ms)
+ GET /ru 200 in 264ms (next.js: 58ms, proxy.ts: 18ms, application-code: 187ms)
+ GET /en 200 in 265ms (next.js: 128ms, proxy.ts: 20ms, application-code: 117ms)
+ GET /ru 200 in 241ms (next.js: 58ms, proxy.ts: 21ms, application-code: 162ms)
+ GET /en 200 in 234ms (next.js: 113ms, proxy.ts: 22ms, application-code: 99ms)
+ GET /ru 200 in 210ms (next.js: 38ms, proxy.ts: 23ms, application-code: 149ms)
+ GET /en 200 in 200ms (next.js: 92ms, proxy.ts: 18ms, application-code: 90ms)
+ GET /ru 200 in 198ms (next.js: 39ms, proxy.ts: 14ms, application-code: 145ms)
+ GET /en 200 in 197ms (next.js: 83ms, proxy.ts: 16ms, application-code: 99ms)
+ GET /en 200 in 264ms (next.js: 113ms, proxy.ts: 20ms, application-code: 130ms)
+ GET /ru 200 in 270ms (next.js: 49ms, proxy.ts: 18ms, application-code: 204ms)
+ GET /ru 200 in 240ms (next.js: 52ms, proxy.ts: 16ms, application-code: 173ms)
+ GET /en 200 in 242ms (next.js: 116ms, proxy.ts: 16ms, application-code: 109ms)
+ GET /en 200 in 219ms (next.js: 99ms, proxy.ts: 17ms, application-code: 103ms)
+ GET /ru 200 in 226ms (next.js: 52ms, proxy.ts: 18ms, application-code: 156ms)
+ GET /en 200 in 186ms (next.js: 81ms, proxy.ts: 18ms, application-code: 88ms)
+ GET /ru 200 in 191ms (next.js: 40ms, proxy.ts: 17ms, application-code: 135ms)
+ GET /en 200 in 191ms (next.js: 83ms, proxy.ts: 14ms, application-code: 93ms)
+ GET /ru 200 in 198ms (next.js: 40ms, proxy.ts: 15ms, application-code: 143ms)
+ GET /en 200 in 195ms (next.js: 88ms, proxy.ts: 13ms, application-code: 93ms)
+ GET /ru 200 in 198ms (next.js: 42ms, proxy.ts: 13ms, application-code: 144ms)
+ GET /en 200 in 252ms (next.js: 129ms, proxy.ts: 19ms, application-code: 104ms)
+ GET /ru 200 in 257ms (next.js: 50ms, proxy.ts: 19ms, application-code: 188ms)
+ GET /en 200 in 181ms (next.js: 81ms, proxy.ts: 13ms, application-code: 87ms)
+ GET /ru 200 in 186ms (next.js: 35ms, proxy.ts: 13ms, application-code: 139ms)
+ GET /en 200 in 188ms (next.js: 85ms, proxy.ts: 15ms, application-code: 87ms)
+ GET /ru 200 in 192ms (next.js: 42ms, proxy.ts: 15ms, application-code: 135ms)
+ GET /en 200 in 198ms (next.js: 88ms, proxy.ts: 12ms, application-code: 98ms)
+ GET /ru 200 in 203ms (next.js: 44ms, proxy.ts: 12ms, application-code: 147ms)
+ GET /ru 200 in 213ms (next.js: 65ms, proxy.ts: 17ms, application-code: 131ms)
+ GET /en 200 in 212ms (next.js: 102ms, proxy.ts: 19ms, application-code: 90ms)
+ GET /ru 200 in 258ms (next.js: 36ms, proxy.ts: 17ms, application-code: 205ms)
+ GET /en 200 in 252ms (next.js: 141ms, proxy.ts: 15ms, application-code: 96ms)
+ GET /ru 200 in 387ms (next.js: 64ms, proxy.ts: 15ms, application-code: 308ms)
+ GET /en 200 in 386ms (next.js: 254ms, proxy.ts: 14ms, application-code: 117ms)
+ GET /ru 200 in 308ms (next.js: 58ms, proxy.ts: 16ms, application-code: 233ms)
+ GET /en 200 in 305ms (next.js: 144ms, proxy.ts: 24ms, application-code: 136ms)
+ GET /en 200 in 275ms (next.js: 130ms, proxy.ts: 24ms, application-code: 120ms)
+ GET /ru 200 in 284ms (next.js: 74ms, proxy.ts: 26ms, application-code: 184ms)
+✓ Compiled in 307ms
+ GET /en 200 in 561ms (next.js: 403ms, proxy.ts: 21ms, application-code: 137ms)
+ GET /ru 200 in 575ms (next.js: 353ms, proxy.ts: 19ms, application-code: 202ms)
+ GET /ru 200 in 287ms (next.js: 78ms, proxy.ts: 27ms, application-code: 183ms)
+ GET /en 200 in 274ms (next.js: 144ms, proxy.ts: 21ms, application-code: 110ms)
+ GET /en 200 in 243ms (next.js: 117ms, proxy.ts: 15ms, application-code: 112ms)
+ GET /ru 200 in 249ms (next.js: 57ms, proxy.ts: 16ms, application-code: 176ms)
+ GET /ru 200 in 258ms (next.js: 50ms, proxy.ts: 14ms, application-code: 194ms)
+ GET /en 200 in 257ms (next.js: 114ms, proxy.ts: 15ms, application-code: 128ms)
+ GET /ru 200 in 352ms (next.js: 75ms, proxy.ts: 22ms, application-code: 255ms)
+ GET /en 200 in 352ms (next.js: 160ms, proxy.ts: 23ms, application-code: 169ms)
+ GET /ru 200 in 264ms (next.js: 104ms, proxy.ts: 30ms, application-code: 129ms)
+ GET /en 200 in 247ms (next.js: 159ms, proxy.ts: 23ms, application-code: 65ms)
+✓ Compiled in 513ms
+ GET /ru 200 in 629ms (next.js: 47ms, proxy.ts: 13ms, application-code: 569ms)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <RedirectBoundary>
+      <RedirectErrorBoundary router={{...}}>
+        <InnerLayoutRouter url="/ru" tree={[...]} params={{locale:"ru"}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+          <SegmentViewNode type="page" pagePath="[locale]/p...">
+            <SegmentTrieNode>
+            <Home>
+              <LandingPage>
+                <main className="site-shell" id="home">
+                  <header>
+                  <section className="hero secti..." id="platform" style={{...}}>
+                    <Reveal>
+                    <div className="hero-core">
+                      <ScientificCore size={800} accentColor="#7c3aed">
+                        <div className="scientific..." aria-hidden="true">
+                          <svg ref={{current:null}} viewBox="0 0 800 800" width="100%" height="100%" ...>
+                            <defs>
+                            <g className="scientific...">
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle
+                                cx={601.3961114215053}
++                               cy={165.06869109397823}
+-                               cy="165.0686910939782"
+                                r={2.88}
+                                fill="#fff"
+                              >
+                              <circle>
+                              <circle>
+                              <circle
+                                cx={331.75370275022794}
++                               cy={739.610663719053}
+-                               cy="739.6106637190532"
+                                r={1.28}
+                                fill="#8649ee"
+                              >
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle
+                                cx={132.75450252700824}
++                               cy={598.6006185297849}
+-                               cy="598.600618529785"
+                                r={3.6799999999999997}
+                                fill="#7034d6"
+                              >
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle
++                               cx={171.36664803424162}
+-                               cx="171.3666480342416"
+                                cy={480.0437878220518}
+                                r={2.88}
+                                fill="#5729a9"
+                              >
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle
+                                cx={518.194181061439}
++                               cy={551.10500045735}
+-                               cy="551.1050004573501"
+                                r={2.88}
+                                fill="#8649ee"
+                              >
+                              ...
+                            ...
+                            ...
+                  ...
+          ...
+        ...
+ 
+ GET /en 200 in 588ms (next.js: 175ms, proxy.ts: 25ms, application-code: 387ms)
+ GET /ru 200 in 644ms (next.js: 323ms, proxy.ts: 58ms, application-code: 263ms)
+ GET /ru 200 in 241ms (next.js: 24ms, proxy.ts: 5ms, application-code: 211ms)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <RedirectBoundary>
+      <RedirectErrorBoundary router={{...}}>
+        <InnerLayoutRouter url="/ru" tree={[...]} params={{locale:"ru"}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+          <SegmentViewNode type="page" pagePath="[locale]/p...">
+            <SegmentTrieNode>
+            <Home>
+              <LandingPage>
+                <main className="site-shell" id="home">
+                  <header>
+                  <section className="hero secti..." id="platform" style={{...}}>
+                    <Reveal>
+                    <div className="hero-core">
+                      <ScientificCore size={800} accentColor="#7c3aed">
+                        <div className="scientific..." aria-hidden="true">
+                          <svg ref={{current:null}} viewBox="0 0 800 800" width="100%" height="100%" ...>
+                            <defs>
+                            <g className="scientific...">
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle
+                                cx={601.3961114215053}
++                               cy={165.06869109397823}
+-                               cy="165.0686910939782"
+                                r={2.88}
+                                fill="#fff"
+                              >
+                              <circle>
+                              <circle>
+                              <circle
+                                cx={331.75370275022794}
++                               cy={739.610663719053}
+-                               cy="739.6106637190532"
+                                r={1.28}
+                                fill="#8649ee"
+                              >
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle
+                                cx={132.75450252700824}
++                               cy={598.6006185297849}
+-                               cy="598.600618529785"
+                                r={3.6799999999999997}
+                                fill="#7034d6"
+                              >
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle
++                               cx={171.36664803424162}
+-                               cx="171.3666480342416"
+                                cy={480.0437878220518}
+                                r={2.88}
+                                fill="#5729a9"
+                              >
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle
+                                cx={518.194181061439}
++                               cy={551.10500045735}
+-                               cy="551.1050004573501"
+                                r={2.88}
+                                fill="#8649ee"
+                              >
+                              ...
+                            ...
+                            ...
+                  ...
+          ...
+        ...
+ 
+ GET /en 200 in 91ms (next.js: 28ms, proxy.ts: 9ms, application-code: 54ms)
+ GET /uz 200 in 89ms (next.js: 22ms, proxy.ts: 10ms, application-code: 57ms)
 [browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
- GET /ru/dashboard 200 in 91ms (next.js: 31ms, proxy.ts: 8ms, application-code: 51ms)
- GET /ru/workspace/sandbox 200 in 99ms (next.js: 31ms, proxy.ts: 11ms, application-code: 58ms)
- GET /ru/dashboard 200 in 94ms (next.js: 30ms, proxy.ts: 15ms, application-code: 48ms)
- GET /ru/dashboard?view=recent 200 in 88ms (next.js: 33ms, proxy.ts: 7ms, application-code: 48ms)
- GET /ru/dashboard?view=favorites 200 in 80ms (next.js: 18ms, proxy.ts: 13ms, application-code: 49ms)
- GET /ru/dashboard 200 in 82ms (next.js: 28ms, proxy.ts: 9ms, application-code: 46ms)
- GET /ru/profile 200 in 82ms (next.js: 28ms, proxy.ts: 7ms, application-code: 47ms)
- GET /ru/profile 200 in 103ms (next.js: 33ms, proxy.ts: 6ms, application-code: 63ms)
- GET /ru/profile 200 in 84ms (next.js: 24ms, proxy.ts: 13ms, application-code: 47ms)
- GET /ru/profile 200 in 80ms (next.js: 22ms, proxy.ts: 8ms, application-code: 50ms)
- GET /ru/profile 200 in 76ms (next.js: 18ms, proxy.ts: 10ms, application-code: 49ms)
- GET /ru/profile 200 in 77ms (next.js: 18ms, proxy.ts: 9ms, application-code: 50ms)
- GET /ru/admin 200 in 1348ms (next.js: 1181ms, proxy.ts: 9ms, application-code: 158ms)
- GET /ru/admin 200 in 64ms (next.js: 31ms, proxy.ts: 10ms, application-code: 24ms)
- GET /ru/admin 200 in 71ms (next.js: 17ms, proxy.ts: 8ms, application-code: 45ms)
- GET /ru/admin/users 200 in 1532ms (next.js: 1410ms, proxy.ts: 13ms, application-code: 110ms)
- GET /ru/admin/laboratories 200 in 3.8s (next.js: 3.7s, proxy.ts: 10ms, application-code: 155ms)
- GET /ru/admin/chemicals 200 in 3.5s (next.js: 3.4s, proxy.ts: 10ms, application-code: 84ms)
- GET /ru/admin/chemicals 200 in 110ms (next.js: 35ms, proxy.ts: 15ms, application-code: 60ms)
- GET /ru/workspace/sandbox 200 in 127ms (next.js: 61ms, proxy.ts: 10ms, application-code: 56ms)
- GET /ru/workspace/sandbox 200 in 87ms (next.js: 32ms, proxy.ts: 8ms, application-code: 47ms)
+ GET /ru 200 in 115ms (next.js: 33ms, proxy.ts: 9ms, application-code: 74ms)
+ GET /uz 200 in 82ms (next.js: 23ms, proxy.ts: 7ms, application-code: 51ms)
+ GET /ru 200 in 72ms (next.js: 15ms, proxy.ts: 8ms, application-code: 49ms)
+ GET /en 200 in 97ms (next.js: 33ms, proxy.ts: 7ms, application-code: 57ms)
+ GET /en 200 in 44ms (next.js: 20ms, proxy.ts: 8ms, application-code: 16ms)
+ GET /en 200 in 69ms (next.js: 18ms, proxy.ts: 9ms, application-code: 43ms)
+ GET /ru/workspace/sandbox 200 in 464ms (next.js: 87ms, proxy.ts: 14ms, application-code: 363ms)
+⚠ Fast Refresh had to perform a full reload when ./src/stores/ui.store.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./src/stores/ui.store.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload when ./src/stores/ui.store.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+✓ Compiled in 376ms
+ GET /ru/workspace/sandbox 200 in 1094ms (next.js: 372ms, proxy.ts: 26ms, application-code: 697ms)
+ GET /ru/workspace/sandbox 200 in 1743ms (next.js: 155ms, proxy.ts: 21ms, application-code: 1567ms)
+ GET /en 200 in 1729ms (next.js: 701ms, proxy.ts: 392ms, application-code: 637ms)
+ GET /en 200 in 1764ms (next.js: 623ms, proxy.ts: 394ms, application-code: 747ms)
+ GET /en 200 in 1789ms (next.js: 216ms, proxy.ts: 322ms, application-code: 1252ms)
+ GET /en 200 in 1693ms (next.js: 815ms, proxy.ts: 290ms, application-code: 588ms)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <RedirectBoundary>
+      <RedirectErrorBoundary router={{...}}>
+        <InnerLayoutRouter url="/en" tree={[...]} params={{locale:"en"}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+          <SegmentViewNode type="page" pagePath="[locale]/p...">
+            <SegmentTrieNode>
+            <Home>
+              <LandingPage>
+                <main className="site-shell" id="home">
+                  <header>
+                  <section className="hero secti..." id="platform" style={{...}}>
+                    <Reveal>
+                    <div className="hero-core">
+                      <ScientificCore size={800} accentColor="#7c3aed">
+                        <div className="scientific..." aria-hidden="true">
+                          <svg ref={{current:null}} viewBox="0 0 800 800" width="100%" height="100%" ...>
+                            <defs>
+                            <g className="scientific...">
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle
+                                cx={601.3961114215053}
++                               cy={165.06869109397823}
+-                               cy="165.0686910939782"
+                                r={2.88}
+                                fill="#fff"
+                              >
+                              <circle>
+                              <circle>
+                              <circle
+                                cx={331.75370275022794}
++                               cy={739.610663719053}
+-                               cy="739.6106637190532"
+                                r={1.28}
+                                fill="#8649ee"
+                              >
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle
+                                cx={132.75450252700824}
++                               cy={598.6006185297849}
+-                               cy="598.600618529785"
+                                r={3.6799999999999997}
+                                fill="#7034d6"
+                              >
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle
++                               cx={171.36664803424162}
+-                               cx="171.3666480342416"
+                                cy={480.0437878220518}
+                                r={2.88}
+                                fill="#5729a9"
+                              >
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle>
+                              <circle
+                                cx={518.194181061439}
++                               cy={551.10500045735}
+-                               cy="551.1050004573501"
+                                r={2.88}
+                                fill="#8649ee"
+                              >
+                              ...
+                            ...
+                            ...
+                  ...
+          ...
+        ...
+ 

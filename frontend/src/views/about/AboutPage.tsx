@@ -28,9 +28,9 @@ export default function AboutPage() {
   const [robotMsg, setRobotMsg] = useState<string>(t('copilotMsg1'));
 
   const timeline = [
-    { year: '2024', title: t('t2024'), desc: t('d2024') },
-    { year: '2025', title: t('t2025'), desc: t('d2025') },
-    { year: '2026', title: t('t2026'), desc: t('d2026') },
+    { year: '2026.07', title: t('t2024'), desc: t('d2024') },
+    { year: '2026.08', title: t('t2025'), desc: t('d2025') },
+    { year: '2026.10', title: t('t2026'), desc: t('d2026') },
   ];
 
   const team = [
@@ -112,15 +112,6 @@ export default function AboutPage() {
                 <p>{t('teamDesc')}</p>
               </div>
 
-              <div className="flex items-center gap-3.5 p-3.5 bg-[#8b5cf6]/[0.06] border border-[#8b5cf6]/20 rounded-[var(--radius-md)] cursor-pointer transition-all hover:bg-[#8b5cf6]/[0.12] hover:border-[#8b5cf6]/50" onClick={() => { setRobotMsg(t('copilotMsg2')); window.setTimeout(() => setRobotMsg(t('copilotMsg1')), 3000); }}>
-                <div className="w-[42px] h-[42px] flex-shrink-0 flex items-center justify-center rounded-[12px] bg-gradient-to-br from-[#1E1F30] to-[#0F101A] border border-white/[0.08] shadow-[0_0_15px_rgba(139,92,246,.4)]">
-                  <BrainCircuit size={18} className="text-[#14F195]" />
-                </div>
-                <div className="text-[12px] text-[var(--muted-foreground)] leading-snug">
-                  <strong className="text-[var(--foreground)] block mb-0.5">{t('copilotTitle')}</strong>
-                  <span key={robotMsg}>{robotMsg}</span>
-                </div>
-              </div>
             </div>
 
             <div className="flex flex-col gap-3">

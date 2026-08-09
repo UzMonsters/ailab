@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import ScienceBackground, { BackgroundGlow } from '@/components/common/ScienceBackground';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+import ThemeToggle from '@/components/common/ThemeToggle';
 import { useAuthStore } from '@/stores/auth.store';
 
 interface SidebarItem {
@@ -86,12 +87,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
           </div>
           <span>jas<span className="text-[#8B5CF6]">Core</span></span>
         </Link>
-        <button
-          onClick={() => { router.push(`/${locale}/workspace/sandbox`); onNavigate?.(); }}
-          className="w-full py-3 bg-gradient-to-br from-[#8b5cf6] to-[#A855F7] text-white rounded-[var(--radius-md)] text-sm font-semibold shadow-[0_10px_25px_rgba(139,92,246,.4)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
-        >
-          <Plus size={16} /> {td('newWorkspace')}
-        </button>
       </div>
 
       <nav className="flex-1 px-3 space-y-1 overflow-y-auto min-h-0">
@@ -123,12 +118,12 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
       </nav>
 
       <div className="p-3 border-t border-white/5 space-y-1 mt-auto">
-        <Link href={`/${locale}/profile`} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/[0.03] transition-all no-underline" onClick={onNavigate}>
+        <Link href={`/${locale}/settings`} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all no-underline ${pathname === `/${locale}/settings` ? 'bg-[#8b5cf6]/10 text-[#8b5cf6] border border-[#8b5cf6]/20' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/[0.03]'}`} onClick={onNavigate}>
           <Settings size={16} /> {tc('settings')}
         </Link>
-        <Link href={`/${locale}/profile`} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-white/[0.03] transition-all no-underline" onClick={onNavigate}>
+        <button type="button" disabled className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--muted-foreground)]/60 cursor-not-allowed bg-transparent border-0 text-left">
           <HelpCircle size={16} /> {tc('help')}
-        </Link>
+        </button>
         <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--muted-foreground)] hover:text-[#F43F5E] hover:bg-[#F43F5E]/5 transition-all">
           <LogOut size={16} /> {tc('logout')}
         </button>
@@ -141,7 +136,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   );
 
   return (
-    <div className="relative min-h-screen flex" style={{ backgroundColor: '#050508' }}>
+    <div className="relative min-h-screen flex" style={{ backgroundColor: 'var(--background)' }}>
       <BackgroundGlow />
       <ScienceBackground />
 
@@ -151,12 +146,12 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
       )}
 
       {/* Desktop sidebar — fixed, 100dvh */}
-      <aside className="hidden lg:flex fixed top-0 left-0 z-50 h-dvh w-[230px] bg-[#0A0B14]/95 backdrop-blur-xl border-r border-white/5 flex-col min-h-0">
+      <aside className="hidden lg:flex fixed top-0 left-0 z-50 h-dvh w-[230px] bg-[var(--card)]/95 backdrop-blur-xl border-r border-white/5 flex-col min-h-0">
         <SidebarContent />
       </aside>
 
       {/* Mobile drawer */}
-      <div className={`lg:hidden fixed top-0 left-0 z-50 h-dvh w-[280px] max-w-[85vw] bg-[#0A0B14]/98 backdrop-blur-xl border-r border-white/5 flex flex-col min-h-0 transition-transform duration-200 ${drawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`lg:hidden fixed top-0 left-0 z-50 h-dvh w-[280px] max-w-[85vw] bg-[var(--card)]/98 backdrop-blur-xl border-r border-white/5 flex flex-col min-h-0 transition-transform duration-200 ${drawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <button
           onClick={() => setDrawerOpen(false)}
           aria-label="Close menu"
@@ -168,7 +163,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       <div className="flex-1 min-w-0 flex flex-col lg:pl-[230px]">
-        <header className="sticky top-0 z-30 px-4 py-3 md:px-6 bg-[#050508]/80 backdrop-blur-xl border-b border-white/5">
+        <header className="sticky top-0 z-30 px-4 py-3 md:px-6 bg-[var(--background)]/80 backdrop-blur-xl border-b border-white/5">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <button onClick={() => setDrawerOpen(true)} className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 bg-[#0A0B14] text-[var(--muted-foreground)]" aria-label="Open menu">
@@ -177,6 +172,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
               <span className="lg:hidden font-bold text-lg">jas<span className="text-[#8B5CF6]">Core</span></span>
             </div>
             <div className="flex items-center gap-2">
+              <ThemeToggle />
               <LanguageSwitcher />
               <button className="w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 bg-[#0A0B14] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all relative" aria-label="Notifications">
                 <Bell size={16} />

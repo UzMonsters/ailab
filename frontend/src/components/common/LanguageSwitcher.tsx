@@ -47,7 +47,7 @@ export default function LanguageSwitcher({ variant = 'ghost', className = '' }: 
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-[#0A0B14] px-2.5 h-9 text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[#8B5CF6]/40 transition-all cursor-pointer"
+        className="flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--card)] px-2.5 h-9 text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[#8B5CF6]/40 transition-all cursor-pointer"
       >
         <Globe size={14} />
         <span className="uppercase font-semibold tracking-wide">{locale}</span>
@@ -56,7 +56,7 @@ export default function LanguageSwitcher({ variant = 'ghost', className = '' }: 
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full mt-1.5 min-w-[140px] bg-[#0F101A] border border-[var(--border)] rounded-[var(--radius-sm)] shadow-[0_15px_35px_rgba(0,0,0,.6)] py-1 z-[120]"
+          className="absolute right-0 top-full mt-1.5 min-w-[140px] bg-[var(--card)] border border-[var(--border)] rounded-[var(--radius-sm)] shadow-[0_15px_35px_rgba(0,0,0,.6)] py-1 z-[120]"
         >
           {LOCALES.map((loc) => (
             <button

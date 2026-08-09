@@ -51,6 +51,28 @@
   --radius: .8rem;
 }
 
+:root[data-theme="light"] {
+  color-scheme: light;
+  --background: #EEF1F6;
+  --foreground: #12151C;
+  --card: #FFFFFF;
+  --card-foreground: #12151C;
+  --popover: #FFFFFF;
+  --popover-foreground: #12151C;
+  --primary: #8b5cf6;
+  --primary-bright: #7c3aed;
+  --primary-foreground: #ffffff;
+  --secondary: #E7EAF1;
+  --secondary-foreground: #12151C;
+  --muted: #F7F8FB;
+  --muted-foreground: #616A78;
+  --accent: #E0E7FF;
+  --accent-foreground: #4F46E5;
+  --border: #D6DBE6;
+  --input: #E7EAF1;
+  --ring: #8b5cf6;
+}
+
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; background: var(--background); }
 body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-sans), Arial, sans-serif; line-height: 1.5; }
@@ -61,6 +83,9 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 
 .site-shell { overflow: hidden; background: radial-gradient(circle at 75% 5%, rgba(139,92,246,.11), transparent 29rem), var(--background); }
 .section-wrap { width: min(1380px, calc(100% - 80px)); margin-inline: auto; }
+[data-theme="light"] canvas.fixed,
+[data-theme="light"] .fixed.inset-0.pointer-events-none[style*="radial-gradient"] { opacity: 0 !important; }
+[data-theme="light"] .site-nav { border-bottom-color: rgba(0,0,0,.08); background: rgba(255,255,255,.82); }
 .site-nav { position: sticky; top: 0; z-index: 20; border-bottom: 1px solid rgba(255,255,255,.07); background: rgba(9,9,9,.82); backdrop-filter: blur(20px); }
 .nav-inner { width: min(1480px, calc(100% - 80px)); height: 76px; margin-inline: auto; display: flex; align-items: center; gap: 30px; }
 .logo { display: inline-flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 650; letter-spacing: -.035em; white-space: nowrap; }
@@ -70,6 +95,10 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .nav-links a, .text-button { color: #99999f; font-size: 12px; transition: color .2s; }
 .nav-links a:hover, .text-button:hover { color: var(--foreground); }
 .nav-actions { display: flex; align-items: center; gap: 14px; }
+.nav-langs { display: flex; align-items: center; gap: 4px; }
+.nav-lang { min-width: 34px; height: 33px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--muted-foreground); font-size: 11px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; cursor: pointer; transition: color .2s, border-color .2s, background .2s; }
+.nav-lang:hover { color: var(--foreground); border-color: rgba(192,161,255,.4); }
+.nav-lang.active { color: var(--primary-bright); border-color: rgba(139,92,246,.6); background: rgba(139,92,246,.12); }
 .icon-button, .mobile-toggle { width: 33px; height: 33px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 8px; color: var(--muted-foreground); background: transparent; cursor: pointer; }
 .icon-button svg, .mobile-toggle svg { width: 15px; height: 15px; }
 .button { min-height: 43px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 18px; border: 1px solid transparent; border-radius: 8px; color: var(--foreground); font-size: 12px; font-weight: 650; cursor: pointer; transition: transform .25s, border-color .25s, background .25s, box-shadow .25s; }
@@ -98,7 +127,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .hero-highlights span { display: flex; align-items: center; gap: 8px; }
 .hero-highlights svg { width: 16px; color: var(--primary-bright); }
 
-.hero-core { position: relative; z-index: 1; width: min(100%, 1080px); aspect-ratio: 1; justify-self: center; align-self: center; cursor: crosshair; }
+.hero-core { position: relative; z-index: 1; width: min(100%, 750px); aspect-ratio: 1; justify-self: end; align-self: center; cursor: crosshair; margin-right: clamp(0px, 3vw, 60px); }
 .hero-core .scientific-core-model { width: 100%; height: 100%; }
 .hc-layer { position: absolute; inset: 0; display: grid; place-items: center; will-change: transform, opacity, filter; }
 .hc-img { display: block; width: 100%; height: auto; max-width: 100%; will-change: transform, opacity, filter; }
@@ -331,7 +360,10 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .stat-card .stat-value { color: var(--foreground); }
 
 @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); }.stat-card { min-height: 190px; min-width: 0; }.stat-big { grid-column: 1 / -1; }.element-body { grid-template-columns: 1fr; }.element-orbit { max-width: 280px; justify-self: center; }.element-orbit .scientific-core-model { width: 100%; } }
-@media (max-width: 1000px) { .section-wrap, .nav-inner { width: min(100% - 48px, 760px); }.nav-links { display: none; position: absolute; top: 76px; left: 0; right: 0; flex-direction: column; align-items: stretch; gap: 0; padding: 8px 24px 18px; border-bottom: 1px solid var(--border); background: #0c0c0c; }.nav-links.nav-open { display: flex; }.nav-links a { padding: 12px 0; }.nav-cta, .login-button { display: none; }.mobile-toggle { display: grid; }.hero { grid-template-columns: 1fr; padding-top: 50px; background-size: auto 100%, auto, cover; background-position: center, center, center; }.hero-copy { text-align: center; }.hero .eyebrow, .hero-actions { justify-content: center; margin-inline: auto; }.hero-description { margin-inline: auto; }.hero-core { width: min(100%, 480px); margin-inline: auto; }.science-grid { grid-template-columns: repeat(2, 1fr); }.molecule-grid { grid-template-columns: 1fr; }.molecule-grid > :nth-child(n) { grid-column: auto; }.workspace-grid { grid-template-columns: 1fr; }.simulation-grid, .architecture-section { grid-template-columns: 1fr; }.architecture-section { gap: 45px; }.stats-grid { grid-template-columns: repeat(2, 1fr); }.stat-big { grid-column: 1 / -1; }.trust-bar { flex-direction: column; align-items: flex-start; gap: 14px; }.trust-items { flex-wrap: wrap; gap: 20px 32px; }.footer-grid { grid-template-columns: repeat(3, 1fr); }.footer-brand, .footer-newsletter { grid-column: span 3; } }
+@media (max-width: 1000px) { .section-wrap, .nav-inner { width: min(100% - 48px, 760px); }.nav-links { display: none; position: absolute; top: 76px; left: 0; right: 0; flex-direction: column; align-items: stretch; gap: 0; padding: 8px 24px 18px; border-bottom: 1px solid var(--border); background: #0c0c0c; }.nav-links.nav-open { display: flex; }.nav-links a { padding: 12px 0; }.nav-cta { display: none; }.mobile-toggle { display: grid; }.hero { grid-template-columns: 1fr; padding-top: 50px; background-size: auto 100%, auto, cover; background-position: center, center, center; }.hero-copy { text-align: center; }.hero .eyebrow, .hero-actions { justify-content: center; margin-inline: auto; }.hero-description { margin-inline: auto; }.hero-core { width: min(100%, 480px); margin-inline: auto; }.science-grid { grid-template-columns: repeat(2, 1fr); }.molecule-grid { grid-template-columns: 1fr; }.molecule-grid > :nth-child(n) { grid-column: auto; }.workspace-grid { grid-template-columns: 1fr; }.simulation-grid, .architecture-section { grid-template-columns: 1fr; }.architecture-section { gap: 45px; }.stats-grid { grid-template-columns: repeat(2, 1fr); }.stat-big { grid-column: 1 / -1; }.trust-bar { flex-direction: column; align-items: flex-start; gap: 14px; }.trust-items { flex-wrap: wrap; gap: 20px 32px; }.footer-grid { grid-template-columns: repeat(3, 1fr); }.footer-brand, .footer-newsletter { grid-column: span 3; } }
 @media (max-width: 580px) { .section-wrap, .nav-inner { width: calc(100% - 32px); }.hero { padding-top: 32px; padding-bottom: 42px; }.hero h1 { font-size: 58px; }.hero-highlights { justify-content: center; gap: 14px; }.hero-core { width: min(100%, 380px); }.hc-nebula { opacity: .08; filter: blur(18px); }.hc-grid { opacity: .08; }.section-block { padding-top: 55px; padding-bottom: 55px; }.section-heading { align-items: flex-start; flex-direction: column; }.decor-edge-icon { display: none; }.science-grid { grid-template-columns: 1fr; }.molecule-grid { display: flex; flex-direction: column; }.molecule-card, .molecule-card:nth-child(3), .molecule-card:nth-child(4) { min-height: 255px; }.molecule-card { grid-template-columns: 1fr; }.molecule-copy { width: 100%; }.tool-panel { padding: 19px; }.periodic-content { grid-template-columns: 1fr; }.element-details { min-height: 275px; }.simulation-grid { grid-template-columns: 1fr; }.architecture-section { padding-top: 75px; padding-bottom: 75px; }.architecture-map { min-height: 360px; transform: scale(.88); margin-inline: -35px; }.stats-grid { grid-template-columns: repeat(1, 1fr); }.footer-grid { grid-template-columns: repeat(2, 1fr); gap: 28px 18px; }.footer-brand, .footer-newsletter { grid-column: span 2; } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+.settings-card { border: 1px solid var(--border); border-radius: 1rem; background: var(--card); padding: clamp(1.1rem, 2.5vw, 2rem); box-shadow: 0 12px 30px rgba(0,0,0,.08); }
+.settings-card h2 { display: flex; align-items: center; gap: .65rem; margin: 0 0 1.5rem; font-size: 1.05rem; font-weight: 700; }
+.settings-card h2 svg { width: 19px; color: var(--primary); }
 .ai-analysis { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }.ai-status { color: #c7c4cf; font-size: 10px; }.ai-progress { height: 3px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }.ai-progress i { display: block; height: 100%; width: 30%; border-radius: 999px; background: linear-gradient(90deg, #7c3aed, #c0a1ff); animation: ai-progress 1.3s ease-in-out infinite alternate; }.ai-analysis dl { display: grid; gap: 5px; margin: 0; }.ai-analysis dl div { display: flex; justify-content: space-between; gap: 10px; }.ai-analysis dt { color: #77777e; font-family: var(--font-mono); font-size: 8px; text-transform: uppercase; letter-spacing: .06em; }.ai-analysis dd { margin: 0; color: #dedde6; font-size: 9px; }.stat-detail { position: absolute; left: 20px; bottom: 16px; color: var(--stat-accent); font-family: var(--font-mono); font-size: 9px; letter-spacing: .02em; opacity: 0; transform: translateY(4px); transition: opacity .3s, transform .3s; pointer-events: none; }.stat-card:hover .stat-detail { opacity: 1; transform: translateY(0); }.stat-card .stat-label { transition: opacity .25s; }.stat-card:hover .stat-label { opacity: 0; }

@@ -18,12 +18,10 @@ const menuActions = [
 function WorkspacePreview({ name }: { name: string }) {
   return (
     <div className="absolute inset-0">
-      <div className="absolute inset-0" style={{ background: 'radial-gradient(120% 100% at 15% 0%, rgba(139,92,246,.22), transparent 55%), radial-gradient(120% 100% at 85% 100%, rgba(20,241,149,.1), transparent 55%), #0d0f1d' }} />
-      <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(120% 100% at 15% 0%, rgba(139,92,246,.15), transparent 55%), radial-gradient(120% 100% at 85% 100%, rgba(20,241,149,.08), transparent 55%), var(--card)' }} />
+      <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(var(--foreground) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-14 h-14 rounded-2xl border border-[#8b5cf6]/30 bg-[#8b5cf6]/10 flex items-center justify-center shadow-[0_0_25px_rgba(139,92,246,.25)]">
-          <FlaskConical size={26} className="text-[#C084FC]/80" />
-        </div>
+        <span className="text-2xl font-bold tracking-tight text-[var(--primary)] opacity-60" style={{ textShadow: '0 0 20px rgba(139,92,246,.35)' }}>H₂O</span>
       </div>
     </div>
   );
@@ -179,7 +177,7 @@ export default function DashboardPage() {
   const renderCard = (ws: Workspace) => (
     <div
       key={ws.id}
-      className="group relative border border-[var(--border)] bg-[#090f18] rounded-[var(--radius-lg)] overflow-visible cursor-pointer transition-all duration-300 hover:border-[#8b5cf6]/50 hover:shadow-[0_12px_35px_rgba(0,0,0,.35)] hover:-translate-y-[2px]"
+      className="group relative border border-[var(--border)] bg-[var(--card)] rounded-[var(--radius-lg)] overflow-visible cursor-pointer transition-all duration-300 hover:border-[var(--ring)]/50 hover:shadow-[0_12px_35px_rgba(0,0,0,.15)] hover:-translate-y-[2px]"
       onMouseEnter={() => setHoveredCard(ws.id)}
       onMouseLeave={() => setHoveredCard(null)}
     >
@@ -187,8 +185,8 @@ export default function DashboardPage() {
         <WorkspacePreview name={ws.name} />
         {ws.isFavorite && <Star size={14} className="absolute top-3 left-3 text-[#F59E0B] fill-[#F59E0B] z-[3]" aria-label={t('favorited')} />}
         {hoveredCard === ws.id && (
-          <div className="absolute inset-0 bg-black/55 flex items-center justify-center backdrop-blur-[2px] z-[2]">
-            <span className="text-sm font-medium text-white px-4 py-2 bg-[#8B5CF6]/70 rounded-lg">{t('openWorkspace')}</span>
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px] z-[2]">
+            <span className="text-sm font-medium text-white px-4 py-2 bg-[var(--primary)]/90 rounded-lg">{t('openWorkspace')}</span>
           </div>
         )}
       </div>
@@ -197,19 +195,19 @@ export default function DashboardPage() {
       <button
         onClick={(e) => openMenu(ws, e)}
         aria-label={t('workspaceActions')}
-        className="absolute top-3 right-3 z-[5] w-8 h-8 rounded-md bg-black/45 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/80 hover:text-white hover:border-[#8b5cf6]/60 hover:bg-[#8b5cf6]/30 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+        className="absolute top-3 right-3 z-[5] w-8 h-8 rounded-md bg-[var(--popover)]/60 backdrop-blur-sm border border-[var(--border)] flex items-center justify-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--ring)]/60 hover:bg-[var(--accent)] transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
       >
         <MoreVertical size={15} />
       </button>
 
       {/* Dropdown anchored under the kebab icon */}
       {menuOpen === ws.id && menuAnchor?.id === ws.id && (
-        <div ref={menuRef} className="fixed z-[90] w-48 bg-[#0F101A] border border-[var(--border)] rounded-[var(--radius-sm)] shadow-[0_20px_45px_rgba(0,0,0,.65)] py-1" style={{ left: menuAnchor.x, top: menuAnchor.y }}>
+        <div ref={menuRef} className="fixed z-[90] w-48 bg-[var(--popover)] border border-[var(--border)] rounded-[var(--radius-sm)] shadow-[0_20px_45px_rgba(0,0,0,.15)] py-1" style={{ left: menuAnchor.x, top: menuAnchor.y }}>
           {menuActions.map((action) => (
             <button
               key={action.key}
               onClick={() => runMenuAction(ws, action.key)}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors ${action.danger ? 'text-[#F43F5E] hover:bg-[#F43F5E]/5' : 'text-[var(--foreground)] hover:bg-white/[0.05]'}`}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors ${action.danger ? 'text-[#F43F5E] hover:bg-[#F43F5E]/10' : 'text-[var(--foreground)] hover:bg-[var(--accent)]'}`}
             >
               <action.icon size={12} className={action.key === 'favorite' && ws.isFavorite ? 'text-[#F59E0B]' : action.danger ? 'text-[#F43F5E]' : ''} />
               {action.key === 'favorite' ? (ws.isFavorite ? t('removeFavorites') : t('addFavorites')) : action.key === 'trash' ? t('moveToTrash') : tc(action.label)}
@@ -219,7 +217,7 @@ export default function DashboardPage() {
       )}
 
       <div className="p-3" onClick={() => handleOpen(ws.id)}>
-        <div className="text-sm font-medium truncate">{ws.name}</div>
+        <div className="text-sm font-medium truncate text-[var(--foreground)]">{ws.name}</div>
         <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5 capitalize">{ws.science}</div>
       </div>
     </div>
@@ -233,11 +231,11 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold mb-6">{t('myWorkspaces')}</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="border border-[var(--border)] bg-[#090f18] rounded-[var(--radius-lg)] overflow-hidden animate-pulse">
-              <div className="aspect-[16/10] bg-[#8b5cf6]/5" />
+            <div key={i} className="border border-[var(--border)] bg-[var(--card)] rounded-[var(--radius-lg)] overflow-hidden animate-pulse">
+              <div className="aspect-[16/10] bg-[var(--primary)]/5" />
               <div className="p-3 space-y-2">
-                <div className="h-4 bg-[#8b5cf6]/10 rounded w-3/4" />
-                <div className="h-3 bg-[#8b5cf6]/5 rounded w-1/3" />
+                <div className="h-4 bg-[var(--primary)]/10 rounded w-3/4" />
+                <div className="h-3 bg-[var(--primary)]/5 rounded w-1/3" />
               </div>
             </div>
           ))}
@@ -277,12 +275,12 @@ export default function DashboardPage() {
           {search && <button onClick={() => setSearch('')} aria-label="Clear search" className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"><X size={14} /></button>}
         </div>
         <div className="flex items-center gap-2">
-          <button className="h-9 px-3 flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--input)] text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all">
+          <button className="h-9 px-3 flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--input)] text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)] transition-all">
             <SlidersHorizontal size={13} /> {tc('sort')}
           </button>
           <div className="flex items-center gap-0.5 h-9 px-1 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--input)]">
-            <button aria-label={t('gridView')} className="w-7 h-7 grid place-items-center rounded-md bg-[#8b5cf6]/15 text-[#8b5cf6]"><Grid2X2 size={14} /></button>
-            <button aria-label={t('listView')} className="w-7 h-7 grid place-items-center rounded-md text-[var(--muted-foreground)] hover:text-[var(--foreground)]"><List size={14} /></button>
+            <button aria-label={t('gridView')} className="w-7 h-7 grid place-items-center rounded-md bg-[var(--primary)]/15 text-[var(--primary)]"><Grid2X2 size={14} /></button>
+            <button aria-label={t('listView')} className="w-7 h-7 grid place-items-center rounded-md text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"><List size={14} /></button>
           </div>
         </div>
       </div>
@@ -332,22 +330,22 @@ export default function DashboardPage() {
 
       {/* Create Modal */}
       {createModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setCreateModalOpen(false)}>
-          <div className="bg-[var(--card)] backdrop-blur-xl border border-[var(--border)] rounded-[var(--radius-lg)] shadow-[0_30px_60px_rgba(0,0,0,0.6)] w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-6">{t('createWorkspaceTitle')}</h2>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setCreateModalOpen(false)}>
+          <div className="bg-[var(--card)] backdrop-blur-xl border border-[var(--border)] rounded-[var(--radius-lg)] shadow-2xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-xl font-bold mb-6 text-[var(--foreground)]">{t('createWorkspaceTitle')}</h2>
             <div className="space-y-5">
-              <div><label className="block text-xs font-medium text-[var(--muted-foreground)] mb-2">{t('workspaceName')}</label><input type="text" className="w-full bg-[var(--input)] border border-[var(--border)] rounded-[var(--radius-md)] px-4 py-3 text-sm text-[var(--foreground)] outline-none focus:border-[#8B5CF6]" placeholder={t('untitledWorkspace')} value={newName} onChange={(e) => setNewName(e.target.value)} autoFocus onKeyDown={(e) => e.key === 'Enter' && handleCreate()} /></div>
+              <div><label className="block text-xs font-medium text-[var(--muted-foreground)] mb-2">{t('workspaceName')}</label><input type="text" className="w-full bg-[var(--input)] border border-[var(--border)] rounded-[var(--radius-md)] px-4 py-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--ring)] focus:ring-1 focus:ring-[var(--ring)] transition-all" placeholder={t('untitledWorkspace')} value={newName} onChange={(e) => setNewName(e.target.value)} autoFocus onKeyDown={(e) => e.key === 'Enter' && handleCreate()} /></div>
               <div><label className="block text-xs font-medium text-[var(--muted-foreground)] mb-2">{t('science')}</label>
                 <div className="space-y-2">
-                  <div className="w-full flex items-center gap-3 p-3 rounded-lg border border-[#8b5cf6]/30 bg-[#8b5cf6]/10"><FlaskConical size={18} className="text-[#8b5cf6]" /><span className="text-sm font-medium">{t('chemistry')}</span><span className="ml-auto w-2 h-2 rounded-full bg-[#14F195]" /></div>
+                  <div className="w-full flex items-center gap-3 p-3 rounded-lg border border-[var(--ring)]/30 bg-[var(--primary)]/10"><FlaskConical size={18} className="text-[var(--primary)]" /><span className="text-sm font-medium text-[var(--foreground)]">{t('chemistry')}</span><span className="ml-auto w-2 h-2 rounded-full bg-[#14F195]" /></div>
                   <div className="w-full flex items-center gap-3 p-3 rounded-lg border border-[var(--border)] bg-[var(--input)] opacity-50 cursor-not-allowed"><Atom size={18} className="text-[var(--muted-foreground)]" /><span className="text-sm font-medium text-[var(--muted-foreground)]">{t('physics')}</span><span className="ml-auto text-[10px] font-mono text-[var(--muted-foreground)] uppercase">{tc('soon')}</span></div>
                   <div className="w-full flex items-center gap-3 p-3 rounded-lg border border-[var(--border)] bg-[var(--input)] opacity-50 cursor-not-allowed"><Atom size={18} className="text-[var(--muted-foreground)]" /><span className="text-sm font-medium text-[var(--muted-foreground)]">{t('biology')}</span><span className="ml-auto text-[10px] font-mono text-[var(--muted-foreground)] uppercase">{tc('soon')}</span></div>
                 </div>
               </div>
             </div>
             <div className="flex items-center justify-end gap-3 mt-8">
-              <button onClick={() => setCreateModalOpen(false)} className="px-5 py-2.5 border border-[var(--border)] bg-[var(--input)] text-[var(--foreground)] rounded-[var(--radius-md)] text-sm hover:bg-white/[0.05] transition-all">{tc('cancel')}</button>
-              <button onClick={handleCreate} disabled={!newName.trim()} className="px-5 py-2.5 bg-gradient-to-br from-[#8b5cf6] to-[#A855F7] text-white rounded-[var(--radius-md)] text-sm font-semibold shadow-[0_8px_20px_rgba(139,92,246,.35)] disabled:opacity-50 disabled:cursor-not-allowed transition-all">{t('createWorkspaceButton')}</button>
+              <button onClick={() => setCreateModalOpen(false)} className="px-5 py-2.5 border border-[var(--border)] bg-[var(--input)] text-[var(--foreground)] rounded-[var(--radius-md)] text-sm hover:bg-[var(--accent)] transition-all">{tc('cancel')}</button>
+              <button onClick={handleCreate} disabled={!newName.trim()} className="px-5 py-2.5 bg-gradient-to-br from-[#8b5cf6] to-[#A855F7] text-white rounded-[var(--radius-md)] text-sm font-semibold shadow-[0_4px_15px_rgba(139,92,246,.25)] disabled:opacity-50 disabled:cursor-not-allowed transition-all">{t('createWorkspaceButton')}</button>
             </div>
           </div>
         </div>
@@ -355,12 +353,12 @@ export default function DashboardPage() {
 
       {/* Rename Modal */}
       {renameModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setRenameModalOpen(null)}>
-          <div className="bg-[var(--card)] backdrop-blur-xl border border-[var(--border)] rounded-[var(--radius-lg)] shadow-[0_30px_60px_rgba(0,0,0,0.6)] w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-bold mb-4">{t('renameWorkspace')}</h2>
-            <input type="text" className="w-full bg-[var(--input)] border border-[var(--border)] rounded-[var(--radius-md)] px-4 py-3 text-sm text-[var(--foreground)] outline-none focus:border-[#8B5CF6]" value={renameValue} onChange={(e) => setRenameValue(e.target.value)} autoFocus onKeyDown={(e) => e.key === 'Enter' && handleRename()} />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setRenameModalOpen(null)}>
+          <div className="bg-[var(--card)] backdrop-blur-xl border border-[var(--border)] rounded-[var(--radius-lg)] shadow-2xl w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-bold mb-4 text-[var(--foreground)]">{t('renameWorkspace')}</h2>
+            <input type="text" className="w-full bg-[var(--input)] border border-[var(--border)] rounded-[var(--radius-md)] px-4 py-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--ring)] focus:ring-1 focus:ring-[var(--ring)] transition-all" value={renameValue} onChange={(e) => setRenameValue(e.target.value)} autoFocus onKeyDown={(e) => e.key === 'Enter' && handleRename()} />
             <div className="flex items-center justify-end gap-3 mt-4">
-              <button onClick={() => setRenameModalOpen(null)} className="px-4 py-2 border border-[var(--border)] bg-[var(--input)] text-[var(--foreground)] rounded-[var(--radius-sm)] text-sm hover:bg-white/[0.05]">{tc('cancel')}</button>
+              <button onClick={() => setRenameModalOpen(null)} className="px-4 py-2 border border-[var(--border)] bg-[var(--input)] text-[var(--foreground)] rounded-[var(--radius-sm)] text-sm hover:bg-[var(--accent)]">{tc('cancel')}</button>
               <button onClick={handleRename} className="px-4 py-2 bg-gradient-to-br from-[#8b5cf6] to-[#A855F7] text-white rounded-[var(--radius-sm)] text-sm font-semibold disabled:opacity-50">{tc('rename')}</button>
             </div>
           </div>
