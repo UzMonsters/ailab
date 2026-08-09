@@ -23,7 +23,7 @@ export interface AuthRegisterResponse {
 }
 
 export interface AuthLoginRequest {
-  usernameOrEmail: string;
+  email: string;
   password: string;
 }
 
