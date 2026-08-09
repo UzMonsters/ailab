@@ -91,7 +91,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 md:p-8" style={{ backgroundColor: '#050508' }}>
+    <div className="relative min-h-screen flex items-center justify-center p-4 md:p-8" style={{ backgroundColor: 'var(--background)' }}>
       <BackgroundGlow />
       <ScienceBackground />
 

@@ -6,7 +6,7 @@ import { authApi } from '@/services/api/auth.api';
 import { userApi } from '@/services/api/user.api';
 import { getAccessToken } from '@/services/api/client';
 
-const MOCK_MODE = true;
+const MOCK_MODE = false;
 
 const MOCK_USER: UserMeResponse = {
   id: '00000000-0000-0000-0000-000000000001',

@@ -24,8 +24,8 @@ export default function AdminUsersPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [actionMenu, setActionMenu] = useState<string | null>(null);
 
-  const [addForm, setAddForm] = useState({ username: '', email: '', password: '', role: 'ROLE_USER' });
-  const [editForm, setEditForm] = useState({ username: '', email: '', role: '' });
+  const [addForm, setAddForm] = useState<{ username: string; email: string; password: string; role: AdminUserResponse['role'] }>({ username: '', email: '', password: '', role: 'ROLE_USER' });
+  const [editForm, setEditForm] = useState<{ username: string; email: string; role: AdminUserResponse['role'] }>({ username: '', email: '', role: 'ROLE_USER' });
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -45,19 +45,15 @@ export default function AdminUsersPage() {
     }
   };
 
+  // Initial mock load intentionally hydrates the local admin dataset once.
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { fetchUsers(); }, []);
 
   const handleAddUser = async () => {
     if (!addForm.username || !addForm.email || !addForm.password) return;
     try {
       setActionLoading(true);
-      // User creation via admin API is not available - use POST /api/v1/auth/register
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/v1/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: addForm.username, email: addForm.email, password: addForm.password }),
-      });
-      if (!res.ok) throw new Error(t('createFailed'));
+      await adminApi.createUser(addForm);
       setAddModalOpen(false);
       setAddForm({ username: '', email: '', password: '', role: 'ROLE_USER' });
       await fetchUsers();
@@ -286,7 +282,7 @@ export default function AdminUsersPage() {
               </div>
               <div>
                 <label className="block text-xs text-[var(--muted-foreground)] mb-1.5">{t('role')}</label>
-                <select value={addForm.role} onChange={(e) => setAddForm({ ...addForm, role: e.target.value })} className="w-full py-2.5 px-3.5 bg-[var(--input)] border border-[var(--border-glass)] rounded-[var(--radius-sm)] text-sm text-[var(--foreground)] outline-none focus:border-[var(--border-focus)]">
+                <select value={addForm.role} onChange={(e) => setAddForm({ ...addForm, role: e.target.value as AdminUserResponse['role'] })} className="w-full py-2.5 px-3.5 bg-[var(--input)] border border-[var(--border-glass)] rounded-[var(--radius-sm)] text-sm text-[var(--foreground)] outline-none focus:border-[var(--border-focus)]">
                   <option value="ROLE_USER">{t('user')}</option>
                   <option value="ROLE_ADMIN">{t('admin')}</option>
                 </select>
@@ -322,7 +318,7 @@ export default function AdminUsersPage() {
               </div>
               <div>
                 <label className="block text-xs text-[var(--muted-foreground)] mb-1.5">{t('role')}</label>
-                <select value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })} className="w-full py-2.5 px-3.5 bg-[var(--input)] border border-[var(--border-glass)] rounded-[var(--radius-sm)] text-sm text-[var(--foreground)] outline-none focus:border-[var(--border-focus)]">
+                <select value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value as AdminUserResponse['role'] })} className="w-full py-2.5 px-3.5 bg-[var(--input)] border border-[var(--border-glass)] rounded-[var(--radius-sm)] text-sm text-[var(--foreground)] outline-none focus:border-[var(--border-focus)]">
                   <option value="ROLE_USER">{t('user')}</option>
                   <option value="ROLE_ADMIN">{t('admin')}</option>
                 </select>

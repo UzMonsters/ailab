@@ -11,7 +11,7 @@ export default function NotFoundPage() {
   const locale = pathname.split('/')[1] || 'en';
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center" style={{ backgroundColor: '#050508' }}>
+    <div className="relative min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background)' }}>
       <BackgroundGlow />
       <ScienceBackground />
 

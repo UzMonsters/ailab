@@ -6,6 +6,7 @@ import { FlaskConical, Atom, Search, MoreVertical, Star, Clock, Trash2, Copy, Pe
 import { useTranslations } from 'next-intl';
 import { workspacesApi } from '@/services/api/workspaces.api';
 import type { Workspace } from '@/types';
+import OnboardingHint from '@/components/common/OnboardingHint';
 
 const menuActions = [
   { key: 'open', label: 'open', icon: FlaskConical, danger: false },
@@ -34,6 +35,10 @@ function WorkspacePreview({ name, thumbnail }: { name: string; thumbnail?: strin
       </div>
     </div>
   );
+}
+
+function TemplateGallery({ onUse }: { onUse: () => void }) {
+  return <section className="max-w-3xl rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm"><p className="text-xs font-semibold uppercase tracking-wider text-[var(--primary)]">Featured template</p><h2 className="mt-2 text-2xl font-bold">Acid-base titration lab</h2><p className="mt-2 max-w-xl text-sm text-[var(--muted-foreground)]">A guided setup with an Erlenmeyer flask, burette-style liquid transfer, pH tracking and a safe neutralization workflow.</p><div className="mt-5 grid grid-cols-3 gap-3 text-xs"><div className="rounded-xl border border-[var(--border)] p-3"><strong className="block">4</strong><span className="text-[var(--muted-foreground)]">Equipment</span></div><div className="rounded-xl border border-[var(--border)] p-3"><strong className="block">HCl + NaOH</strong><span className="text-[var(--muted-foreground)]">Reaction</span></div><div className="rounded-xl border border-[var(--border)] p-3"><strong className="block">pH</strong><span className="text-[var(--muted-foreground)]">Live monitor</span></div></div><button className="mt-6 min-h-11 rounded-xl bg-[var(--primary)] px-5 font-semibold text-white" onClick={onUse}>Use this template</button></section>;
 }
 
 export default function DashboardPage() {
@@ -163,6 +168,10 @@ export default function DashboardPage() {
 
   const handleOpen = (id: string) => {
     router.push(`/${locale}/workspace/sandbox?workspace=${encodeURIComponent(id)}`);
+  };
+
+  const handleUseTemplate = async () => {
+    try { const workspace = await workspacesApi.create('Acid-base titration lab', 'chemistry'); router.push(`/${locale}/workspace/sandbox?workspace=${encodeURIComponent(workspace.id)}&template=acid-base`); } catch (err: unknown) { showToast(err instanceof Error ? err.message : 'Could not create template', 'error'); }
   };
 
   const openMenu = (ws: Workspace, e: React.MouseEvent) => {
@@ -295,7 +304,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {visibleWorkspaces.length === 0 ? (
+      {view === 'templates' ? <TemplateGallery onUse={handleUseTemplate} /> : visibleWorkspaces.length === 0 ? (
         <div className="text-center py-20">
           <FlaskConical size={48} className="text-[var(--muted-foreground)]/30 mx-auto mb-4" />
           <h2 className="text-lg font-semibold mb-2">{t('emptyTitle')}</h2>
@@ -363,6 +372,7 @@ export default function DashboardPage() {
           <button onClick={() => setToast(null)} className="opacity-60 hover:opacity-100"><X size={14} /></button>
         </div>
       )}
+      <OnboardingHint storageKey="dashboard-onboarding-v2" locale={locale} kind="dashboard" />
     </div>
   );
 }

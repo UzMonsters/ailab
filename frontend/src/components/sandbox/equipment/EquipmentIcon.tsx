@@ -19,7 +19,14 @@ export default function EquipmentIcon({ type, size = 100, liquidLevel = 0, liqui
   const animated = operation !== 'idle';
   const common = { width: size, height: size, viewBox: '0 0 100 100', fill: 'none', stroke: 'currentColor', strokeWidth: 3 };
   if (type === 'thermometer') return <svg {...common} aria-hidden="true"><path d="M50 17a9 9 0 0 0-9 9v39a16 16 0 1 0 18 0V26a9 9 0 0 0-9-9Z" strokeWidth="4" /><path d="M50 42v25" stroke="#F59E0B" strokeWidth="7" strokeLinecap="round" /><circle cx="50" cy="76" r="9" fill="#F59E0B" /><path d="M65 39h8M65 51h5M65 63h8" strokeWidth="3" strokeLinecap="round" /></svg>;
-  if (type === 'burner') return <svg {...common} aria-hidden="true"><path d="M30 90 H70 M40 90 V50 M60 90 V50 M40 50 H60 M45 50 V30 H55 V50" strokeLinecap="round" strokeLinejoin="round" /><path className={operation === 'heating' ? 'sandbox-flame' : ''} d="M50 30 Q40 15 50 5 Q60 15 50 30" fill="#F59E0B" stroke="#F59E0B" /></svg>;
+  if (type === 'burner') return <svg {...common} aria-hidden="true">
+    <path d="M20 88h60l-7 7H27z" fill="currentColor" opacity=".2" stroke="currentColor" />
+    <path d="M30 86h40M36 82h28V54H36z" fill="var(--background)" stroke="currentColor" strokeLinejoin="round" />
+    <path d="M42 54V38h16v16M34 64h32M31 76h38" stroke="currentColor" strokeLinecap="round" />
+    <path d="M58 46h17l8 5" stroke="currentColor" strokeLinecap="round" />
+    <path className={operation === 'heating' ? 'sandbox-flame' : ''} d="M50 38c-7-9-3-17 3-23 1 7 8 9 7 16-1 4-4 6-10 7Z" fill="#F59E0B" stroke="#FBBF24" strokeLinejoin="round" />
+    <path className={operation === 'heating' ? 'sandbox-flame' : ''} d="M51 35c-3-5-1-8 2-12 1 4 4 6 3 9-1 2-2 3-5 3Z" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="1.5" />
+  </svg>;
   if (type === 'hotplate') return <svg width={size} height={size} viewBox="0 0 140 100" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true"><rect x="14" y="28" width="112" height="54" rx="10" fill="var(--background)" /><ellipse cx="58" cy="53" rx="28" ry="14" fill="#7C3AED" opacity={animated ? '.4' : '.22'} stroke="#A78BFA" /><ellipse cx="58" cy="53" rx="19" ry="9" stroke="#C4B5FD" /><circle cx="103" cy="52" r="8" fill="#F59E0B" stroke="#FBBF24" /><path d="M26 82h88" strokeLinecap="round" opacity=".5" /></svg>;
   if (type === 'condenser') return <svg width={size} height={size * .56} viewBox="0 0 180 100" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true"><path d="M20 25h35M20 75h35M145 25h15M145 75h15" strokeLinecap="round" /><rect x="45" y="18" width="100" height="64" rx="12" fill="var(--background)" /><path d="M58 24v52M70 24v52M82 24v52M94 24v52M106 24v52M118 24v52M130 24v52" stroke="#22D3EE" opacity=".65" /><path d="M20 25h12v18M160 75h-12V57M20 75h12V57M160 25h-12v18" stroke="#34D399" /></svg>;
   const isRound = type === 'roundflask';

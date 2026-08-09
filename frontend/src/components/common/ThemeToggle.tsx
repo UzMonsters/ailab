@@ -5,20 +5,16 @@ import { useUIStore } from '@/stores/ui.store';
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useUIStore();
-  const isLight = theme === 'light';
-
-  const toggle = () => {
-    setTheme(isLight ? 'dark' : 'light');
-  };
+  const isDark = theme === 'dark' || (theme === 'system' && typeof window !== 'undefined' && !window.matchMedia('(prefers-color-scheme: light)').matches);
 
   return (
     <button
-      onClick={toggle}
-      aria-label={isLight ? 'Switch to dark mode' : 'Switch to light mode'}
-      title={isLight ? 'Switch to dark mode' : 'Switch to light mode'}
+      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       className="w-9 h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all"
     >
-      {isLight ? <Moon size={16} /> : <Sun size={16} />}
+      {isDark ? <Sun size={16} /> : <Moon size={16} />}
     </button>
   );
 }

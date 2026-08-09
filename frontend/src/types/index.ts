@@ -92,9 +92,9 @@ export interface AdminUserResponse {
   email: string;
   role: 'ROLE_USER' | 'ROLE_ADMIN' | 'ROLE_BANNED';
   avatarUrl: string | null;
-  active: boolean;
+  active?: boolean;
   level?: number;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface AdminUpdateUserRequest {

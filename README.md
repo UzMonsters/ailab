@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AI Laboratory
 
 Full-stack AI-powered virtual laboratory platform for scientific research and education.
@@ -59,3 +60,6 @@ User: user / User@12345
 
 ## API Documentation
 See BACKEND_FRONTEND_HANDOFF.md for the complete API contract (60 endpoints).
+=======
+# ailab
+>>>>>>> origin/main

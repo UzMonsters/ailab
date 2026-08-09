@@ -13,6 +13,7 @@ import ScienceBackground, { BackgroundGlow } from '@/components/common/ScienceBa
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import ThemeToggle from '@/components/common/ThemeToggle';
 import { useAuthStore } from '@/stores/auth.store';
+import { useUIStore } from '@/stores/ui.store';
 
 interface SidebarItem {
   key: string;
@@ -34,6 +35,12 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   const locale = pathname.split('/')[1] || 'en';
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { user, logout } = useAuthStore();
+  const { theme, setTheme } = useUIStore();
+  const themeEnabled = pathname.endsWith('/dashboard') || pathname.endsWith('/dashboards');
+
+  useEffect(() => {
+    if (!themeEnabled && theme !== 'dark') setTheme('dark');
+  }, [theme, themeEnabled, setTheme]);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -167,13 +174,13 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         <header className="sticky top-0 z-30 px-4 py-3 md:px-6 bg-[var(--background)]/80 backdrop-blur-xl border-b border-white/5">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <button onClick={() => setDrawerOpen(true)} className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 bg-[#0A0B14] text-[var(--muted-foreground)]" aria-label="Open menu">
+              <button onClick={() => setDrawerOpen(true)} className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)]" aria-label="Open menu">
                 <Menu size={18} />
               </button>
               <span className="lg:hidden font-bold text-lg">jas<span className="text-[#8B5CF6]">Core</span></span>
             </div>
             <div className="flex items-center gap-2">
-              <ThemeToggle />
+              {themeEnabled && <ThemeToggle />}
               <LanguageSwitcher />
               <button className="w-9 h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all relative" aria-label={tc('notifications')}>
                 <Bell size={16} />

@@ -10,7 +10,7 @@ export default function NotFound() {
   const locale = pathname.split('/')[1] || 'en';
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#050508' }}>
+    <div className="relative min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--background)' }}>
       <BackgroundGlow />
       <ScienceBackground />
       <div className="relative z-10 text-center max-w-md">

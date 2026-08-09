@@ -10,7 +10,7 @@ export default function TermsPage() {
   const locale = pathname.split('/')[1] || 'en';
 
   return (
-    <div className="relative min-h-screen" style={{ backgroundColor: '#050508' }}>
+    <div className="relative min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
       <BackgroundGlow />
       <ScienceBackground />
 

@@ -34,13 +34,13 @@ export default function AboutPage() {
   ];
 
   const team = [
-    { name: 'Alexey Gromov', role: t('role1'), bio: t('bio1'), img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', accent: '#8B5CF6' },
-    { name: 'Dmitry Orlov', role: t('role2'), bio: t('bio2'), img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', accent: '#14F195' },
-    { name: 'Elena Belova', role: t('role3'), bio: t('bio3'), img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80', accent: '#F59E0B' },
+    { name: 'Samiyev Aminjon', role: t('role1'), bio: t('bio1'), img: '/about/Samiyev.jpg', accent: '#8B5CF6' },
+    { name: 'Mansurov Jasur', role: t('role2'), bio: t('bio2'), img: '/about/Mansurov.jpg', accent: '#14F195' },
+    { name: 'Ashurov Sardor', role: t('role3'), bio: t('bio3'), img: '/about/Ashurov.jpg', accent: '#F59E0B' },
   ];
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 md:p-8" style={{ backgroundColor: '#050508' }}>
+    <div className="relative min-h-screen flex items-center justify-center p-4 md:p-8" style={{ backgroundColor: 'var(--background)' }}>
       <BackgroundGlow />
       <ScienceBackground />
 
@@ -76,7 +76,7 @@ export default function AboutPage() {
                 <span className="absolute left-[5px] top-2 bottom-2 w-[2px] bg-gradient-to-b from-[#8b5cf6] to-[#14F195] opacity-40" />
                 {timeline.map((item) => (
                   <div key={item.year} className="relative">
-                    <span className="absolute -left-5 top-1.5 w-3 h-3 rounded-full bg-[#050508] border-2 border-[#8b5cf6] shadow-[0_0_10px_rgba(139,92,246,.4)]" />
+                    <span className="absolute -left-5 top-1.5 w-3 h-3 rounded-full bg-[var(--background)] border-2 border-[#8b5cf6] shadow-[0_0_10px_rgba(139,92,246,.4)]" />
                     <div className="font-mono text-[11px] font-bold text-[#14F195]">{item.year}</div>
                     <div className="text-[13px] font-semibold text-[var(--foreground)]">{item.title}</div>
                     <div className="text-[12px] text-[var(--dim)] leading-snug">{item.desc}</div>

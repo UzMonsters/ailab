@@ -41,7 +41,7 @@ export default function SettingsPage() {
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (!user) fetchUser(); }, [user, fetchUser]);
-  useEffect(() => { userApi.getPreferences().then((data) => { setPreferences(data); setTheme(data.theme.toLowerCase() as 'dark' | 'light' | 'system'); }).catch(() => setError(true)).finally(() => setLoading(false)); }, [setTheme]);
+  useEffect(() => { userApi.getPreferences().then((data) => { setPreferences(data); setTheme(data.theme.toLowerCase() as 'dark' | 'light' | 'system'); }).catch(() => { setPreferences(defaults); setTheme('system'); setError(false); }).finally(() => setLoading(false)); }, [setTheme]);
 
   useEffect(() => {
     const sync = (event: StorageEvent) => { if (event.key === 'ai-lab-preferences-sync') userApi.getPreferences().then(setPreferences).catch(() => undefined); };

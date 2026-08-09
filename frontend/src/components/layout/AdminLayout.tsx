@@ -35,7 +35,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const displayName = user?.username || t('admin');
 
   return (
-    <div className="relative min-h-screen flex" style={{ backgroundColor: '#050508' }}>
+    <div className="relative min-h-screen flex" style={{ backgroundColor: 'var(--background)' }}>
       <BackgroundGlow />
       <ScienceBackground />
 
@@ -76,7 +76,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="sticky top-0 z-30 px-4 py-3 md:px-6 bg-[#050508]/80 backdrop-blur-xl border-b border-white/5">
+        <header className="sticky top-0 z-30 px-4 py-3 md:px-6 bg-[var(--background)]/80 backdrop-blur-xl border-b border-[var(--border)]">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <button onClick={() => setSidebarOpen(true)} className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 bg-[#0A0B14] text-[var(--muted-foreground)]">
