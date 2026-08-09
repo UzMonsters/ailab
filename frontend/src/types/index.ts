@@ -41,7 +41,7 @@ export interface UserMeResponse {
   id: string;
   username: string;
   email: string;
-  role: 'ROLE_USER' | 'ROLE_ADMIN';
+  role: 'ROLE_USER' | 'ROLE_ADMIN' | 'ROLE_BANNED';
   avatarUrl: string | null;
   createdAt: string;
 }
@@ -90,16 +90,17 @@ export interface AdminUserResponse {
   id: string;
   username: string;
   email: string;
-  role: 'ROLE_USER' | 'ROLE_ADMIN';
+  role: 'ROLE_USER' | 'ROLE_ADMIN' | 'ROLE_BANNED';
   avatarUrl: string | null;
   active: boolean;
+  level?: number;
   createdAt: string;
 }
 
 export interface AdminUpdateUserRequest {
   username?: string;
   email?: string;
-  role?: 'ROLE_USER' | 'ROLE_ADMIN';
+  role?: 'ROLE_USER' | 'ROLE_ADMIN' | 'ROLE_BANNED';
   active?: boolean;
 }
 

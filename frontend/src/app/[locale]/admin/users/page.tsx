@@ -76,7 +76,7 @@ export default function AdminUsersPage() {
       const updateData: AdminUpdateUserRequest = {
         username: editForm.username || undefined,
         email: editForm.email || undefined,
-        role: editForm.role || undefined,
+        role: (editForm.role as AdminUpdateUserRequest['role']) || undefined,
       };
       await adminApi.updateUser(selectedUser.id, updateData);
       setEditModalOpen(false);
@@ -350,7 +350,7 @@ export default function AdminUsersPage() {
             </div>
             <div className="flex justify-center gap-3">
               <button onClick={() => setDeleteConfirmOpen(null)} className="py-2.5 px-5 bg-[var(--input)] border border-[var(--border)] rounded-[var(--radius-md)] text-sm text-[var(--foreground)] cursor-pointer hover:bg-white/[0.08] transition-all">{t('cancel')}</button>
-              <button onClick={handleDeleteUser} disabled={actionLoading} className="py-2.5 px-5 bg-[#F43F5E]/10 border border-[#F43F5E]/30 text-[#F43F5E] rounded-[var(--radius-md)] text-sm font-medium cursor-pointer hover:bg-[#F43F5E]/20 transition-all flex items-center gap-2">
+              <button onClick={() => handleDeleteUser('')} disabled={actionLoading} className="py-2.5 px-5 bg-[#F43F5E]/10 border border-[#F43F5E]/30 text-[#F43F5E] rounded-[var(--radius-md)] text-sm font-medium cursor-pointer hover:bg-[#F43F5E]/20 transition-all flex items-center gap-2">
                 {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                 {t('delete')}
               </button>
