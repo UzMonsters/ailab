@@ -115,7 +115,7 @@ export default function AuthPage() {
             </div>
           </div>
           <div className="flex items-center justify-between pt-5 border-t border-white/5 text-xs text-[var(--dim)]">
-            <div className="flex items-center gap-2 text-[#14F195] font-mono"><div className="w-2 h-2 rounded-full bg-[#14F195] shadow-[0_0_10px_#14F195] animate-pulse" />Core v4.8 Active</div>
+            <div className="flex items-center gap-2 text-[#14F195] font-mono"><div className="w-2 h-2 rounded-full bg-[#14F195] shadow-[0_0_10px_#14F195] animate-pulse" />Science v4.8 Active</div>
             <span>&copy; 2026 jasScience Inc.</span>
           </div>
         </div>
@@ -124,7 +124,7 @@ export default function AuthPage() {
         <div className="p-8 md:p-10 flex flex-col justify-center">
           <div className="lg:hidden flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#A855F7] flex items-center justify-center"><Atom size={18} className="text-white" /></div>
-            <span className="font-bold text-lg">jas<span className="text-[#8b5cf6]">Core</span></span>
+            <span className="font-bold text-lg">jas<span className="text-[#8b5cf6]">Science</span></span>
           </div>
           {/* Tab Switcher */}
           <div className="flex gap-1 p-1 bg-[var(--input)] rounded-[var(--radius-md)] border border-[var(--border)] mb-6 relative">
