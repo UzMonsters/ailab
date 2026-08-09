@@ -1,6 +1,11 @@
 import type { ApiError } from '@/types';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const configuredApiBase = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/$/, '');
+const API_BASE = configuredApiBase || (
+  process.env.NODE_ENV === 'production'
+    ? 'https://ailab-api-1h23.onrender.com'
+    : 'http://localhost:8080'
+);
 
 let accessToken: string | null = null;
 let refreshPromise: Promise<boolean> | null = null;
