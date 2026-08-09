@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15-alpine
@@ -34,7 +32,9 @@ services:
       DB_USERNAME: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       JWT_SECRET: ${JWT_SECRET:-changeme}
-      SERVER_PORT: "8080"
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      PORT: "8080"
+      REFRESH_COOKIE_SECURE: "false"
     depends_on:
       postgres:
         condition: service_healthy
