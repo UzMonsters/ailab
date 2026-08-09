@@ -1,0 +1,66 @@
+databases:
+  - name: ailab-db
+    plan: free
+    region: frankfurt
+    databaseName: ai_laboratory
+    user: ailab
+    postgresMajorVersion: "15"
+
+services:
+  - name: ailab-backend
+    type: web
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Backend/Dockerfile
+    dockerContext: ./Backend
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DB_HOST
+        fromDatabase:
+          name: ailab-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: ailab-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: ailab-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: ailab-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: ailab-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: SEED_ENABLED
+        value: "false"
+      - key: SEED_ADMIN_USERNAME
+        sync: false
+      - key: SEED_ADMIN_EMAIL
+        sync: false
+      - key: SEED_ADMIN_PASSWORD
+        sync: false
+      - key: REFRESH_COOKIE_SECURE
+        value: "true"
+
+  - name: ailab-frontend
+    type: web
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    healthCheckPath: /
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
