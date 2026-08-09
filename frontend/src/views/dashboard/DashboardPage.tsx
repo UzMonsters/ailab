@@ -195,7 +195,7 @@ export default function DashboardPage() {
       <button
         onClick={(e) => openMenu(ws, e)}
         aria-label={t('workspaceActions')}
-        className="absolute top-3 right-3 z-[5] w-8 h-8 rounded-md bg-[var(--popover)]/60 backdrop-blur-sm border border-[var(--border)] flex items-center justify-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--ring)]/60 hover:bg-[var(--accent)] transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+        className="absolute top-3 right-3 z-[5] w-8 h-8 rounded-md bg-[var(--popover)]/60 backdrop-blur-sm border border-[var(--border)] flex items-center justify-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--ring)]/60 hover:bg-[var(--accent)] transition-all opacity-100 sm:opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
       >
         <MoreVertical size={15} />
       </button>

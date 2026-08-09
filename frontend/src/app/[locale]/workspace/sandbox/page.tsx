@@ -92,6 +92,7 @@ export default function SandboxPage() {
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
   const [zoom, setZoom] = useState(1);
   const [tool, setTool] = useState<'select' | 'pan' | 'connect'>('select');
+  const [mobilePanel, setMobilePanel] = useState<'canvas' | 'equipment' | 'properties'>('canvas');
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -141,10 +142,10 @@ export default function SandboxPage() {
   const selected = canvasItems.find(it => it.id === selectedItem);
 
   return (
-    <div className="flex h-screen bg-[var(--background)] text-[var(--foreground)] overflow-hidden font-sans">
+    <div className="flex h-[100dvh] min-h-0 bg-[var(--background)] text-[var(--foreground)] overflow-hidden font-sans">
       
       {/* LEFT PANEL */}
-      <div className="w-[320px] shrink-0 border-r border-[var(--border)] bg-[var(--card)] flex flex-col z-20">
+      <div className="hidden xl:flex w-[320px] shrink-0 border-r border-[var(--border)] bg-[var(--card)] flex-col z-20">
         <header className="p-4 border-b border-[var(--border)] flex items-center justify-between">
           <Link href={`/${pathname.split('/')[1]}/dashboard`} className="p-2 -ml-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">
             <ArrowLeft size={18} />
@@ -179,15 +180,15 @@ export default function SandboxPage() {
       </div>
 
       {/* CENTER CANVAS */}
-      <div className="flex-1 relative bg-[var(--background)] overflow-hidden flex flex-col">
+      <div className="flex-1 min-w-0 relative bg-[var(--background)] overflow-hidden flex flex-col">
         {/* Toolbar */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 p-1 bg-[var(--card)]/90 backdrop-blur border border-[var(--border)] rounded-xl shadow-lg">
-          <button onClick={() => setTool('select')} className={`p-2.5 rounded-lg ${tool === 'select' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`} title="Select"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg></button>
-          <button onClick={() => setTool('pan')} className={`p-2.5 rounded-lg ${tool === 'pan' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`} title="Pan"><Move size={18} /></button>
-          <button onClick={() => setTool('connect')} className={`p-2.5 rounded-lg ${tool === 'connect' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`} title="Connect"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 12h8M4 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm16 0a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg></button>
+          <button aria-label="Select tool" onClick={() => setTool('select')} className={`p-2.5 rounded-lg ${tool === 'select' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`} title="Select"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg></button>
+          <button aria-label="Pan tool" onClick={() => setTool('pan')} className={`p-2.5 rounded-lg ${tool === 'pan' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`} title="Pan"><Move size={18} /></button>
+          <button aria-label="Connect tool" onClick={() => setTool('connect')} className={`p-2.5 rounded-lg ${tool === 'connect' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`} title="Connect"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 12h8M4 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm16 0a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg></button>
           <div className="w-px h-6 bg-[var(--border)] mx-1" />
-          <button onClick={() => setZoom(z => z + 0.1)} className="p-2.5 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)]"><ZoomIn size={18}/></button>
-          <button onClick={() => setZoom(z => z - 0.1)} className="p-2.5 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)]"><ZoomOut size={18}/></button>
+          <button aria-label="Zoom in" onClick={() => setZoom(z => Math.min(2, z + 0.1))} className="p-2.5 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)]"><ZoomIn size={18}/></button>
+          <button aria-label="Zoom out" onClick={() => setZoom(z => Math.max(.5, z - 0.1))} className="p-2.5 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)]"><ZoomOut size={18}/></button>
         </div>
 
         {/* Canvas Area */}
@@ -239,7 +240,7 @@ export default function SandboxPage() {
             <button className="px-4 py-2 text-xs font-medium border-b-2 border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] flex items-center gap-2"><List size={14}/> Reaction Log</button>
             <button className="px-4 py-2 text-xs font-medium border-b-2 border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] flex items-center gap-2"><AlertTriangle size={14}/> Safety</button>
           </div>
-          <div className="flex-1 p-4 grid grid-cols-4 gap-6 items-start">
+          <div className="flex-1 p-3 sm:p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 items-start overflow-y-auto">
             <div className="space-y-1">
               <div className="text-[10px] uppercase text-[var(--muted-foreground)] font-bold">Temperature</div>
               <div className="text-xl font-mono text-[var(--foreground)]">24.5 °C</div>
@@ -261,7 +262,7 @@ export default function SandboxPage() {
       </div>
 
       {/* RIGHT PROPERTIES PANEL */}
-      <div className="w-[300px] shrink-0 border-l border-[var(--border)] bg-[var(--card)] flex flex-col z-20">
+      <div className="hidden xl:flex w-[300px] shrink-0 border-l border-[var(--border)] bg-[var(--card)] flex-col z-20">
         <div className="p-4 border-b border-[var(--border)] flex justify-between items-center bg-[var(--background)]/50">
           <div className="font-semibold text-sm">Properties</div>
           <button onClick={() => setSelectedItem(null)} className="p-1 rounded hover:bg-[var(--accent)] text-[var(--muted-foreground)]"><X size={16}/></button>
@@ -304,6 +305,23 @@ export default function SandboxPage() {
           </div>
         )}
       </div>
+
+      {/* Canvas-first navigation for tablet and phone. The full side panels remain on desktop. */}
+      <div className="xl:hidden fixed inset-x-0 bottom-0 z-40 flex min-h-14 items-center justify-around border-t border-[var(--border)] bg-[var(--card)]/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
+        {([['canvas', 'Canvas'], ['equipment', 'Equipment'], ['properties', 'Properties']] as const).map(([key, label]) => (
+          <button key={key} type="button" onClick={() => setMobilePanel(key)} className={`min-h-11 flex-1 rounded-lg px-2 text-xs font-semibold ${mobilePanel === key ? 'text-[var(--primary)] bg-[var(--accent)]' : 'text-[var(--muted-foreground)]'}`}>{label}</button>
+        ))}
+      </div>
+
+      {mobilePanel === 'equipment' && <div className="xl:hidden fixed inset-x-0 top-0 bottom-14 z-30 overflow-y-auto border-r border-[var(--border)] bg-[var(--card)] p-4 shadow-2xl">
+        <div className="mb-5 flex items-center justify-between"><h2 className="font-semibold">Equipment</h2><button aria-label="Close equipment panel" onClick={() => setMobilePanel('canvas')} className="rounded-lg p-2 text-[var(--muted-foreground)]"><X size={18} /></button></div>
+        <div className="grid grid-cols-2 gap-3">{equipmentGroups.flatMap(group => group.items).map(item => <button type="button" key={item.id} onClick={() => { addToCanvas(item); setMobilePanel('canvas'); }} className="flex min-h-28 flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--background)] p-3 text-center active:border-[var(--primary)]"><item.icon size={30} className="mb-2 text-[var(--primary)]" /><span className="text-xs font-medium">{item.name}</span></button>)}</div>
+      </div>}
+
+      {mobilePanel === 'properties' && <div className="xl:hidden fixed inset-x-0 top-0 bottom-14 z-30 overflow-y-auto border-l border-[var(--border)] bg-[var(--card)] p-5 shadow-2xl">
+        <div className="mb-5 flex items-center justify-between"><h2 className="font-semibold">Properties</h2><button aria-label="Close properties panel" onClick={() => setMobilePanel('canvas')} className="rounded-lg p-2 text-[var(--muted-foreground)]"><X size={18} /></button></div>
+        {selected ? <><div className="flex flex-col items-center border-b border-[var(--border)] pb-5"><EquipmentIcon type={selected.type} size={72} /><h3 className="mt-3 text-lg font-bold">{selected.name}</h3></div><div className="mt-5 grid grid-cols-2 gap-3"><button className="min-h-11 rounded-lg border border-[#F59E0B]/30 bg-[#F59E0B]/10 text-xs font-semibold text-[#F59E0B]">Heat</button><button className="min-h-11 rounded-lg border border-[#22D3EE]/30 bg-[#22D3EE]/10 text-xs font-semibold text-[#22D3EE]">Cool</button><button className="min-h-11 rounded-lg border border-[var(--primary)]/30 bg-[var(--primary)]/10 text-xs font-semibold text-[var(--primary)]">Stir</button><button className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--background)] text-xs font-semibold">Pour</button></div></> : <p className="py-16 text-center text-sm text-[var(--muted-foreground)]">Select an object on the canvas first.</p>}
+      </div>}
 
     </div>
   );

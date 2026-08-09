@@ -166,15 +166,15 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="w-full max-w-[1320px] mx-auto px-6 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="w-full max-w-[1320px] mx-auto px-4 sm:px-6 py-5 sm:py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
       {/* PROFILE BANNER */}
       <section className="bg-[var(--card)] border border-[var(--border)] rounded-[24px] overflow-hidden mb-8 shadow-sm">
         <div className="h-40 relative border-b border-[var(--border)] bg-gradient-to-br from-[var(--primary)]/20 via-[var(--primary)]/5 to-[var(--accent)]">
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(var(--foreground)_1px,transparent_1px)] [background-size:16px_16px]" />
         </div>
-        <div className="px-8 pb-8 -mt-[60px] relative flex flex-col md:flex-row items-start md:items-end gap-6 flex-wrap">
-          <div className="flex items-end gap-6">
+        <div className="px-4 sm:px-8 pb-6 sm:pb-8 -mt-[60px] relative flex flex-col md:flex-row items-start md:items-end gap-5 sm:gap-6 flex-wrap">
+          <div className="flex min-w-0 items-end gap-4 sm:gap-6">
             <div className="relative">
               <div className="w-[120px] h-[120px] rounded-[24px] border-4 border-[var(--card)] bg-[var(--background)] flex items-center justify-center text-[48px] text-[var(--primary)] shadow-lg">
                 {user.username[0].toUpperCase()}
@@ -182,15 +182,15 @@ export default function ProfilePage() {
               <div className="absolute bottom-1 right-1 w-[20px] h-[20px] bg-[#34D399] border-[4px] border-[var(--card)] rounded-full" />
             </div>
             <div className="mb-2">
-              <h1 className="text-3xl font-bold tracking-tight text-[var(--foreground)] flex items-center gap-3">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--foreground)] flex items-center gap-2 sm:gap-3 truncate">
                 {user.username}
                 <CheckCircle size={20} className="text-[var(--primary)]" />
               </h1>
               <p className="text-[var(--muted-foreground)] text-sm mt-1">{t('memberSince', { date: formatDate(user.createdAt) })}</p>
             </div>
           </div>
-          <div className="flex gap-3 md:ml-auto mb-2">
-            <button onClick={() => { setEditUsername(user.username); setEditModalOpen(true); }} className="bg-[var(--primary)] text-[var(--primary-foreground)] border-none py-2.5 px-6 rounded-xl text-sm font-semibold cursor-pointer flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm">
+          <div className="flex w-full gap-3 md:ml-auto md:w-auto mb-2">
+            <button onClick={() => { setEditUsername(user.username); setEditModalOpen(true); }} className="w-full md:w-auto bg-[var(--primary)] text-[var(--primary-foreground)] border-none py-2.5 px-5 rounded-xl text-sm font-semibold cursor-pointer flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-sm">
               <Edit3 size={16} /> {t('editProfile')}
             </button>
           </div>
