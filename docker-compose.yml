@@ -44,8 +44,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-      target: dev
+      dockerfile: Dockerfile.local
     container_name: ailab-frontend
     ports:
       - "${FRONTEND_PORT:-3000}:3000"

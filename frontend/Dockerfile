@@ -6,15 +6,6 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
-FROM base AS dev
-
-ENV NODE_ENV=development
-ENV PORT=3000
-
-EXPOSE 3000
-
-CMD ["pnpm", "dev", "--hostname", "0.0.0.0"]
-
 FROM base AS builder
 WORKDIR /app
 
@@ -27,7 +18,8 @@ FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=3000
+# Render injects PORT at runtime. Keep the server reachable from the platform.
+ENV HOSTNAME=0.0.0.0
 
 RUN corepack enable
 
