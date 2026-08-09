@@ -186,3 +186,11 @@ https://react.dev/link/hydration-mismatch
 
  GET /ru/auth 200 in 5.0s (next.js: 3.1s, proxy.ts: 686ms, application-code: 1185ms)
  GET /uz/auth 200 in 200ms (next.js: 46ms, proxy.ts: 14ms, application-code: 140ms)
+✓ Compiled in 411ms
+ GET /ru/auth 200 in 125ms (next.js: 46ms, proxy.ts: 13ms, application-code: 67ms)
+✓ Compiled in 294ms
+ GET /ru/auth 200 in 179ms (next.js: 53ms, proxy.ts: 29ms, application-code: 97ms)
+✓ Compiled in 260ms
+ GET /ru/auth 200 in 212ms (next.js: 53ms, proxy.ts: 20ms, application-code: 139ms)
+✓ Compiled in 347ms
+ GET /ru/auth 200 in 130ms (next.js: 42ms, proxy.ts: 9ms, application-code: 79ms)

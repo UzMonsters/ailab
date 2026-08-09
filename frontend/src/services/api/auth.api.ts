@@ -10,8 +10,8 @@ export const authApi = {
   register: (username: string, email: string, password: string) =>
     api.post<AuthRegisterResponse>('/api/v1/auth/register', { username, email, password }),
 
-  login: (usernameOrEmail: string, password: string) =>
-    api.post<AuthTokenResponse>('/api/v1/auth/login', { usernameOrEmail, password } satisfies AuthLoginRequest).then((res) => {
+  login: (email: string, password: string) =>
+    api.post<AuthTokenResponse>('/api/v1/auth/login', { email, password } satisfies AuthLoginRequest).then((res) => {
       if (res.accessToken) {
         setAccessToken(res.accessToken);
       }

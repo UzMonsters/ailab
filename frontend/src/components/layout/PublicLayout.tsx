@@ -15,6 +15,11 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   const tc = useTranslations('common');
   const locale = pathname.split('/')[1] || 'en';
   const [menuOpen, setMenuOpen] = useState(false);
+  const isAuthRoute = pathname.endsWith('/auth');
+
+  if (isAuthRoute) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="relative min-h-screen" style={{ backgroundColor: 'var(--background)' }}>

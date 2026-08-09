@@ -23,7 +23,7 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
 
-  login: (usernameOrEmail: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   fetchUser: () => Promise<void>;
@@ -36,7 +36,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  login: async (usernameOrEmail: string, password: string) => {
+  login: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
     try {
       if (MOCK_MODE) {
@@ -45,7 +45,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }, 400);
         return;
       }
-      await authApi.login(usernameOrEmail, password);
+      await authApi.login(email, password);
       const user = await userApi.getMe();
       set({ user, isAuthenticated: true, isLoading: false });
     } catch (err: any) {
@@ -64,7 +64,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return;
       }
       await authApi.register(username, email, password);
-      await authApi.login(username, password);
+      await authApi.login(email, password);
       const user = await userApi.getMe();
       set({ user, isAuthenticated: true, isLoading: false });
     } catch (err: any) {
