@@ -53,7 +53,7 @@ export default function AboutPage() {
                 <div className="w-[42px] h-[42px] bg-gradient-to-br from-[#8b5cf6] to-[#A855F7] rounded-[12px] flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,.4)]">
                   <Atom size={20} className="text-white" />
                 </div>
-                <span className="font-bold text-xl">jas<span className="text-[#8b5cf6]">Core</span></span>
+                <span className="font-bold text-xl">jas<span className="text-[#8b5cf6]">Science</span></span>
               </Link>
 
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#8b5cf6]/10 border border-[#8b5cf6]/30 rounded-full text-[11px] font-mono text-[#C084FC] mb-6 tracking-wider uppercase">

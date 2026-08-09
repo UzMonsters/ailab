@@ -93,7 +93,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
           <div className="w-9 h-9 bg-gradient-to-br from-[#8B5CF6] to-[#A855F7] rounded-[10px] flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.35)]">
             <Atom size={16} className="text-white" />
           </div>
-          <span>jas<span className="text-[#8B5CF6]">Core</span></span>
+          <span>jas<span className="text-[#8B5CF6]">Science</span></span>
         </Link>
       </div>
 
@@ -177,7 +177,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
               <button onClick={() => setDrawerOpen(true)} className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)]" aria-label="Open menu">
                 <Menu size={18} />
               </button>
-              <span className="lg:hidden font-bold text-lg">jas<span className="text-[#8B5CF6]">Core</span></span>
+              <span className="lg:hidden font-bold text-lg">jas<span className="text-[#8B5CF6]">Science</span></span>
             </div>
             <div className="flex items-center gap-2">
               {themeEnabled && <ThemeToggle />}
