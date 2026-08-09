@@ -1,0 +1,34 @@
+import { api, setAccessToken } from './client';
+import type {
+  AuthRegisterRequest,
+  AuthRegisterResponse,
+  AuthLoginRequest,
+  AuthTokenResponse,
+} from '@/types';
+
+export const authApi = {
+  register: (username: string, email: string, password: string) =>
+    api.post<AuthRegisterResponse>('/api/v1/auth/register', { username, email, password }),
+
+  login: (usernameOrEmail: string, password: string) =>
+    api.post<AuthTokenResponse>('/api/v1/auth/login', { usernameOrEmail, password } satisfies AuthLoginRequest).then((res) => {
+      if (res.accessToken) {
+        setAccessToken(res.accessToken);
+      }
+      return res;
+    }),
+
+  refresh: () =>
+    api.post<AuthTokenResponse>('/api/v1/auth/refresh', {}).then((res) => {
+      if (res.accessToken) {
+        setAccessToken(res.accessToken);
+      }
+      return res;
+    }),
+
+  logout: () =>
+    api.post<{ message: string }>('/api/v1/auth/logout').then((res) => {
+      setAccessToken(null);
+      return res;
+    }),
+};
