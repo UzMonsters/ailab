@@ -2,6 +2,7 @@ FROM node:22-alpine AS base
 WORKDIR /app
 
 RUN corepack enable
+RUN pnpm config set onlyBuiltDependencies '@swc/core' '@parcel/watcher'
 
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
