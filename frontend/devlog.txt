@@ -183,3 +183,6 @@ https://react.dev/link/hydration-mismatch
  To use this directory, set `turbopack.root` in your Next.js config.
 
 ✓ Running next.config.mjs took 124ms
+
+ GET /ru/auth 200 in 5.0s (next.js: 3.1s, proxy.ts: 686ms, application-code: 1185ms)
+ GET /uz/auth 200 in 200ms (next.js: 46ms, proxy.ts: 14ms, application-code: 140ms)
