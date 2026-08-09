@@ -1,328 +1,136 @@
 'use client';
+
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState, useRef, useCallback } from 'react';
-import {
-  ArrowLeft, Settings, Play, Save, X, Plus, Trash2, AlertTriangle,
-  Search, Undo2, Redo2, ZoomIn, ZoomOut, Move, Activity, List, Gauge, Beaker,
-  Thermometer, Droplets, Filter, Radio, Snowflake, Atom, Flame, FlaskConical
-} from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, Beaker, ChevronDown, Copy, Droplets, Flame, Minus, Move, Plus, RotateCcw, RotateCw, Save, Search, Snowflake, Sparkles, Trash2, Wind, X, ZoomIn, ZoomOut, MessageCircle, Send, Link2 } from 'lucide-react';
+import ThemeToggle from '@/components/common/ThemeToggle';
+import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+import EquipmentIcon, { type EquipmentOperation } from '@/components/sandbox/equipment/EquipmentIcon';
 
-// --- Types ---
-type CanvasItemType = 'equipment' | 'material';
+type EquipmentType = 'beaker' | 'erlenmeyer' | 'roundflask' | 'testtube' | 'burner' | 'hotplate' | 'thermometer' | 'condenser' | 'icebath' | 'phmeter' | 'scales';
+type Tool = 'select' | 'pan' | 'connect';
+type Material = { id: string; name: string; formula: string; color: string; state: 'liquid' | 'gas' | 'solid' };
+type CanvasItem = { id: string; type: EquipmentType; name: string; x: number; y: number; w: number; h: number; rotation: number; scale: number; material?: Material; liquidLevel: number; volumeMl: number; operation: EquipmentOperation; temperature: number; attachedTo?: string };
+type ConnectionPort = 'Glass' | 'Liquid' | 'Gas' | 'Thermal' | 'Electrical';
+type Connection = { id: string; from: string; to: string; port: ConnectionPort; direction: 'source-to-target' | 'target-to-source' };
+type LibraryItem = { id: EquipmentType; name: string; w: number; h: number; icon: typeof Beaker };
 
-interface CanvasItem {
-  id: string;
-  type: string;
-  name: string;
-  kind: CanvasItemType;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
-// --- SVGs for Equipment ---
-const EquipmentIcon = ({ type, size }: { type: string, size: number }) => {
-  if (type === 'beaker') {
-    return (
-      <svg width={size} height={size} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4">
-        <path d="M20 10 H80 M30 10 V80 Q30 90 40 90 H60 Q70 90 70 80 V10" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M32 60 H68 M35 70 H65 M30 50 H70" stroke="var(--primary)" opacity="0.5"/>
-      </svg>
-    );
-  }
-  if (type === 'erlenmeyer') {
-    return (
-      <svg width={size} height={size} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4">
-        <path d="M40 10 H60 M45 10 V35 L20 80 Q15 90 25 90 H75 Q85 90 80 80 L55 35 V10" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M26 70 H74 M32 60 H68 M38 50 H62" stroke="var(--primary)" opacity="0.5"/>
-      </svg>
-    );
-  }
-  if (type === 'roundflask') {
-    return (
-      <svg width={size} height={size} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4">
-        <path d="M40 10 H60 M45 10 V40 A 30 30 0 1 0 55 40 V10" strokeLinecap="round" strokeLinejoin="round"/>
-        <circle cx="50" cy="65" r="24" fill="var(--primary)" opacity="0.3" stroke="none" />
-      </svg>
-    );
-  }
-  if (type === 'burner') {
-    return (
-      <svg width={size} height={size} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="4">
-        <path d="M30 90 H70 M40 90 V50 M60 90 V50 M40 50 H60 M45 50 V30 H55 V50" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M50 30 Q 40 15 50 5 Q 60 15 50 30" fill="#F59E0B" stroke="#F59E0B" />
-      </svg>
-    );
-  }
-  return <div className="w-full h-full flex items-center justify-center border-2 border-dashed border-[var(--border)] text-[var(--muted-foreground)] rounded-lg font-bold text-xs">{type}</div>;
-};
-
-// --- Library ---
-const equipmentGroups = [
-  {
-    key: 'containers',
-    title: 'Containers',
-    items: [
-      { id: 'beaker', name: 'Beaker', icon: Beaker, w: 100, h: 100 },
-      { id: 'erlenmeyer', name: 'Erlenmeyer Flask', icon: Beaker, w: 100, h: 100 },
-      { id: 'roundflask', name: 'Round-bottom Flask', icon: Beaker, w: 100, h: 110 },
-    ],
-  },
-  {
-    key: 'heating',
-    title: 'Heating',
-    items: [
-      { id: 'burner', name: 'Bunsen Burner', icon: Flame, w: 80, h: 120 },
-      { id: 'hotplate', name: 'Hot Plate', icon: Flame, w: 120, h: 60 },
-    ],
-  },
+const materials: Material[] = [
+  { id: 'water', name: 'Water', formula: 'H₂O', color: '#22D3EE', state: 'liquid' },
+  { id: 'ethanol', name: 'Ethanol', formula: 'C₂H₅OH', color: '#F59E0B', state: 'liquid' },
+  { id: 'cuso4', name: 'Copper sulfate', formula: 'CuSO₄', color: '#3B82F6', state: 'liquid' },
+  { id: 'hcl', name: 'Hydrochloric acid', formula: 'HCl', color: '#F43F5E', state: 'liquid' },
+  { id: 'oxygen', name: 'Oxygen', formula: 'O₂', color: '#A78BFA', state: 'gas' },
 ];
+const compounds: Material[] = [
+  { id: 'sodium-chloride', name: 'Sodium chloride', formula: 'NaCl', color: '#CBD5E1', state: 'solid' },
+  { id: 'sodium-hydroxide', name: 'Sodium hydroxide', formula: 'NaOH', color: '#F8FAFC', state: 'solid' },
+  { id: 'copper-sulfate-crystal', name: 'Copper sulfate crystals', formula: 'CuSO₄·5H₂O', color: '#2563EB', state: 'solid' },
+];
+const library: { title: string; items: LibraryItem[] }[] = [
+  { title: 'Containers', items: [{ id: 'beaker', name: 'Beaker', w: 100, h: 100, icon: Beaker }, { id: 'erlenmeyer', name: 'Erlenmeyer Flask', w: 100, h: 105, icon: Beaker }, { id: 'roundflask', name: 'Round-bottom Flask', w: 100, h: 110, icon: Beaker }, { id: 'testtube', name: 'Test Tube', w: 72, h: 110, icon: Beaker }] },
+  { title: 'Heating', items: [{ id: 'burner', name: 'Bunsen Burner', w: 56, h: 82, icon: Flame }, { id: 'hotplate', name: 'Hot Plate', w: 140, h: 75, icon: Flame }] },
+  { title: 'Cooling & Sensors', items: [{ id: 'icebath', name: 'Ice Bath', w: 120, h: 80, icon: Snowflake }, { id: 'thermometer', name: 'Thermometer', w: 70, h: 110, icon: Beaker }, { id: 'phmeter', name: 'pH Meter', w: 80, h: 105, icon: Beaker }, { id: 'scales', name: 'Precision Scale', w: 100, h: 80, icon: Beaker }, { id: 'condenser', name: 'Condenser', w: 220, h: 100, icon: Wind }] },
+];
+const isVessel = (item: CanvasItem) => ['beaker', 'erlenmeyer', 'roundflask', 'testtube'].includes(item.type);
+const errorText = (error: unknown) => error instanceof Error ? error.message : 'Something went wrong';
 
 export default function SandboxPage() {
   const pathname = usePathname();
-  const t = useTranslations('sandbox');
-  const tc = useTranslations('common');
-  
-  const [activePanel, setActivePanel] = useState<'equipment' | 'materials'>('equipment');
-  const [canvasItems, setCanvasItems] = useState<CanvasItem[]>([]);
-  const [selectedItem, setSelectedItem] = useState<string | null>(null);
-  const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
-  const [zoom, setZoom] = useState(1);
-  const [tool, setTool] = useState<'select' | 'pan' | 'connect'>('select');
-  const [mobilePanel, setMobilePanel] = useState<'canvas' | 'equipment' | 'properties'>('canvas');
-
+  const params = useSearchParams();
+  const locale = pathname.split('/')[1] || 'en';
+  const workspaceId = params.get('workspace');
   const canvasRef = useRef<HTMLDivElement>(null);
+  const [items, setItems] = useState<CanvasItem[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [tool, setTool] = useState<Tool>('select');
+  const [panel, setPanel] = useState<'equipment' | 'materials' | 'compounds'>('equipment');
+  const [mobilePanel, setMobilePanel] = useState<'canvas' | 'library' | 'properties'>('canvas');
+  const [zoom, setZoom] = useState(1);
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [connectSource, setConnectSource] = useState<string | null>(null);
+  const [pourSource, setPourSource] = useState<string | null>(null);
+  const [pourAmount, setPourAmount] = useState(25);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [connectionDraft, setConnectionDraft] = useState<{ from: string; to: string } | null>(null);
+  const [pourAnimation, setPourAnimation] = useState<string | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; text: string }>>([{ role: 'assistant', text: locale === 'ru' ? 'Я помогу собрать безопасный эксперимент. Добавьте сосуд и материал, затем выберите операцию.' : 'I can help you build a safe experiment. Add a vessel and material, then choose an operation.' }]);
+  const dragRef = useRef<{ id: string; dx: number; dy: number } | null>(null);
+  const selected = items.find((item) => item.id === selectedId);
 
-  const addToCanvas = (item: any) => {
-    const canvas = canvasRef.current;
-    const cw = canvas?.getBoundingClientRect().width || 800;
-    const ch = canvas?.getBoundingClientRect().height || 600;
-    
-    // Smart placement near center
-    const x = (cw / 2) - (item.w / 2) + (Math.random() * 40 - 20);
-    const y = (ch / 2) - (item.h / 2) + (Math.random() * 40 - 20);
+  const addItem = useCallback((item: LibraryItem) => {
+    const bounds = canvasRef.current?.getBoundingClientRect();
+    const index = items.length;
+    const x = Math.max(24, (bounds?.width || 800) / 2 - item.w / 2 + (index % 3) * 28);
+    const y = Math.max(90, (bounds?.height || 600) / 2 - item.h / 2 + Math.floor(index / 3) * 24);
+    const next: CanvasItem = { id: `${item.id}-${crypto.randomUUID()}`, type: item.id, name: item.name, x, y, w: item.w, h: item.h, rotation: 0, scale: 1, liquidLevel: 0, volumeMl: 0, operation: 'idle', temperature: 24.5 };
+    setItems((current) => [...current, next]);
+    setSelectedId(next.id);
+    setMobilePanel('canvas');
+  }, [items.length]);
 
-    const newItem: CanvasItem = {
-      id: `${item.id}_${Date.now()}`,
-      type: item.id,
-      name: item.name,
-      kind: 'equipment',
-      x, y, w: item.w, h: item.h
-    };
-    setCanvasItems(prev => [...prev, newItem]);
-    setSelectedItem(newItem.id);
-  };
-
-  const handleMouseDown = (idx: number) => (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>, id: string) => {
+    event.stopPropagation();
+    setSelectedId(id);
+    if (tool === 'connect') { if (!connectSource) setConnectSource(id); else if (connectSource !== id) { setConnectionDraft({ from: connectSource, to: id }); setConnectSource(null); setTool('select'); } return; }
     if (tool !== 'select') return;
-    setDraggingIdx(idx);
-    setSelectedItem(canvasItems[idx].id);
-    const startX = e.clientX - canvasItems[idx].x * zoom;
-    const startY = e.clientY - canvasItems[idx].y * zoom;
-
-    const handleMove = (me: MouseEvent) => {
-      const newX = (me.clientX - startX) / zoom;
-      const newY = (me.clientY - startY) / zoom;
-      setCanvasItems(prev => prev.map((it, i) => i === idx ? { ...it, x: newX, y: newY } : it));
-    };
-
-    const handleUp = () => {
-      setDraggingIdx(null);
-      window.removeEventListener('mousemove', handleMove);
-      window.removeEventListener('mouseup', handleUp);
-    };
-    window.addEventListener('mousemove', handleMove);
-    window.addEventListener('mouseup', handleUp);
+    const item = items.find((value) => value.id === id);
+    const bounds = canvasRef.current?.getBoundingClientRect();
+    if (!item || !bounds) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragRef.current = { id, dx: (event.clientX - bounds.left) / zoom - item.x, dy: (event.clientY - bounds.top) / zoom - item.y };
   };
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current || !canvasRef.current) return;
+    const bounds = canvasRef.current.getBoundingClientRect(); const { id, dx, dy } = dragRef.current;
+    setItems((current) => current.map((item) => item.id === id ? { ...item, x: Math.max(0, (event.clientX - bounds.left) / zoom - dx), y: Math.max(72, (event.clientY - bounds.top) / zoom - dy) } : item));
+  };
+  const stopDrag = () => { if (dragRef.current) { const moved = items.find((item) => item.id === dragRef.current?.id); if (moved?.type === 'burner') { const vessel = items.filter(isVessel).map((item) => ({ item, distance: Math.hypot((item.x + item.w / 2) - (moved.x + moved.w / 2), (item.y + item.h / 2) - (moved.y + moved.h / 2)) })).sort((a, b) => a.distance - b.distance)[0]; if (vessel && vessel.distance < 130) { setItems((current) => current.map((item) => item.id === moved.id ? { ...item, x: vessel.item.x + vessel.item.w / 2 - item.w / 2, y: vessel.item.y + vessel.item.h - item.h * .55, attachedTo: vessel.item.id } : item)); setNotice(`Burner attached to ${vessel.item.name}`); } } } dragRef.current = null; };
+  const updateSelected = (patch: Partial<CanvasItem>) => { if (selectedId) setItems((current) => current.map((item) => item.id === selectedId ? { ...item, ...patch } : item)); };
+  const duplicate = () => { if (!selected) return; const copy = { ...selected, id: `${selected.type}-${crypto.randomUUID()}`, x: selected.x + 24, y: selected.y + 24 }; setItems((current) => [...current, copy]); setSelectedId(copy.id); };
+  const remove = () => { if (!selectedId) return; setItems((current) => current.filter((item) => item.id !== selectedId)); setConnections((current) => current.filter((connection) => connection.from !== selectedId && connection.to !== selectedId)); setSelectedId(null); };
+  const addMaterial = (material: Material) => { if (!selected || !isVessel(selected)) { setNotice('Select a vessel first'); return; } if (material.state === 'gas') { setNotice('Gas needs a gas-tight connected apparatus; it cannot stay in an open vessel.'); return; } updateSelected({ material, liquidLevel: material.state === 'liquid' ? Math.max(selected.liquidLevel, .35) : selected.liquidLevel, volumeMl: material.state === 'liquid' ? Math.max(selected.volumeMl, 25) : selected.volumeMl }); setPourAnimation(selected.id); window.setTimeout(() => setPourAnimation(null), 900); setNotice(`${material.name} added to ${selected.name} · ${material.state === 'liquid' ? '25 mL' : 'solid sample'}`); };
+  const pour = (targetId: string) => { if (!pourSource || pourSource === targetId) return; const source = items.find((item) => item.id === pourSource); const target = items.find((item) => item.id === targetId); if (!source?.material || source.material.state !== 'liquid' || !target || !isVessel(target)) { setNotice('Only liquids can be poured between open vessels.'); return; } const amount = Math.min(pourAmount, source.volumeMl); setItems((current) => current.map((item) => item.id === pourSource ? { ...item, liquidLevel: Math.max(0, item.liquidLevel - amount / 100), volumeMl: Math.max(0, item.volumeMl - amount) } : item.id === targetId ? { ...item, material: source.material, liquidLevel: Math.min(1, item.liquidLevel + amount / 100), volumeMl: item.volumeMl + amount } : item)); setPourAnimation(target.id); window.setTimeout(() => setPourAnimation(null), 900); setPourSource(null); setNotice(`Poured ${amount} mL into ${target.name}`); };
+  const applyOperation = (item: CanvasItem, operation: EquipmentOperation) => { const nextTemperature = operation === 'heating' ? 80 : operation === 'cooling' ? 5 : 24.5; setItems((current) => current.map((value) => value.id === item.id || (item.type === 'burner' && item.attachedTo === value.id) || (value.type === 'burner' && value.attachedTo === item.id) ? { ...value, operation, temperature: nextTemperature } : value)); };
+  const saveConnection = (port: ConnectionPort, direction: Connection['direction']) => { if (!connectionDraft) return; setConnections((current) => [...current, { id: crypto.randomUUID(), from: connectionDraft.from, to: connectionDraft.to, port, direction }]); setConnectionDraft(null); setNotice(`Connected ${port} · ${direction}`); };
+  const sendChat = () => { const text = chatInput.trim(); if (!text) return; setChatMessages((current) => [...current, { role: 'user', text }, { role: 'assistant', text: locale === 'ru' ? 'Совет: сначала соедините горелку с колбой, затем включите Heat. Для кислорода используйте герметичный Gas-порт.' : 'Tip: attach the burner to the flask first, then enable Heat. Oxygen needs a sealed Gas port.' }]); setChatInput(''); };
 
-  const selected = canvasItems.find(it => it.id === selectedItem);
+  useEffect(() => { const onKey = (event: KeyboardEvent) => { if (event.key === 'Delete') remove(); if (event.key === 'Escape') { setPourSource(null); setConnectSource(null); } if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'd') { event.preventDefault(); duplicate(); } }; window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey); });
+  const centers = useMemo(() => new Map(items.map((item) => [item.id, { x: item.x + item.w * item.scale / 2, y: item.y + item.h * item.scale / 2 }])), [items]);
 
-  return (
-    <div className="flex h-[100dvh] min-h-0 bg-[var(--background)] text-[var(--foreground)] overflow-hidden font-sans">
-      
-      {/* LEFT PANEL */}
-      <div className="hidden xl:flex w-[320px] shrink-0 border-r border-[var(--border)] bg-[var(--card)] flex-col z-20">
-        <header className="p-4 border-b border-[var(--border)] flex items-center justify-between">
-          <Link href={`/${pathname.split('/')[1]}/dashboard`} className="p-2 -ml-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">
-            <ArrowLeft size={18} />
-          </Link>
-          <div className="font-semibold text-sm">Untitled Experiment</div>
-          <button className="p-2 -mr-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors">
-            <Settings size={18} />
-          </button>
-        </header>
-
-        <div className="flex p-2 gap-1 border-b border-[var(--border)]">
-          <button onClick={() => setActivePanel('equipment')} className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${activePanel === 'equipment' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`}>Equipment</button>
-          <button onClick={() => setActivePanel('materials')} className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${activePanel === 'materials' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`}>Materials</button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          {activePanel === 'equipment' && equipmentGroups.map(group => (
-            <div key={group.key}>
-              <h3 className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider mb-3">{group.title}</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {group.items.map(item => (
-                  <div key={item.id} onClick={() => addToCanvas(item)} className="group cursor-pointer border border-[var(--border)] rounded-lg p-3 bg-[var(--background)] hover:border-[var(--primary)] hover:shadow-md transition-all flex flex-col items-center text-center">
-                    <item.icon size={28} className="mb-2 text-[var(--primary)] opacity-80 group-hover:opacity-100" />
-                    <span className="text-xs font-medium">{item.name}</span>
-                    <button className="mt-2 w-full py-1 text-[10px] uppercase font-bold text-[var(--primary)] bg-[var(--primary)]/10 rounded group-hover:bg-[var(--primary)]/20">Add</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+  return <div className="flex h-[100dvh] min-h-0 overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
+    <aside className="hidden w-[300px] shrink-0 flex-col border-r border-[var(--border)] bg-[var(--card)] xl:flex"><Header locale={locale} workspaceId={workspaceId} /><Library panel={panel} setPanel={setPanel} addItem={addItem} addMaterial={addMaterial} selected={selected} /></aside>
+    <main className="relative flex min-w-0 flex-1 flex-col"><header className="flex min-h-14 items-center justify-between border-b border-[var(--border)] bg-[var(--card)]/95 px-3 backdrop-blur xl:hidden"><Link href={`/${locale}/dashboard`} aria-label="Back to dashboard" className="touch-target rounded-lg p-2"><ArrowLeft size={18} /></Link><div className="truncate text-sm font-semibold">{workspaceId ? 'Workspace experiment' : 'Untitled Experiment'}</div><div className="flex items-center gap-1"><ThemeToggle /><LanguageSwitcher /></div></header>
+      <div className="absolute left-1/2 top-16 z-30 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--card)]/95 p-1 shadow-lg sm:top-4"><ToolButton label="Select" active={tool === 'select'} onClick={() => setTool('select')}><span className="text-lg">↖</span></ToolButton><ToolButton label="Pan" active={tool === 'pan'} onClick={() => setTool('pan')}><Move size={17} /></ToolButton><ToolButton label="Connect" active={tool === 'connect'} onClick={() => { setTool('connect'); setConnectSource(null); }}><span aria-hidden="true">⌁</span></ToolButton><span className="mx-1 h-6 w-px bg-[var(--border)]" /><ToolButton label="Zoom in" onClick={() => setZoom((value) => Math.min(2, value + .1))}><ZoomIn size={17} /></ToolButton><ToolButton label="Zoom out" onClick={() => setZoom((value) => Math.max(.5, value - .1))}><ZoomOut size={17} /></ToolButton></div>
+      <div ref={canvasRef} onPointerMove={handlePointerMove} onPointerUp={stopDrag} onPointerLeave={stopDrag} onPointerDown={() => { setSelectedId(null); setConnectSource(null); }} className="relative flex-1 overflow-hidden bg-[radial-gradient(circle_at_center,var(--card),var(--background)_75%)]" style={{ backgroundImage: 'radial-gradient(var(--border) 1px, transparent 1px)', backgroundSize: `${20 * zoom}px ${20 * zoom}px` }}>
+        <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">{connections.map((connection) => { const from = centers.get(connection.from); const to = centers.get(connection.to); return from && to ? <line key={connection.id} x1={from.x * zoom} y1={from.y * zoom} x2={to.x * zoom} y2={to.y * zoom} stroke="var(--primary)" strokeWidth="3" strokeDasharray="8 6" /> : null; })}</svg>
+        {items.map((item) => <div key={item.id} role="button" tabIndex={0} aria-label={`${item.name}${item.material ? ` containing ${item.material.name}` : ''}`} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedId(item.id); } }} onPointerDown={(event) => handlePointerDown(event, item.id)} style={{ left: item.x, top: item.y, width: item.w * item.scale, height: item.h * item.scale, transform: `rotate(${item.rotation}deg)`, touchAction: 'none' }} className={`absolute rounded-xl p-1 text-[var(--foreground)] outline-none transition-shadow focus:ring-2 focus:ring-[var(--primary)] ${selectedId === item.id ? 'z-20 ring-2 ring-[var(--primary)] shadow-[0_0_30px_rgba(139,92,246,.25)]' : 'z-10 hover:ring-1 hover:ring-[var(--primary)]/60'}`}><EquipmentIcon type={item.type} size={item.w * item.scale} liquidLevel={item.liquidLevel} liquidColor={item.material?.color} operation={item.operation} />{selectedId === item.id && <SelectionToolbar duplicate={duplicate} remove={remove} connect={() => { setTool('connect'); setConnectSource(item.id); }} />}{(selectedId === item.id || tool === 'connect') && <div className="absolute -right-3 top-1/2 grid gap-1"><Port label="Glass" color="bg-slate-400" onClick={() => setConnectSource(item.id)} /><Port label="Liquid" color="bg-cyan-400" onClick={() => setConnectSource(item.id)} /><Port label="Gas" color="bg-violet-400" onClick={() => setConnectSource(item.id)} /></div>}</div>)}
+        {items.length === 0 && <div className="absolute inset-0 grid place-items-center p-6 text-center"><div><Beaker className="mx-auto mb-3 text-[var(--primary)]" size={40} /><p className="font-semibold">Build your experiment</p><p className="mt-1 text-sm text-[var(--muted-foreground)]">Add equipment, fill vessels, then connect them.</p></div></div>}
+        {notice && <div role="status" className="absolute bottom-4 left-1/2 z-40 -translate-x-1/2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm shadow-lg">{notice}<button className="ml-3" aria-label="Dismiss" onClick={() => setNotice(null)}><X size={14} /></button></div>}
       </div>
-
-      {/* CENTER CANVAS */}
-      <div className="flex-1 min-w-0 relative bg-[var(--background)] overflow-hidden flex flex-col">
-        {/* Toolbar */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 p-1 bg-[var(--card)]/90 backdrop-blur border border-[var(--border)] rounded-xl shadow-lg">
-          <button aria-label="Select tool" onClick={() => setTool('select')} className={`p-2.5 rounded-lg ${tool === 'select' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`} title="Select"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg></button>
-          <button aria-label="Pan tool" onClick={() => setTool('pan')} className={`p-2.5 rounded-lg ${tool === 'pan' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`} title="Pan"><Move size={18} /></button>
-          <button aria-label="Connect tool" onClick={() => setTool('connect')} className={`p-2.5 rounded-lg ${tool === 'connect' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`} title="Connect"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 12h8M4 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm16 0a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg></button>
-          <div className="w-px h-6 bg-[var(--border)] mx-1" />
-          <button aria-label="Zoom in" onClick={() => setZoom(z => Math.min(2, z + 0.1))} className="p-2.5 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)]"><ZoomIn size={18}/></button>
-          <button aria-label="Zoom out" onClick={() => setZoom(z => Math.max(.5, z - 0.1))} className="p-2.5 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)]"><ZoomOut size={18}/></button>
-        </div>
-
-        {/* Canvas Area */}
-        <div 
-          ref={canvasRef}
-          className="flex-1 relative cursor-default"
-          style={{ backgroundImage: 'radial-gradient(var(--border) 1px, transparent 1px)', backgroundSize: `${20*zoom}px ${20*zoom}px`, backgroundPosition: 'center' }}
-          onClick={() => setSelectedItem(null)}
-        >
-          {canvasItems.length === 0 && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--muted-foreground)] pointer-events-none">
-              <FlaskConical size={48} className="opacity-20 mb-4" />
-              <h2 className="text-xl font-bold mb-2 text-[var(--foreground)]">Build your experiment</h2>
-              <p className="text-sm">Drag equipment from the left panel to begin.</p>
-            </div>
-          )}
-
-          <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', width: '100%', height: '100%' }}>
-            {canvasItems.map((item, idx) => {
-              const isSelected = selectedItem === item.id;
-              return (
-                <div
-                  key={item.id}
-                  className={`absolute group ${isSelected ? 'ring-2 ring-[var(--primary)]' : 'hover:ring-1 hover:ring-[var(--primary)]/50'} rounded-lg p-2 bg-[var(--background)]/50 backdrop-blur-sm cursor-grab active:cursor-grabbing transition-shadow`}
-                  style={{ left: item.x, top: item.y, width: item.w, height: item.h }}
-                  onMouseDown={handleMouseDown(idx)}
-                  onClick={(e) => { e.stopPropagation(); setSelectedItem(item.id); }}
-                >
-                  <EquipmentIcon type={item.type} size={Math.min(item.w, item.h) - 16} />
-                  
-                  {/* Connection Ports (visible when selected or connect tool active) */}
-                  {(isSelected || tool === 'connect') && (
-                    <>
-                      <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#C084FC] border-2 border-[var(--background)] cursor-crosshair z-10 hover:scale-125 transition-transform" title="Glass Joint" />
-                      <div className="absolute top-1/2 -right-1.5 -translate-y-1/2 w-3 h-3 rounded-full bg-[#34D399] border-2 border-[var(--background)] cursor-crosshair z-10 hover:scale-125 transition-transform" title="Gas Port" />
-                      <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#F59E0B] border-2 border-[var(--background)] cursor-crosshair z-10 hover:scale-125 transition-transform" title="Thermal Contact" />
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* BOTTOM PANEL */}
-        <div className="h-[200px] shrink-0 border-t border-[var(--border)] bg-[var(--card)] z-20 flex flex-col">
-          <div className="flex border-b border-[var(--border)] bg-[var(--background)]/50 px-2">
-            <button className="px-4 py-2 text-xs font-bold border-b-2 border-[var(--primary)] text-[var(--primary)] flex items-center gap-2"><Activity size={14}/> Results</button>
-            <button className="px-4 py-2 text-xs font-medium border-b-2 border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] flex items-center gap-2"><List size={14}/> Reaction Log</button>
-            <button className="px-4 py-2 text-xs font-medium border-b-2 border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] flex items-center gap-2"><AlertTriangle size={14}/> Safety</button>
-          </div>
-          <div className="flex-1 p-3 sm:p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 items-start overflow-y-auto">
-            <div className="space-y-1">
-              <div className="text-[10px] uppercase text-[var(--muted-foreground)] font-bold">Temperature</div>
-              <div className="text-xl font-mono text-[var(--foreground)]">24.5 °C</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-[10px] uppercase text-[var(--muted-foreground)] font-bold">Pressure</div>
-              <div className="text-xl font-mono text-[var(--foreground)]">1.0 atm</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-[10px] uppercase text-[var(--muted-foreground)] font-bold">pH</div>
-              <div className="text-xl font-mono text-[var(--foreground)]">7.2</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-[10px] uppercase text-[var(--muted-foreground)] font-bold">State</div>
-              <div className="text-sm font-medium text-[#34D399] flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#34D399]"></span> Stable</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* RIGHT PROPERTIES PANEL */}
-      <div className="hidden xl:flex w-[300px] shrink-0 border-l border-[var(--border)] bg-[var(--card)] flex-col z-20">
-        <div className="p-4 border-b border-[var(--border)] flex justify-between items-center bg-[var(--background)]/50">
-          <div className="font-semibold text-sm">Properties</div>
-          <button onClick={() => setSelectedItem(null)} className="p-1 rounded hover:bg-[var(--accent)] text-[var(--muted-foreground)]"><X size={16}/></button>
-        </div>
-        
-        {selected ? (
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-5 flex flex-col items-center border-b border-[var(--border)]">
-              <div className="w-16 h-16 bg-[var(--background)] rounded-xl border border-[var(--border)] flex items-center justify-center mb-3">
-                <EquipmentIcon type={selected.type} size={40} />
-              </div>
-              <h3 className="font-bold text-lg text-[var(--foreground)]">{selected.name}</h3>
-              <div className="text-[10px] text-[var(--primary)] font-mono bg-[var(--primary)]/10 px-2 py-1 rounded mt-1">Ready</div>
-            </div>
-            
-            <div className="p-4 space-y-4">
-              <div>
-                <h4 className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider mb-2">Details</h4>
-                <div className="bg-[var(--background)] border border-[var(--border)] rounded-lg p-3 space-y-2">
-                  <div className="flex justify-between text-xs"><span className="text-[var(--muted-foreground)]">Capacity</span><span className="font-mono">500 mL</span></div>
-                  <div className="flex justify-between text-xs"><span className="text-[var(--muted-foreground)]">Temperature</span><span className="font-mono text-[#F59E0B]">25.0 °C</span></div>
-                  <div className="flex justify-between text-xs"><span className="text-[var(--muted-foreground)]">Material</span><span>Glass</span></div>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider mb-2">Actions</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <button className="py-2 text-xs font-semibold rounded bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/30 hover:bg-[#F59E0B]/20">Heat</button>
-                  <button className="py-2 text-xs font-semibold rounded bg-[#22D3EE]/10 text-[#22D3EE] border border-[#22D3EE]/30 hover:bg-[#22D3EE]/20">Cool</button>
-                  <button className="py-2 text-xs font-semibold rounded bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/30 hover:bg-[var(--primary)]/20">Stir</button>
-                  <button className="py-2 text-xs font-semibold rounded bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] hover:bg-[var(--accent)]">Pour</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1 flex items-center justify-center p-6 text-center text-[var(--muted-foreground)]">
-            <p className="text-sm">Select an object on the canvas to view its properties.</p>
-          </div>
-        )}
-      </div>
-
-      {/* Canvas-first navigation for tablet and phone. The full side panels remain on desktop. */}
-      <div className="xl:hidden fixed inset-x-0 bottom-0 z-40 flex min-h-14 items-center justify-around border-t border-[var(--border)] bg-[var(--card)]/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
-        {([['canvas', 'Canvas'], ['equipment', 'Equipment'], ['properties', 'Properties']] as const).map(([key, label]) => (
-          <button key={key} type="button" onClick={() => setMobilePanel(key)} className={`min-h-11 flex-1 rounded-lg px-2 text-xs font-semibold ${mobilePanel === key ? 'text-[var(--primary)] bg-[var(--accent)]' : 'text-[var(--muted-foreground)]'}`}>{label}</button>
-        ))}
-      </div>
-
-      {mobilePanel === 'equipment' && <div className="xl:hidden fixed inset-x-0 top-0 bottom-14 z-30 overflow-y-auto border-r border-[var(--border)] bg-[var(--card)] p-4 shadow-2xl">
-        <div className="mb-5 flex items-center justify-between"><h2 className="font-semibold">Equipment</h2><button aria-label="Close equipment panel" onClick={() => setMobilePanel('canvas')} className="rounded-lg p-2 text-[var(--muted-foreground)]"><X size={18} /></button></div>
-        <div className="grid grid-cols-2 gap-3">{equipmentGroups.flatMap(group => group.items).map(item => <button type="button" key={item.id} onClick={() => { addToCanvas(item); setMobilePanel('canvas'); }} className="flex min-h-28 flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--background)] p-3 text-center active:border-[var(--primary)]"><item.icon size={30} className="mb-2 text-[var(--primary)]" /><span className="text-xs font-medium">{item.name}</span></button>)}</div>
-      </div>}
-
-      {mobilePanel === 'properties' && <div className="xl:hidden fixed inset-x-0 top-0 bottom-14 z-30 overflow-y-auto border-l border-[var(--border)] bg-[var(--card)] p-5 shadow-2xl">
-        <div className="mb-5 flex items-center justify-between"><h2 className="font-semibold">Properties</h2><button aria-label="Close properties panel" onClick={() => setMobilePanel('canvas')} className="rounded-lg p-2 text-[var(--muted-foreground)]"><X size={18} /></button></div>
-        {selected ? <><div className="flex flex-col items-center border-b border-[var(--border)] pb-5"><EquipmentIcon type={selected.type} size={72} /><h3 className="mt-3 text-lg font-bold">{selected.name}</h3></div><div className="mt-5 grid grid-cols-2 gap-3"><button className="min-h-11 rounded-lg border border-[#F59E0B]/30 bg-[#F59E0B]/10 text-xs font-semibold text-[#F59E0B]">Heat</button><button className="min-h-11 rounded-lg border border-[#22D3EE]/30 bg-[#22D3EE]/10 text-xs font-semibold text-[#22D3EE]">Cool</button><button className="min-h-11 rounded-lg border border-[var(--primary)]/30 bg-[var(--primary)]/10 text-xs font-semibold text-[var(--primary)]">Stir</button><button className="min-h-11 rounded-lg border border-[var(--border)] bg-[var(--background)] text-xs font-semibold">Pour</button></div></> : <p className="py-16 text-center text-sm text-[var(--muted-foreground)]">Select an object on the canvas first.</p>}
-      </div>}
-
-    </div>
-  );
+      <ActivityLog items={items} selected={selected} onOpenProperties={() => setMobilePanel('properties')} />
+      <div className="flex min-h-12 items-center justify-between border-t border-[var(--border)] bg-[var(--card)] px-3 text-xs"><span className="text-[var(--muted-foreground)]">Temperature {selected?.temperature.toFixed(1) || '24.5'} °C · Pressure 1.0 atm</span><span className="flex items-center gap-2"><button className="touch-target rounded-lg px-3 hover:bg-[var(--accent)]" onClick={() => setMobilePanel('library')}>Library</button><button className="touch-target rounded-lg px-3 hover:bg-[var(--accent)]" onClick={() => setMobilePanel('properties')} disabled={!selected}>Properties</button><Save size={16} className="text-[var(--muted-foreground)]" /></span></div>
+    </main>
+    <aside className="hidden w-[310px] shrink-0 flex-col border-l border-[var(--border)] bg-[var(--card)] xl:flex"><div className="border-b border-[var(--border)] p-4"><p className="text-xs uppercase tracking-wider text-[var(--muted-foreground)]">Inspector</p><h2 className="mt-1 font-semibold">Equipment details</h2></div>{selected ? <Properties selected={selected} update={updateSelected} onOperation={applyOperation} setPourSource={setPourSource} pourSource={pourSource} pour={pour} /> : <div className="p-5 text-sm text-[var(--muted-foreground)]">Select equipment to see size, ports, material, volume and operations.</div>}<div className="mt-auto border-t border-[var(--border)] p-4 text-xs text-[var(--muted-foreground)]"><p className="font-semibold text-[var(--foreground)]">Ports</p><div className="mt-2 grid grid-cols-2 gap-2"><span>● Glass</span><span className="text-cyan-500">● Liquid</span><span className="text-violet-500">● Gas</span><span className="text-orange-500">● Thermal</span><span className="text-emerald-500">● Electrical</span></div></div></aside>
+    {mobilePanel !== 'canvas' && <div className="fixed inset-0 z-50 bg-[var(--background)] xl:hidden"><div className="flex min-h-14 items-center justify-between border-b border-[var(--border)] px-4"><h2 className="font-semibold">{mobilePanel === 'library' ? 'Library' : 'Properties'}</h2><button className="touch-target rounded-lg" aria-label="Close panel" onClick={() => setMobilePanel('canvas')}><X /></button></div>{mobilePanel === 'library' ? <Library panel={panel} setPanel={setPanel} addItem={addItem} addMaterial={addMaterial} selected={selected} /> : selected ? <Properties selected={selected} update={updateSelected} onOperation={applyOperation} setPourSource={setPourSource} pourSource={pourSource} pour={pour} /> : <p className="p-6 text-sm text-[var(--muted-foreground)]">Select equipment first.</p>}</div>}
+    {pourSource && <PourDialog source={items.find((item) => item.id === pourSource)} targets={items.filter((item) => item.id !== pourSource && isVessel(item))} amount={pourAmount} setAmount={setPourAmount} onPour={pour} onClose={() => setPourSource(null)} />}
+    {connectionDraft && <ConnectionDialog onSave={saveConnection} onClose={() => setConnectionDraft(null)} />}
+    <button aria-label="Open AI assistant" onClick={() => setChatOpen((value) => !value)} className="fixed bottom-5 right-5 z-[70] grid h-14 w-14 place-items-center rounded-full bg-[var(--primary)] text-white shadow-xl"><MessageCircle /></button>
+    {chatOpen && <AssistantPanel messages={chatMessages} input={chatInput} setInput={setChatInput} onSend={sendChat} onClose={() => setChatOpen(false)} />}
+  </div>;
 }
+
+function Header({ locale, workspaceId }: { locale: string; workspaceId: string | null }) { return <header className="flex items-center justify-between border-b border-[var(--border)] p-4"><Link href={`/${locale}/dashboard`} aria-label="Back to dashboard" className="touch-target rounded-lg p-2"><ArrowLeft size={18} /></Link><span className="truncate text-sm font-semibold">{workspaceId ? 'Workspace experiment' : 'Untitled Experiment'}</span><div className="flex items-center gap-1"><ThemeToggle /><LanguageSwitcher /></div></header>; }
+function ToolButton({ label, active, onClick, children }: { label: string; active?: boolean; onClick: () => void; children: React.ReactNode }) { return <button aria-label={label} title={label} onClick={onClick} className={`touch-target rounded-lg p-2 ${active ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'hover:bg-[var(--accent)]'}`}>{children}</button>; }
+function Library({ panel, setPanel, addItem, addMaterial, selected }: { panel: 'equipment' | 'materials' | 'compounds'; setPanel: (value: 'equipment' | 'materials' | 'compounds') => void; addItem: (item: LibraryItem) => void; addMaterial: (material: Material) => void; selected?: CanvasItem }) { const list = panel === 'compounds' ? compounds : materials; return <div className="flex min-h-0 flex-1 flex-col"><div className="grid grid-cols-3 gap-1 border-b border-[var(--border)] p-2"><button className={`min-h-11 rounded-lg text-xs font-semibold ${panel === 'equipment' ? 'bg-[var(--primary)] text-white' : 'hover:bg-[var(--accent)]'}`} onClick={() => setPanel('equipment')}>Equipment</button><button className={`min-h-11 rounded-lg text-xs font-semibold ${panel === 'materials' ? 'bg-[var(--primary)] text-white' : 'hover:bg-[var(--accent)]'}`} onClick={() => setPanel('materials')}>Materials</button><button className={`min-h-11 rounded-lg text-xs font-semibold ${panel === 'compounds' ? 'bg-[var(--primary)] text-white' : 'hover:bg-[var(--accent)]'}`} onClick={() => setPanel('compounds')}>Compounds</button></div><div className="flex-1 overflow-y-auto p-4">{panel === 'equipment' ? library.map((group) => <section key={group.title} className="mb-6"><h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">{group.title}</h3><div className="grid grid-cols-2 gap-3">{group.items.map((item) => <button key={item.id} className="group rounded-xl border border-[var(--border)] p-3 text-center hover:border-[var(--primary)]" onClick={() => addItem(item)}><item.icon size={26} className="mx-auto mb-2 text-[var(--primary)]" /><span className="block text-xs font-medium">{item.name}</span><span className="mt-2 block text-[10px] font-bold uppercase text-[var(--primary)]">Add</span></button>)}</div></section>) : <div className="space-y-3">{list.map((material) => <button key={material.id} onClick={() => addMaterial(material)} className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-[var(--border)] p-3 text-left hover:border-[var(--primary)]"><span className="h-9 w-9 rounded-full border-2 border-white/20" style={{ background: material.color }} /><span><span className="block text-sm font-semibold">{material.name}</span><span className="text-xs text-[var(--muted-foreground)]">{material.formula} · {material.state}</span></span></button>)}{!selected && <p className="mt-4 text-xs text-[var(--muted-foreground)]">Select a vessel before adding a material.</p>}</div>}</div></div>; }
+function SelectionToolbar({ duplicate, remove, connect }: { duplicate: () => void; remove: () => void; connect: () => void }) { return <div className="absolute -top-12 left-1/2 flex -translate-x-1/2 gap-1 rounded-lg border border-[var(--border)] bg-[var(--card)] p-1 shadow-lg"><ToolButton label="Duplicate" onClick={duplicate}><Copy size={15} /></ToolButton><ToolButton label="Delete" onClick={remove}><Trash2 size={15} /></ToolButton><ToolButton label="Connect" onClick={connect}><span>⌁</span></ToolButton></div>; }
+function Port({ label, color, onClick }: { label: string; color: string; onClick: () => void }) { return <button aria-label={`${label} port`} title={`${label} port — click to connect`} onClick={(event) => { event.stopPropagation(); onClick(); }} className={`relative h-5 w-5 rounded-full border-2 border-[var(--card)] ${color} shadow`}><span className="sr-only">{label}</span></button>; }
+function ConnectionDialog({ onSave, onClose }: { onSave: (port: ConnectionPort, direction: Connection['direction']) => void; onClose: () => void }) { const [port, setPort] = useState<ConnectionPort>('Glass'); const [direction, setDirection] = useState<Connection['direction']>('source-to-target'); return <div className="fixed inset-0 z-[90] grid place-items-center bg-black/55 p-4" role="dialog" aria-modal="true" aria-labelledby="connection-title"><div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-2xl"><div className="flex items-center justify-between"><h2 id="connection-title" className="font-bold">Configure connection</h2><button className="touch-target" onClick={onClose} aria-label="Close"><X size={18} /></button></div><label className="mt-5 block text-sm">Connection type<select value={port} onChange={(event) => setPort(event.target.value as ConnectionPort)} className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] p-3"><option>Glass</option><option>Liquid</option><option>Gas</option><option>Thermal</option><option>Electrical</option></select></label><label className="mt-4 block text-sm">Direction<select value={direction} onChange={(event) => setDirection(event.target.value as Connection['direction'])} className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] p-3"><option value="source-to-target">Source → target</option><option value="target-to-source">Target → source</option></select></label><div className="mt-5 flex justify-end gap-2"><button className="min-h-11 rounded-xl border border-[var(--border)] px-4" onClick={onClose}>Cancel</button><button className="min-h-11 rounded-xl bg-[var(--primary)] px-4 font-semibold text-white" onClick={() => onSave(port, direction)}><Link2 size={15} className="mr-2 inline" />Connect</button></div></div></div>; }
+function AssistantPanel({ messages, input, setInput, onSend, onClose }: { messages: Array<{ role: 'user' | 'assistant'; text: string }>; input: string; setInput: (value: string) => void; onSend: () => void; onClose: () => void }) { return <section className="fixed bottom-20 right-5 z-[70] flex h-[min(520px,70vh)] w-[min(360px,calc(100vw-2rem))] flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-2xl" aria-label="AI assistant"><header className="flex items-center justify-between border-b border-[var(--border)] p-4"><div><p className="font-semibold">AI Lab Assistant</p><p className="text-xs text-[var(--muted-foreground)]">Safety-aware sandbox help</p></div><button className="touch-target" onClick={onClose} aria-label="Close assistant"><X size={17} /></button></header><div className="flex-1 space-y-3 overflow-y-auto p-4">{messages.map((message, index) => <div key={`${message.role}-${index}`} className={`max-w-[88%] rounded-xl px-3 py-2 text-sm ${message.role === 'user' ? 'ml-auto bg-[var(--primary)] text-white' : 'bg-[var(--background)]'}`}>{message.text}</div>)}</div><div className="flex gap-2 border-t border-[var(--border)] p-3"><input aria-label="Ask AI assistant" value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') onSend(); }} placeholder="Ask about this experiment…" className="min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm" /><button className="touch-target rounded-xl bg-[var(--primary)] text-white" onClick={onSend} aria-label="Send message"><Send size={16} className="mx-auto" /></button></div></section>; }
+function ActivityLog({ items, selected, onOpenProperties }: { items: CanvasItem[]; selected?: CanvasItem; onOpenProperties: () => void }) { return <section className="hidden min-h-[104px] border-t border-[var(--border)] bg-[var(--card)] px-4 py-3 lg:block"><div className="flex items-center justify-between"><h3 className="text-xs font-semibold uppercase tracking-wider">Experiment log</h3><button className="text-xs text-[var(--primary)]" onClick={onOpenProperties}>Open inspector</button></div><div className="mt-3 grid grid-cols-4 gap-3 text-xs"><div><p className="text-[var(--muted-foreground)]">Objects</p><p className="mt-1 font-semibold">{items.length}</p></div><div><p className="text-[var(--muted-foreground)]">Selected volume</p><p className="mt-1 font-semibold">{selected?.volumeMl || 0} mL</p></div><div><p className="text-[var(--muted-foreground)]">Material</p><p className="mt-1 font-semibold">{selected?.material?.formula || '—'}</p></div><div><p className="text-[var(--muted-foreground)]">State</p><p className="mt-1 font-semibold capitalize">{selected?.operation || 'idle'}</p></div></div></section>; }
+function Properties({ selected, update, setPourSource, pourSource, pour }: { selected: CanvasItem; update: (patch: Partial<CanvasItem>) => void; setPourSource: (id: string | null) => void; pourSource: string | null; pour: (id: string) => void }) { return <div className="space-y-5 overflow-y-auto p-5"><div><p className="text-xs uppercase tracking-wider text-[var(--muted-foreground)]">Selected equipment</p><h3 className="mt-1 text-lg font-bold">{selected.name}</h3></div><label className="block text-sm">Size <input aria-label="Equipment size" type="range" min=".6" max="1.6" step=".05" value={selected.scale} onChange={(event) => update({ scale: Number(event.target.value) })} className="mt-2 w-full" /></label><div className="flex gap-2"><button className="touch-target flex-1 rounded-xl border border-[var(--border)]" aria-label="Rotate counterclockwise" onClick={() => update({ rotation: selected.rotation - 15 })}><RotateCcw size={17} className="mx-auto" /></button><button className="touch-target flex-1 rounded-xl border border-[var(--border)]" aria-label="Rotate clockwise" onClick={() => update({ rotation: selected.rotation + 15 })}><RotateCw size={17} className="mx-auto" /></button></div><div className="grid grid-cols-3 gap-2"><ActionButton label="Heat" icon={<Flame size={15} />} onClick={() => update({ operation: selected.operation === 'heating' ? 'idle' : 'heating', temperature: selected.operation === 'heating' ? 24.5 : 80 })} /><ActionButton label="Cool" icon={<Snowflake size={15} />} onClick={() => update({ operation: selected.operation === 'cooling' ? 'idle' : 'cooling', temperature: selected.operation === 'cooling' ? 24.5 : 5 })} /><ActionButton label="Stir" icon={<Sparkles size={15} />} onClick={() => update({ operation: selected.operation === 'stirring' ? 'idle' : 'stirring' })} /></div>{selected.material && <div className="rounded-xl border border-[var(--border)] p-3"><div className="flex items-center gap-2"><span className="h-4 w-4 rounded-full" style={{ background: selected.material.color }} /><span className="text-sm font-semibold">{selected.material.name}</span></div><label className="mt-3 block text-xs text-[var(--muted-foreground)]">Liquid level<input aria-label="Liquid level" type="range" min="0" max="1" step=".05" value={selected.liquidLevel} onChange={(event) => update({ liquidLevel: Number(event.target.value) })} className="mt-2 w-full" /></label></div>}{isVessel(selected) && <button className="min-h-11 w-full rounded-xl border border-[var(--primary)] text-sm font-semibold text-[var(--primary)]" onClick={() => setPourSource(pourSource ? null : selected.id)}><Droplets size={15} className="mr-2 inline" />Pour into another vessel</button>}{pourSource && pourSource !== selected.id && <button className="min-h-11 w-full rounded-xl bg-[var(--primary)] text-sm font-semibold text-white" onClick={() => pour(selected.id)}>Pour here</button>}</div>; }
+function ActionButton({ label, icon, onClick }: { label: string; icon: React.ReactNode; onClick: () => void }) { return <button onClick={onClick} className="min-h-11 rounded-xl border border-[var(--border)] text-xs font-semibold hover:border-[var(--primary)]">{icon}<span className="ml-1">{label}</span></button>; }
+function PourDialog({ source, targets, amount, setAmount, onPour, onClose }: { source?: CanvasItem; targets: CanvasItem[]; amount: number; setAmount: (value: number) => void; onPour: (id: string) => void; onClose: () => void }) { return <div className="fixed inset-0 z-[80] grid place-items-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="pour-title"><div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-2xl"><div className="flex items-center justify-between"><h2 id="pour-title" className="font-bold">Pour from {source?.name}</h2><button className="touch-target" aria-label="Close pour dialog" onClick={onClose}><X size={18} /></button></div><label className="mt-5 block text-sm">Amount: {amount} mL<input aria-label="Pour amount" type="range" min="5" max="100" step="5" value={amount} onChange={(event) => setAmount(Number(event.target.value))} className="mt-3 w-full" /></label><p className="mt-4 text-xs text-[var(--muted-foreground)]">Choose a destination vessel.</p><div className="mt-3 grid gap-2">{targets.map((target) => <button key={target.id} className="min-h-11 rounded-xl border border-[var(--border)] px-3 text-left text-sm hover:border-[var(--primary)]" onClick={() => onPour(target.id)}>{target.name}{target.material ? ` · ${target.material.name}` : ''}</button>)}{targets.length === 0 && <p className="text-sm text-[var(--muted-foreground)]">Add another vessel first.</p>}</div></div></div>; }

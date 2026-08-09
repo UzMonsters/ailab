@@ -1,5 +1,5 @@
 'use client';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Check, Globe } from 'lucide-react';
 import { LOCALES, LOCALE_NAMES } from '@/constants';
@@ -11,6 +11,7 @@ interface LanguageSwitcherProps {
 
 export default function LanguageSwitcher({ variant = 'ghost', className = '' }: LanguageSwitcherProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -35,7 +36,8 @@ export default function LanguageSwitcher({ variant = 'ghost', className = '' }: 
 
   const switchTo = (next: string) => {
     const rest = pathname.split('/').slice(2).join('/');
-    router.push(`/${next}${rest ? `/${rest}` : ''}`);
+    const query = searchParams.toString();
+    router.push(`/${next}${rest ? `/${rest}` : ''}${query ? `?${query}` : ''}`);
     setOpen(false);
   };
 

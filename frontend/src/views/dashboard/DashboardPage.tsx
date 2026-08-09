@@ -15,13 +15,22 @@ const menuActions = [
   { key: 'trash', label: 'moveToTrash', icon: Trash2, danger: true },
 ] as const;
 
-function WorkspacePreview({ name }: { name: string }) {
+function WorkspacePreview({ name, thumbnail }: { name: string; thumbnail?: string }) {
+  if (thumbnail) return <img src={thumbnail} alt={`${name} workspace preview`} className="absolute inset-0 h-full w-full object-cover" />;
   return (
     <div className="absolute inset-0">
       <div className="absolute inset-0" style={{ background: 'radial-gradient(120% 100% at 15% 0%, rgba(139,92,246,.15), transparent 55%), radial-gradient(120% 100% at 85% 100%, rgba(20,241,149,.08), transparent 55%), var(--card)' }} />
       <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(var(--foreground) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-2xl font-bold tracking-tight text-[var(--primary)] opacity-60" style={{ textShadow: '0 0 20px rgba(139,92,246,.35)' }}>H₂O</span>
+        <span
+          className="text-3xl font-black tracking-tighter"
+          style={{
+            color: '#c084fc',
+            textShadow: '0 0 20px rgba(139,92,246,.9), 0 0 40px rgba(139,92,246,.6), 0 0 80px rgba(139,92,246,.3)',
+          }}
+        >
+          H<sub className="text-xl">2</sub>O
+        </span>
       </div>
     </div>
   );
@@ -49,6 +58,9 @@ export default function DashboardPage() {
   const [renameModalOpen, setRenameModalOpen] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [layout, setLayout] = useState<'grid' | 'list'>('grid');
+  const [sort, setSort] = useState<'updated' | 'name' | 'favorite'>('updated');
+  const [menuIndex, setMenuIndex] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
@@ -80,12 +92,11 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    loadWorkspaces();
+    const timer = window.setTimeout(() => { void loadWorkspaces(); }, 0);
+    return () => window.clearTimeout(timer);
   }, [loadWorkspaces]);
 
-  const filtered = workspaces.filter(w =>
-    w.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = workspaces.filter(w => w.name.toLowerCase().includes(search.toLowerCase())).sort((a, b) => sort === 'name' ? a.name.localeCompare(b.name) : sort === 'favorite' ? Number(b.isFavorite) - Number(a.isFavorite) : new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   const recent = filtered.slice(0, 4);
   const favorites = filtered.filter(w => w.isFavorite);
 
@@ -151,7 +162,7 @@ export default function DashboardPage() {
   };
 
   const handleOpen = (id: string) => {
-    router.push(`/${locale}/workspace/sandbox`);
+    router.push(`/${locale}/workspace/sandbox?workspace=${encodeURIComponent(id)}`);
   };
 
   const openMenu = (ws: Workspace, e: React.MouseEvent) => {
@@ -160,7 +171,7 @@ export default function DashboardPage() {
     if (menuOpen === ws.id) {
       setMenuOpen(null); setMenuAnchor(null);
     } else {
-      setMenuOpen(ws.id);
+      setMenuOpen(ws.id); setMenuIndex(0);
       setMenuAnchor({ id: ws.id, x: rect.left, y: rect.bottom + 6 });
     }
   };
@@ -177,12 +188,12 @@ export default function DashboardPage() {
   const renderCard = (ws: Workspace) => (
     <div
       key={ws.id}
-      className="group relative border border-[var(--border)] bg-[var(--card)] rounded-[var(--radius-lg)] overflow-visible cursor-pointer transition-all duration-300 hover:border-[var(--ring)]/50 hover:shadow-[0_12px_35px_rgba(0,0,0,.15)] hover:-translate-y-[2px]"
+      className={`group relative border border-[var(--border)] bg-[var(--card)] rounded-[var(--radius-lg)] overflow-visible cursor-pointer transition-all duration-300 hover:border-[var(--ring)]/50 hover:shadow-[0_12px_35px_rgba(0,0,0,.15)] hover:-translate-y-[2px] ${layout === 'list' ? 'flex items-center' : ''}`}
       onMouseEnter={() => setHoveredCard(ws.id)}
       onMouseLeave={() => setHoveredCard(null)}
     >
-      <div className="aspect-[16/10] relative overflow-hidden rounded-t-[var(--radius-lg)]" onClick={() => handleOpen(ws.id)}>
-        <WorkspacePreview name={ws.name} />
+      <div className={`${layout === 'list' ? 'h-24 w-40 shrink-0 rounded-l-[var(--radius-lg)]' : 'aspect-[16/10]'} relative overflow-hidden rounded-t-[var(--radius-lg)]`} onClick={() => handleOpen(ws.id)}>
+        <WorkspacePreview name={ws.name} thumbnail={ws.thumbnail} />
         {ws.isFavorite && <Star size={14} className="absolute top-3 left-3 text-[#F59E0B] fill-[#F59E0B] z-[3]" aria-label={t('favorited')} />}
         {hoveredCard === ws.id && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px] z-[2]">
@@ -202,12 +213,13 @@ export default function DashboardPage() {
 
       {/* Dropdown anchored under the kebab icon */}
       {menuOpen === ws.id && menuAnchor?.id === ws.id && (
-        <div ref={menuRef} className="fixed z-[90] w-48 bg-[var(--popover)] border border-[var(--border)] rounded-[var(--radius-sm)] shadow-[0_20px_45px_rgba(0,0,0,.15)] py-1" style={{ left: menuAnchor.x, top: menuAnchor.y }}>
+        <div ref={menuRef} role="menu" aria-label={`${ws.name} actions`} onKeyDown={(event) => { if (event.key === 'ArrowDown') { event.preventDefault(); setMenuIndex((value) => (value + 1) % menuActions.length); } if (event.key === 'ArrowUp') { event.preventDefault(); setMenuIndex((value) => (value - 1 + menuActions.length) % menuActions.length); } if (event.key === 'Enter') runMenuAction(ws, menuActions[menuIndex].key); if (event.key === 'Escape') { setMenuOpen(null); setMenuAnchor(null); } }} className="fixed z-[90] w-48 bg-[var(--popover)] border border-[var(--border)] rounded-[var(--radius-sm)] shadow-[0_20px_45px_rgba(0,0,0,.15)] py-1" style={{ left: menuAnchor.x, top: menuAnchor.y }}>
           {menuActions.map((action) => (
             <button
               key={action.key}
               onClick={() => runMenuAction(ws, action.key)}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors ${action.danger ? 'text-[#F43F5E] hover:bg-[#F43F5E]/10' : 'text-[var(--foreground)] hover:bg-[var(--accent)]'}`}
+              role="menuitem" tabIndex={menuActions[menuIndex].key === action.key ? 0 : -1} autoFocus={menuActions[menuIndex].key === action.key}
+              className={`min-h-11 w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors ${menuActions[menuIndex].key === action.key ? 'bg-[var(--accent)]' : ''} ${action.danger ? 'text-[#F43F5E] hover:bg-[#F43F5E]/10' : 'text-[var(--foreground)] hover:bg-[var(--accent)]'}`}
             >
               <action.icon size={12} className={action.key === 'favorite' && ws.isFavorite ? 'text-[#F59E0B]' : action.danger ? 'text-[#F43F5E]' : ''} />
               {action.key === 'favorite' ? (ws.isFavorite ? t('removeFavorites') : t('addFavorites')) : action.key === 'trash' ? t('moveToTrash') : tc(action.label)}
@@ -216,7 +228,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="p-3" onClick={() => handleOpen(ws.id)}>
+      <div className="min-w-0 flex-1 p-3" onClick={() => handleOpen(ws.id)}>
         <div className="text-sm font-medium truncate text-[var(--foreground)]">{ws.name}</div>
         <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5 capitalize">{ws.science}</div>
       </div>
@@ -275,12 +287,10 @@ export default function DashboardPage() {
           {search && <button onClick={() => setSearch('')} aria-label="Clear search" className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"><X size={14} /></button>}
         </div>
         <div className="flex items-center gap-2">
-          <button className="h-9 px-3 flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--input)] text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)] transition-all">
-            <SlidersHorizontal size={13} /> {tc('sort')}
-          </button>
+          <label className="flex h-9 items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--input)] px-3 text-xs text-[var(--muted-foreground)]"><SlidersHorizontal size={13} /><span className="sr-only">{tc('sort')}</span><select aria-label={tc('sort')} value={sort} onChange={(event) => setSort(event.target.value as typeof sort)} className="bg-transparent text-xs text-[var(--foreground)] outline-none"><option value="updated">Newest</option><option value="name">Name A-Z</option><option value="favorite">Favorites</option></select></label>
           <div className="flex items-center gap-0.5 h-9 px-1 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--input)]">
-            <button aria-label={t('gridView')} className="w-7 h-7 grid place-items-center rounded-md bg-[var(--primary)]/15 text-[var(--primary)]"><Grid2X2 size={14} /></button>
-            <button aria-label={t('listView')} className="w-7 h-7 grid place-items-center rounded-md text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"><List size={14} /></button>
+            <button aria-label={t('gridView')} onClick={() => setLayout('grid')} className={`w-7 h-7 grid place-items-center rounded-md ${layout === 'grid' ? 'bg-[var(--primary)]/15 text-[var(--primary)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`}><Grid2X2 size={14} /></button>
+            <button aria-label={t('listView')} onClick={() => setLayout('list')} className={`w-7 h-7 grid place-items-center rounded-md ${layout === 'list' ? 'bg-[var(--primary)]/15 text-[var(--primary)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`}><List size={14} /></button>
           </div>
         </div>
       </div>
@@ -301,30 +311,11 @@ export default function DashboardPage() {
               {view === 'home' && <Clock size={12} className="inline mr-1.5" />}
               {sectionTitle}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 min-w-0">
+            <div className={layout === 'grid' ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'space-y-3'}>
               {visibleWorkspaces.map(renderCard)}
             </div>
           </div>
 
-          {view === 'home' && favorites.length > 0 && (
-            <div className="mb-8">
-              <h2 className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-4">
-                <Star size={12} className="inline mr-1.5 text-[#F59E0B]" />{tn('favorites')}
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 min-w-0">
-                {favorites.map(renderCard)}
-              </div>
-            </div>
-          )}
-
-          {view === 'home' && (
-            <div>
-              <h2 className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-4">{t('allWorkspaces')}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 min-w-0">
-                {filtered.map(renderCard)}
-              </div>
-            </div>
-          )}
         </>
       )}
 

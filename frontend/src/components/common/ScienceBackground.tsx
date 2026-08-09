@@ -12,6 +12,9 @@ export default function ScienceBackground({ className }: ScienceBackgroundProps)
   const mouseRef = useRef({ x: 0, y: 0, radius: 140 });
 
   const initParticles = useCallback((width: number, height: number) => {
+    const isLight = document.documentElement.dataset.theme === 'light';
+    const violet = isLight ? 'rgba(91, 53, 194, ' : 'rgba(139, 92, 246, ';
+    const mint = isLight ? 'rgba(4, 150, 105, ' : 'rgba(20, 241, 149, ';
     const count = Math.min(Math.floor(width / 16), 70);
     particlesRef.current = Array.from({ length: count }, () => ({
       x: Math.random() * width,
@@ -19,7 +22,7 @@ export default function ScienceBackground({ className }: ScienceBackgroundProps)
       radius: Math.random() * 2 + 1,
       vx: (Math.random() - 0.5) * 0.7,
       vy: (Math.random() - 0.5) * 0.7,
-      color: Math.random() > 0.4 ? 'rgba(139, 92, 246, ' : 'rgba(20, 241, 149, ',
+      color: Math.random() > 0.4 ? violet : mint,
       alpha: Math.random() * 0.5 + 0.2,
     }));
   }, []);
@@ -36,6 +39,9 @@ export default function ScienceBackground({ className }: ScienceBackgroundProps)
       initParticles(canvas.width, canvas.height);
     };
     resize();
+
+    const themeObserver = new MutationObserver(() => resize());
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
     const handleMouse = (e: MouseEvent) => {
       mouseRef.current = { ...mouseRef.current, x: e.clientX, y: e.clientY };
@@ -98,6 +104,7 @@ export default function ScienceBackground({ className }: ScienceBackgroundProps)
     return () => {
       window.removeEventListener('mousemove', handleMouse);
       window.removeEventListener('resize', resize);
+      themeObserver.disconnect();
       cancelAnimationFrame(animId);
     };
   }, [initParticles]);

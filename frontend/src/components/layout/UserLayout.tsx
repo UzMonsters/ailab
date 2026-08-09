@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/static-components -- SidebarContent intentionally shares layout-local auth and locale state. */
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -62,7 +63,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     {
       title: tn('sciences'),
       items: [
-        { key: 'chemistry', icon: FlaskConical, label: td('chemistry'), href: `/${locale}/dashboard`, exact: true },
+        { key: 'chemistry', icon: FlaskConical, label: td('chemistry'), href: `/${locale}/dashboard?science=chemistry`, exact: true },
         { key: 'physics', icon: Atom, label: td('physics'), href: `/${locale}/dashboard`, badge: tc('soon'), disabled: true },
         { key: 'biology', icon: Atom, label: td('biology'), href: `/${locale}/dashboard`, badge: tc('soon'), disabled: true },
       ],
@@ -70,8 +71,8 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     {
       title: '',
       items: [
-        { key: 'templates', icon: FileText, label: tn('templates'), href: `/${locale}/dashboard`, exact: true },
-        { key: 'trash', icon: Trash2, label: tn('trash'), href: `/${locale}/dashboard`, exact: true },
+        { key: 'templates', icon: FileText, label: tn('templates'), href: `/${locale}/dashboard?view=templates`, exact: true },
+        { key: 'trash', icon: Trash2, label: tn('trash'), href: `/${locale}/dashboard?view=trash`, exact: true },
       ],
     },
   ];
@@ -174,7 +175,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <LanguageSwitcher />
-              <button className="w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 bg-[#0A0B14] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all relative" aria-label="Notifications">
+              <button className="w-9 h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all relative" aria-label={tc('notifications')}>
                 <Bell size={16} />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#14F195] rounded-full" />
               </button>

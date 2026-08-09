@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Beaker, Cpu, BarChart3, Activity, Grid3X3, Clock,
   Mail, Edit3, CheckCircle, AlertTriangle, Shield, User,
@@ -52,6 +52,12 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const avatarInput = useRef<HTMLInputElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
@@ -83,13 +89,12 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
-    if (!user) fetchUser();
-    loadStats();
-    loadPreferences();
+    const timer = window.setTimeout(() => { if (!user) void fetchUser(); void loadStats(); void loadPreferences(); }, 0);
+    return () => window.clearTimeout(timer);
   }, [user, fetchUser, loadStats, loadPreferences]);
 
   useEffect(() => {
-    if (user) setEditUsername(user.username);
+    if (user) { const timer = window.setTimeout(() => setEditUsername(user.username), 0); return () => window.clearTimeout(timer); }
   }, [user]);
 
   useEffect(() => {
@@ -103,6 +108,12 @@ export default function ProfilePage() {
     }
   }, [preferences?.theme]);
 
+  useEffect(() => {
+    if (!editModalOpen && !deleteOpen) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') { setEditModalOpen(false); setDeleteOpen(false); } if (event.key === 'Tab' && modalRef.current) { const nodes = modalRef.current.querySelectorAll<HTMLElement>('button,input'); const first = nodes[0]; const last = nodes[nodes.length - 1]; if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); } else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); } } };
+    document.addEventListener('keydown', onKey); return () => document.removeEventListener('keydown', onKey);
+  }, [editModalOpen, deleteOpen]);
+
   const handleSaveProfile = async () => {
     if (!editUsername.trim()) return;
     setSaving(true);
@@ -112,8 +123,8 @@ export default function ProfilePage() {
       await fetchUser();
       setEditModalOpen(false);
       showToast(t('profileUpdated'));
-    } catch (err: any) {
-      setSaveStatus(err.message || t('saveFailedMsg'));
+    } catch (err: unknown) {
+      setSaveStatus(err instanceof Error ? err.message : t('saveFailedMsg'));
     } finally {
       setSaving(false);
     }
@@ -133,12 +144,20 @@ export default function ProfilePage() {
       });
       setSaveStatus(t('saved'));
       setTimeout(() => setSaveStatus(null), 2000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setSaveStatus(t('saveFailed'));
     } finally {
       setSaving(false);
     }
   };
+
+  const handleAvatar = async (file?: File) => {
+    if (!file || !file.type.startsWith('image/')) return;
+    setAvatarBusy(true);
+    try { const dataUrl = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Invalid image')); reader.onerror = () => reject(reader.error || new Error('Could not read image')); reader.readAsDataURL(file); }); await userApi.uploadAvatar(dataUrl); await fetchUser(); } catch (err: unknown) { showToast(err instanceof Error ? err.message : 'Avatar upload failed', 'error'); } finally { setAvatarBusy(false); }
+  };
+  const copyId = async () => { await navigator.clipboard.writeText(user?.id || ''); setCopied(true); window.setTimeout(() => setCopied(false), 1600); };
+  const handleDelete = async () => { setDeleteError(null); try { await userApi.deleteMe(); await logout(); window.location.href = `/${locale}/auth`; } catch (err: unknown) { setDeleteError(err instanceof Error ? err.message : 'Could not delete account'); } };
 
   const handleLogout = async () => {
     await logout();
@@ -176,8 +195,9 @@ export default function ProfilePage() {
         <div className="px-4 sm:px-8 pb-6 sm:pb-8 -mt-[60px] relative flex flex-col md:flex-row items-start md:items-end gap-5 sm:gap-6 flex-wrap">
           <div className="flex min-w-0 items-end gap-4 sm:gap-6">
             <div className="relative">
-              <div className="w-[120px] h-[120px] rounded-[24px] border-4 border-[var(--card)] bg-[var(--background)] flex items-center justify-center text-[48px] text-[var(--primary)] shadow-lg">
-                {user.username[0].toUpperCase()}
+              <div className="relative w-[120px] h-[120px] rounded-[24px] border-4 border-[var(--card)] bg-[var(--background)] flex items-center justify-center text-[48px] text-[var(--primary)] shadow-lg overflow-hidden">
+                {user.avatarUrl ? <img src={user.avatarUrl} alt={`${user.username} avatar`} className="h-full w-full object-cover" /> : user.username[0].toUpperCase()}
+                <button type="button" aria-label="Upload avatar" onClick={() => avatarInput.current?.click()} className="absolute inset-x-2 bottom-2 min-h-9 rounded-lg bg-black/60 text-xs text-white">{avatarBusy ? 'Uploading…' : 'Change'}</button><input ref={avatarInput} type="file" accept="image/*" className="hidden" onChange={(event) => handleAvatar(event.target.files?.[0])} />
               </div>
               <div className="absolute bottom-1 right-1 w-[20px] h-[20px] bg-[#34D399] border-[4px] border-[var(--card)] rounded-full" />
             </div>
@@ -280,7 +300,7 @@ export default function ProfilePage() {
                   return (
                     <div key={i} className="flex flex-col gap-1.5 pb-4 border-b border-[var(--border)] last:border-0 last:pb-0">
                       <span className="text-[var(--muted-foreground)] text-xs font-semibold uppercase tracking-wider flex items-center gap-2"><Icon size={14} />{row.label}</span>
-                      <span className="font-medium text-[var(--foreground)] text-sm truncate">{row.value}</span>
+                      {row.label === t('userId') ? <span className="flex items-center gap-2"><span className="max-w-[150px] truncate font-medium text-[var(--foreground)] text-sm">{row.value}</span><button type="button" onClick={copyId} className="rounded px-2 py-1 text-xs text-[var(--primary)] hover:bg-[var(--accent)]" title={copied ? 'Copied' : 'Copy ID'} aria-label={copied ? 'Copied' : 'Copy ID'}>{copied ? 'Copied' : 'Copy'}</button></span> : <span className="font-medium text-[var(--foreground)] text-sm truncate">{row.value}</span>}
                     </div>
                   );
                 })}
@@ -336,7 +356,7 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-3">{t('theme')}</label>
-                  <select value={preferences.theme} onChange={(e) => setPreferences({ ...preferences, theme: e.target.value as any })} className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl py-3 px-4 text-sm font-medium text-[var(--foreground)] outline-none focus:border-[var(--primary)] transition-colors">
+                  <select value={preferences.theme} onChange={(e) => setPreferences({ ...preferences, theme: e.target.value as UserPreferencesResponse['theme'] })} className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl py-3 px-4 text-sm font-medium text-[var(--foreground)] outline-none focus:border-[var(--primary)] transition-colors">
                     <option value="DARK">{t('dark')}</option>
                     <option value="LIGHT">{t('light')}</option>
                     <option value="SYSTEM">{t('system')}</option>
@@ -344,7 +364,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-3">{t('temperatureUnit')}</label>
-                  <select value={preferences.defaultTemperatureUnit} onChange={(e) => setPreferences({ ...preferences, defaultTemperatureUnit: e.target.value as any })} className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl py-3 px-4 text-sm font-medium text-[var(--foreground)] outline-none focus:border-[var(--primary)] transition-colors">
+                  <select value={preferences.defaultTemperatureUnit} onChange={(e) => setPreferences({ ...preferences, defaultTemperatureUnit: e.target.value as UserPreferencesResponse['defaultTemperatureUnit'] })} className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl py-3 px-4 text-sm font-medium text-[var(--foreground)] outline-none focus:border-[var(--primary)] transition-colors">
                     <option value="CELSIUS">Celsius</option>
                     <option value="KELVIN">Kelvin</option>
                     <option value="FAHRENHEIT">Fahrenheit</option>
@@ -352,7 +372,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-3">{t('pressureUnit')}</label>
-                  <select value={preferences.defaultPressureUnit} onChange={(e) => setPreferences({ ...preferences, defaultPressureUnit: e.target.value as any })} className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl py-3 px-4 text-sm font-medium text-[var(--foreground)] outline-none focus:border-[var(--primary)] transition-colors">
+                  <select value={preferences.defaultPressureUnit} onChange={(e) => setPreferences({ ...preferences, defaultPressureUnit: e.target.value as UserPreferencesResponse['defaultPressureUnit'] })} className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl py-3 px-4 text-sm font-medium text-[var(--foreground)] outline-none focus:border-[var(--primary)] transition-colors">
                     <option value="ATMOSPHERE">Atmosphere</option>
                     <option value="PASCAL">Pascal</option>
                     <option value="BAR">Bar</option>
@@ -360,7 +380,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-3">{t('volumeUnit')}</label>
-                  <select value={preferences.defaultVolumeUnit} onChange={(e) => setPreferences({ ...preferences, defaultVolumeUnit: e.target.value as any })} className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl py-3 px-4 text-sm font-medium text-[var(--foreground)] outline-none focus:border-[var(--primary)] transition-colors">
+                  <select value={preferences.defaultVolumeUnit} onChange={(e) => setPreferences({ ...preferences, defaultVolumeUnit: e.target.value as UserPreferencesResponse['defaultVolumeUnit'] })} className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl py-3 px-4 text-sm font-medium text-[var(--foreground)] outline-none focus:border-[var(--primary)] transition-colors">
                     <option value="LITER">Liter</option>
                     <option value="MILLILITER">Milliliter</option>
                     <option value="CUBIC_METER">Cubic Meter</option>
@@ -422,7 +442,7 @@ export default function ProfilePage() {
               <AlertTriangle size={20} />{t('dangerZone')}
             </h2>
             <p className="text-sm text-[var(--muted-foreground)] mb-6 leading-relaxed">{t('dangerZoneDesc')}</p>
-            <button className="bg-[#F43F5E]/10 border border-[#F43F5E]/30 text-[#F43F5E] py-2.5 px-6 rounded-xl text-sm font-bold cursor-pointer hover:bg-[#F43F5E]/20 transition-all">
+            <button onClick={() => { setDeleteError(null); setDeleteOpen(true); }} className="bg-[#F43F5E]/10 border border-[#F43F5E]/30 text-[#F43F5E] py-2.5 px-6 rounded-xl text-sm font-bold cursor-pointer hover:bg-[#F43F5E]/20 transition-all">
               {t('deleteAccount')}
             </button>
           </div>
@@ -432,7 +452,7 @@ export default function ProfilePage() {
       {/* EDIT PROFILE MODAL */}
       {editModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200" onClick={() => setEditModalOpen(false)}>
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl w-full max-w-[480px] p-8 shadow-2xl animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+          <div ref={modalRef} className="bg-[var(--card)] border border-[var(--border)] rounded-2xl w-full max-w-[480px] p-8 shadow-2xl animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-xl font-bold text-[var(--foreground)]">{t('editProfile')}</h3>
               <button onClick={() => setEditModalOpen(false)} className="p-2 rounded-lg text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)] transition-colors"><X size={20} /></button>
@@ -457,6 +477,8 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {deleteOpen && <div className="fixed inset-0 z-[110] grid place-items-center bg-black/60 p-5" role="dialog" aria-modal="true" aria-labelledby="delete-profile-title"><div ref={modalRef} className="w-full max-w-md rounded-2xl border border-[#F43F5E]/30 bg-[var(--card)] p-6 shadow-2xl"><h2 id="delete-profile-title" className="text-xl font-bold text-[#F43F5E]">{t('deleteAccount')}</h2><p className="mt-3 text-sm text-[var(--muted-foreground)]">This permanently removes access to your account.</p>{deleteError && <p role="alert" className="mt-3 text-sm text-[#F43F5E]">{deleteError}</p>}<div className="mt-6 flex justify-end gap-3"><button className="min-h-11 rounded-xl border border-[var(--border)] px-4" onClick={() => setDeleteOpen(false)}>Cancel</button><button className="min-h-11 rounded-xl bg-[#F43F5E] px-4 font-semibold text-white" onClick={handleDelete}>Delete account</button></div></div></div>}
 
       {/* TOAST */}
       {toast && (

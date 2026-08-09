@@ -23,8 +23,8 @@ const scienceKeys = [
   { nameKey: 'sciencePhysName', copyKey: 'sciencePhysCopy', statKey: 'sciencePhysStat', image: '/physics.png' },
   { nameKey: 'scienceBioName', copyKey: 'scienceBioCopy', statKey: 'scienceBioStat', image: '/dnk.png' },
   { nameKey: 'scienceMatName', copyKey: 'scienceMatCopy', statKey: 'scienceMatStat', image: '/atom.png' },
-  { nameKey: 'scienceMicroName', copyKey: 'scienceMicroCopy', statKey: 'scienceMicroStat', image: '/atom.png' },
-  { nameKey: 'scienceElectroName', copyKey: 'scienceElectroCopy', statKey: 'scienceElectroStat', image: '/physics.png' },
+  { nameKey: 'scienceMicroName', copyKey: 'scienceMicroCopy', statKey: 'scienceMicroStat', image: '/mol-graphene.png' },
+  { nameKey: 'scienceElectroName', copyKey: 'scienceElectroCopy', statKey: 'scienceElectroStat', image: '/mol-water.png' },
 ]
 
 const elements = [
@@ -39,7 +39,7 @@ const elements = [
 const moleculeKeys = [
   { formula: 'DNA', type: 'dna', nameKey: 'moleculeDnaName', copyKey: 'moleculeDnaCopy', image: '/dna.png' },
   { formula: 'H\u2082O', type: 'water', nameKey: 'moleculeWaterName', copyKey: 'moleculeWaterCopy', image: '/molecule.png' },
-  { formula: 'C\u2086H\u2086', type: 'benzene', nameKey: 'moleculeBenzeneName', copyKey: 'moleculeBenzeneCopy', image: '/chemistry.png' },
+  { formula: 'C\u2086H\u2086', type: 'benzene', nameKey: 'moleculeBenzeneName', copyKey: 'moleculeBenzeneCopy', image: '/atom.png' },
   { formula: 'Graphene', type: 'graphene', nameKey: 'moleculeGrapheneName', copyKey: 'moleculeGrapheneCopy', image: '/molecular_network.png' },
 ]
 
@@ -59,7 +59,7 @@ function Reveal({ children, className = '', delay = 0, id }: { children: React.R
 }
 
 function Logo() {
-  return <Link className="logo" href="#home" aria-label="jasCore home"><span className="logo-symbol"><Atom /></span><span>jas<span className="text-[#8b5cf6]">Core</span></span></Link>
+  return <Link className="logo" href="#home" aria-label="jasScience home"><span className="logo-symbol"><Atom /></span><span>jas<span className="text-[#8b5cf6]">Science</span></span></Link>
 }
 
 function SectionDecor({ icons }: { icons: { Icon: typeof Atom; className: string; color: string; ring?: boolean }[] }) {
@@ -338,6 +338,6 @@ export default function LandingPage() {
         <p>{t('footerNewsletterDesc')}</p>
         <div className="newsletter-row"><input aria-label={t('footerNewsletterPlaceholder')} placeholder={t('footerNewsletterPlaceholder')} /><button className="button button-primary" aria-label="Subscribe"><ArrowRight /></button></div>
       </div>
-    </div><div className="copyright section-wrap"><span>&copy; 2026 jasCore</span><span>{t('footerCopyright')}</span></div></footer>
+    </div><div className="copyright section-wrap"><span>&copy; 2026 jasScience</span><span>{t('footerCopyright')}</span></div></footer>
   </main>
 }

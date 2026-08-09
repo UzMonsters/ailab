@@ -116,7 +116,7 @@ export default function AuthPage() {
           </div>
           <div className="flex items-center justify-between pt-5 border-t border-white/5 text-xs text-[var(--dim)]">
             <div className="flex items-center gap-2 text-[#14F195] font-mono"><div className="w-2 h-2 rounded-full bg-[#14F195] shadow-[0_0_10px_#14F195] animate-pulse" />Core v4.8 Active</div>
-            <span>&copy; 2026 jasCore Inc.</span>
+            <span>&copy; 2026 jasScience Inc.</span>
           </div>
         </div>
 

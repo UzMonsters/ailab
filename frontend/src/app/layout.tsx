@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const jetbrains = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains' });
 
 export const metadata: Metadata = {
-  title: 'jasCore — The Scientific OS',
+  title: 'jasScience — The Scientific OS',
   description: 'AI-powered virtual laboratory platform for scientific research and education.',
 };
 

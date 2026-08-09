@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, Check, ChevronRight, Globe2, Laptop, Loader2, LogOut, Moon, Palette, Save, Shield, SlidersHorizontal, Sun, UserRound, X } from 'lucide-react';
 import { userApi } from '@/services/api/user.api';
 import { useAuthStore } from '@/stores/auth.store';
@@ -36,18 +36,32 @@ export default function SettingsPage() {
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
+  const saveTimer = useRef<number | null>(null);
+  const pendingPatch = useRef<UserPreferencesUpdateRequest>({});
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (!user) fetchUser(); }, [user, fetchUser]);
   useEffect(() => { userApi.getPreferences().then((data) => { setPreferences(data); setTheme(data.theme.toLowerCase() as 'dark' | 'light' | 'system'); }).catch(() => setError(true)).finally(() => setLoading(false)); }, [setTheme]);
 
-  const update = async (patch: UserPreferencesUpdateRequest) => {
+  useEffect(() => {
+    const sync = (event: StorageEvent) => { if (event.key === 'ai-lab-preferences-sync') userApi.getPreferences().then(setPreferences).catch(() => undefined); };
+    const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('ai-lab-preferences') : null;
+    const onMessage = () => userApi.getPreferences().then(setPreferences).catch(() => undefined);
+    window.addEventListener('storage', sync); channel?.addEventListener('message', onMessage);
+    return () => { window.removeEventListener('storage', sync); channel?.removeEventListener('message', onMessage); channel?.close(); if (saveTimer.current) clearTimeout(saveTimer.current); };
+  }, []);
+
+  useEffect(() => { if (!confirmOpen) return; const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setConfirmOpen(false); if (event.key === 'Tab' && modalRef.current) { const focusable = modalRef.current.querySelectorAll<HTMLElement>('button,input'); const first = focusable[0]; const last = focusable[focusable.length - 1]; if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); } else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); } } }; document.addEventListener('keydown', onKey); return () => document.removeEventListener('keydown', onKey); }, [confirmOpen]);
+
+  const update = (patch: UserPreferencesUpdateRequest) => {
     if (!preferences) return;
     const next = { ...preferences, ...patch };
     setPreferences(next);
     if (patch.theme) setTheme(patch.theme.toLowerCase() as 'dark' | 'light' | 'system');
     setSaveState('saving');
-    try { await userApi.updatePreferences(patch); setSaveState('saved'); window.setTimeout(() => setSaveState('idle'), 1800); }
-    catch { setSaveState('error'); }
+    pendingPatch.current = { ...pendingPatch.current, ...patch };
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(async () => { const patchToSave = pendingPatch.current; pendingPatch.current = {}; try { await userApi.updatePreferences(patchToSave); localStorage.setItem('ai-lab-preferences-sync', String(Date.now())); setSaveState('saved'); const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('ai-lab-preferences') : null; channel?.postMessage('updated'); channel?.close(); window.setTimeout(() => setSaveState('idle'), 1800); } catch { setSaveState('error'); } }, 450);
   };
 
   const sections = useMemo(() => Object.keys(t.sections) as Section[], [t]);
@@ -73,7 +87,7 @@ export default function SettingsPage() {
       </div>
     </div>
     {saveState !== 'idle' && active !== 'laboratory' && <div className="fixed bottom-5 right-5 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm shadow-xl">{saveState === 'saving' ? <><Loader2 size={15} className="mr-2 inline animate-spin" />{t.saving}</> : saveState === 'saved' ? <span className="text-[#14F195]">✓ {t.saved}</span> : <span className="text-[#F43F5E]">{t.saveError}</span>}</div>}
-    {confirmOpen && <div className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-5" role="dialog" aria-modal="true"><div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-2xl"><div className="flex items-start justify-between"><h2 className="text-xl font-bold">{t.deleteTitle}</h2><button aria-label="Close" onClick={() => setConfirmOpen(false)}><X size={18} /></button></div><p className="mt-3 text-sm text-[var(--muted-foreground)]">{t.deleteBody}</p><input autoFocus value={confirmText} onChange={(e) => setConfirmText(e.target.value)} className={selectClass} placeholder={user?.username} /><div className="mt-6 flex justify-end gap-3"><button onClick={() => setConfirmOpen(false)} className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm">{t.cancel}</button><button disabled={confirmText !== user?.username} onClick={onDelete} className="rounded-xl bg-[#F43F5E] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-40">{t.confirm}</button></div></div></div>}
+    {confirmOpen && <div className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-5" role="dialog" aria-modal="true"><div ref={modalRef} className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-2xl"><div className="flex items-start justify-between"><h2 className="text-xl font-bold">{t.deleteTitle}</h2><button aria-label="Close" onClick={() => setConfirmOpen(false)}><X size={18} /></button></div><p className="mt-3 text-sm text-[var(--muted-foreground)]">{t.deleteBody}</p><input autoFocus value={confirmText} onChange={(e) => setConfirmText(e.target.value)} className={selectClass} placeholder={user?.username} /><div className="mt-6 flex justify-end gap-3"><button onClick={() => setConfirmOpen(false)} className="min-h-11 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm">{t.cancel}</button><button disabled={confirmText !== user?.username} onClick={onDelete} className="min-h-11 rounded-xl bg-[#F43F5E] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-40">{t.confirm}</button></div></div></div>}
   </div>;
 }
 

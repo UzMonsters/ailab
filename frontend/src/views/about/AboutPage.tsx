@@ -65,7 +65,7 @@ export default function AboutPage() {
               </h1>
 
               <div className="space-y-3.5 text-[13.5px] leading-relaxed text-[var(--muted-foreground)]">
-                <p><strong className="text-[var(--foreground)]">jasCore</strong> {t('p1')}</p>
+                <p><strong className="text-[var(--foreground)]">jasScience</strong> {t('p1')}</p>
                 <p>{t('p2')}</p>
               </div>
             </div>
@@ -87,7 +87,7 @@ export default function AboutPage() {
 
             <div className="flex items-center justify-between pt-4 border-t border-white/5 text-xs text-[var(--dim)]">
               <div className="flex items-center gap-2 text-[#14F195] font-mono"><span className="w-2 h-2 rounded-full bg-[#14F195] shadow-[0_0_10px_#14F195] animate-pulse" /> {t('status')}</div>
-              <span>&copy; 2026 jasCore Inc.</span>
+              <span>&copy; 2026 jasScience Inc.</span>
             </div>
           </section>
 
