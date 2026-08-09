@@ -1,11 +1,20 @@
 import { api } from './client';
-import type { User, Workspace } from '@/types';
+import type {
+  AdminUserResponse,
+  AdminUpdateUserRequest,
+  AuthSuccessResponse,
+} from '@/types';
 
 export const adminApi = {
-  getUsers: () => api.get<User[]>('/admin/users'),
-  getUser: (id: string) => api.get<User>(`/admin/users/${id}`),
-  updateUser: (id: string, data: Partial<User>) => api.put<User>(`/admin/users/${id}`, data),
-  deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
-  getLaboratories: () => api.get<Workspace[]>('/admin/laboratories'),
-  getStats: () => api.get<{ totalUsers: number; activeLabs: number; experiments: number; health: string }>('/admin/stats'),
+  getUsers: () =>
+    api.get<AdminUserResponse[]>('/api/v1/admin/users'),
+
+  getUser: (id: string) =>
+    api.get<AdminUserResponse>(`/api/v1/admin/users/${id}`),
+
+  updateUser: (id: string, data: AdminUpdateUserRequest) =>
+    api.put<AdminUserResponse>(`/api/v1/admin/users/${id}`, data),
+
+  deleteUser: (id: string) =>
+    api.delete<AuthSuccessResponse>(`/api/v1/admin/users/${id}`),
 };

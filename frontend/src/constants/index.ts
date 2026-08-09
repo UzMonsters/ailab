@@ -9,5 +9,5 @@ export const LOCALE_NAMES: Record<Locale, string> = {
   uz: "O'zbek",
 };
 
-export const SITE_NAME = 'AI Laboratory';
+export const SITE_NAME = 'jasCore';
 export const SITE_DESCRIPTION = 'AI-powered virtual laboratory platform for scientific research and education.';
