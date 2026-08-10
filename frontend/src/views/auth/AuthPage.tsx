@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Atom, FlaskConical, Brain, Users, Mail, Lock, User, Eye, EyeOff, ArrowRight, Loader2, AlertCircle, XCircle } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import ScienceBackground, { BackgroundGlow } from '@/components/common/ScienceBackground';
+import { normalizeError } from '@/lib/errors';
 
 interface FieldErrors {
   username?: string;
@@ -67,9 +68,10 @@ export default function AuthPage() {
       try {
         await register(form.username, form.email, form.password);
         router.push(`/${locale}/dashboard`);
-      } catch (err: any) {
-        if (err.status === 409) {
-          const msg = err.message?.toLowerCase() || '';
+      } catch (err: unknown) {
+        const normalized = normalizeError(err);
+        if (normalized.status === 409) {
+          const msg = normalized.message.toLowerCase();
           if (msg.includes('username')) setFieldErrors({ username: 'Username already taken' });
           else if (msg.includes('email')) setFieldErrors({ email: 'Email already registered' });
         }

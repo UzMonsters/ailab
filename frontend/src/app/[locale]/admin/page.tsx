@@ -6,6 +6,7 @@ import { Users, FlaskConical, Activity, Heart, ShieldCheck, AlertTriangle, Loade
 import { adminApi } from '@/services/api/admin.api';
 import type { AdminUserResponse } from '@/types';
 import { useTranslations } from 'next-intl';
+import { normalizeError } from '@/lib/errors';
 
 export default function AdminDashboardPage() {
   const pathname = usePathname();
@@ -21,14 +22,14 @@ export default function AdminDashboardPage() {
         setLoading(true);
         const data = await adminApi.getUsers();
         setUsers(data);
-      } catch (err: any) {
-        setError(err.message || t('loadFailed'));
+      } catch (err: unknown) {
+        setError(normalizeError(err, t('loadFailed')).message);
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, []);
+    }, [t]);
 
   if (loading) {
     return (

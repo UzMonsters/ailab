@@ -7,6 +7,7 @@ import {
   Trash2, Edit3, CheckCircle, XCircle, Loader2, X, AlertTriangle,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { normalizeError } from '@/lib/errors';
 
 export default function AdminUsersPage() {
   const t = useTranslations('admin');
@@ -38,8 +39,8 @@ export default function AdminUsersPage() {
       const data = await adminApi.getUsers();
       setUsers(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || t('fetchFailed'));
+    } catch (err: unknown) {
+      setError(normalizeError(err, t('fetchFailed')).message);
     } finally {
       setLoading(false);
     }
@@ -58,8 +59,8 @@ export default function AdminUsersPage() {
       setAddForm({ username: '', email: '', password: '', role: 'ROLE_USER' });
       await fetchUsers();
       showToast(t('created'));
-    } catch (err: any) {
-      showToast(err.message || t('createFailed'));
+    } catch (err: unknown) {
+      showToast(normalizeError(err, t('createFailed')).message);
     } finally {
       setActionLoading(false);
     }
@@ -78,8 +79,8 @@ export default function AdminUsersPage() {
       setEditModalOpen(false);
       await fetchUsers();
       showToast(t('updated'));
-    } catch (err: any) {
-      showToast(err.message || t('updateFailed'));
+    } catch (err: unknown) {
+      showToast(normalizeError(err, t('updateFailed')).message);
     } finally {
       setActionLoading(false);
     }
@@ -94,8 +95,8 @@ export default function AdminUsersPage() {
       setDeleteConfirmOpen(null);
       await fetchUsers();
       showToast(t('deleted'));
-    } catch (err: any) {
-      showToast(err.message || t('deleteFailed'));
+    } catch (err: unknown) {
+      showToast(normalizeError(err, t('deleteFailed')).message);
     } finally {
       setActionLoading(false);
       setActionMenu(null);
@@ -109,8 +110,8 @@ export default function AdminUsersPage() {
       await adminApi.updateUser(user.id, { role: newRole });
       await fetchUsers();
       showToast(t('roleChanged', { role: newRole === 'ROLE_ADMIN' ? t('admin') : t('user') }));
-    } catch (err: any) {
-      showToast(err.message || t('roleUpdateFailed'));
+    } catch (err: unknown) {
+      showToast(normalizeError(err, t('roleUpdateFailed')).message);
     } finally {
       setActionLoading(false);
       setActionMenu(null);
