@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { workspacesApi } from '@/services/api/workspaces.api';
 import type { Workspace } from '@/types';
 import OnboardingHint from '@/components/common/OnboardingHint';
+import { normalizeError } from '@/lib/errors';
 
 const menuActions = [
   { key: 'open', label: 'open', icon: FlaskConical, danger: false },
@@ -89,12 +90,12 @@ export default function DashboardPage() {
     try {
       const data = await workspacesApi.list();
       setWorkspaces(data.filter(w => !w.isDeleted));
-    } catch (err: any) {
-      setError(err.message || t('loadFailed'));
+    } catch (err: unknown) {
+      setError(normalizeError(err, t('loadFailed')).message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => { void loadWorkspaces(); }, 0);
@@ -115,8 +116,8 @@ export default function DashboardPage() {
       setCreateModalOpen(false);
       setNewName('');
       showToast(t('created'));
-    } catch (err: any) {
-      showToast(err.message || t('creationFailed'), 'error');
+    } catch (err: unknown) {
+      showToast(normalizeError(err, t('creationFailed')).message, 'error');
     }
   };
 
@@ -128,8 +129,8 @@ export default function DashboardPage() {
       setRenameModalOpen(null);
       setRenameValue('');
       showToast(t('renamed'));
-    } catch (err: any) {
-      showToast(err.message || t('renameFailed'), 'error');
+    } catch (err: unknown) {
+      showToast(normalizeError(err, t('renameFailed')).message, 'error');
     }
   };
 
@@ -139,8 +140,8 @@ export default function DashboardPage() {
       setWorkspaces(prev => [copy, ...prev]);
       setMenuOpen(null); setMenuAnchor(null);
       showToast(t('duplicated'));
-    } catch (err: any) {
-      showToast(err.message || t('duplicateFailed'), 'error');
+    } catch (err: unknown) {
+      showToast(normalizeError(err, t('duplicateFailed')).message, 'error');
     }
   };
 
@@ -150,8 +151,8 @@ export default function DashboardPage() {
       setWorkspaces(prev => prev.map(w => w.id === updated.id ? updated : w));
       setMenuOpen(null); setMenuAnchor(null);
       showToast(updated.isFavorite ? t('addedToFavorites') : t('removedFromFavorites'));
-    } catch (err: any) {
-      showToast(err.message || t('actionFailed'), 'error');
+    } catch (err: unknown) {
+      showToast(normalizeError(err, t('actionFailed')).message, 'error');
     }
   };
 
@@ -161,8 +162,8 @@ export default function DashboardPage() {
       setWorkspaces(prev => prev.filter(w => w.id !== id));
       setMenuOpen(null); setMenuAnchor(null);
       showToast(t('movedToTrash'));
-    } catch (err: any) {
-      showToast(err.message || t('actionFailed'), 'error');
+    } catch (err: unknown) {
+      showToast(normalizeError(err, t('actionFailed')).message, 'error');
     }
   };
 

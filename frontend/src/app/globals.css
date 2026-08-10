@@ -369,6 +369,8 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .sandbox-pour-stream { animation: sandbox-pour-stream .9s ease-out both; transform-origin: top; }
 @keyframes sandbox-pour-stream { 0% { transform: translateX(-50%) scaleY(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateX(-50%) scaleY(1); opacity: 0; } }
 .touch-target { min-width: 44px; min-height: 44px; }
+aside .grid.grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+aside .grid.grid-cols-4 > button { min-width: 0; min-height: 44px; padding-inline: .35rem; line-height: 1.15; white-space: normal; overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: reduce) { .sandbox-bubbles, .sandbox-stir, .sandbox-flame { animation: none; } }
 .viz-grid { display: grid; gap: 3px; flex: 1; }
 .viz-cell { aspect-ratio: 1; border-radius: 2px; }

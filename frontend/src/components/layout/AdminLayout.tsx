@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -9,15 +9,39 @@ import {
 } from 'lucide-react';
 import ScienceBackground, { BackgroundGlow } from '@/components/common/ScienceBackground';
 import { useAuthStore } from '@/stores/auth.store';
+import { authApi } from '@/services/api/auth.api';
 import { useTranslations } from 'next-intl';
+import { Loader2 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const locale = pathname.split('/')[1] || 'en';
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout } = useAuthStore();
+  const { user, logout, fetchUser } = useAuthStore();
+  const [checkingAccess, setCheckingAccess] = useState(true);
   const t = useTranslations('admin');
+
+  useEffect(() => {
+    let active = true;
+    const checkAccess = async () => {
+      try {
+        await authApi.refresh();
+      } catch {
+        // An existing in-memory access token can still be valid.
+      }
+      await fetchUser();
+      if (!active) return;
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser?.role !== 'ROLE_ADMIN') {
+        router.replace(currentUser ? `/${locale}/dashboard` : `/${locale}/auth`);
+        return;
+      }
+      setCheckingAccess(false);
+    };
+    void checkAccess();
+    return () => { active = false; };
+  }, [fetchUser, locale, router]);
 
   const handleLogout = async () => {
     await logout();
@@ -33,6 +57,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   const displayName = user?.username || t('admin');
+
+  if (checkingAccess || user?.role !== 'ROLE_ADMIN') {
+    return <div className="grid min-h-screen place-items-center bg-[var(--background)]"><Loader2 className="animate-spin text-[var(--primary)]" aria-label="Checking access" /></div>;
+  }
 
   return (
     <div className="relative min-h-screen flex" style={{ backgroundColor: 'var(--background)' }}>

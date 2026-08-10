@@ -5,6 +5,7 @@ import type { UserMeResponse } from '@/types';
 import { authApi } from '@/services/api/auth.api';
 import { userApi } from '@/services/api/user.api';
 import { getAccessToken } from '@/services/api/client';
+import { normalizeError } from '@/lib/errors';
 
 const MOCK_MODE = false;
 
@@ -48,8 +49,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await authApi.login(email, password);
       const user = await userApi.getMe();
       set({ user, isAuthenticated: true, isLoading: false });
-    } catch (err: any) {
-      set({ error: err.message || 'Login failed', isLoading: false, isAuthenticated: false });
+    } catch (err: unknown) {
+      set({ error: normalizeError(err, 'Login failed').message, isLoading: false, isAuthenticated: false });
       throw err;
     }
   },
@@ -67,8 +68,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await authApi.login(email, password);
       const user = await userApi.getMe();
       set({ user, isAuthenticated: true, isLoading: false });
-    } catch (err: any) {
-      set({ error: err.message || 'Registration failed', isLoading: false });
+    } catch (err: unknown) {
+      set({ error: normalizeError(err, 'Registration failed').message, isLoading: false });
       throw err;
     }
   },
