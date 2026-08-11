@@ -12,9 +12,6 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="app" target="17" />
-      <module name="chemistry-engine" target="17" />
-      <module name="identity-module" target="17" />
       <module name="identity-service" target="21" />
     </bytecodeTargetLevel>
   </component>

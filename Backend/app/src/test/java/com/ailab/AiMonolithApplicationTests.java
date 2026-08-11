@@ -33,8 +33,12 @@ class AiMonolithApplicationTests {
                 "jdbc:postgresql://localhost:5432/ai_laboratory", "postgres", "Sardorbek.01")) {
             conn.createStatement().execute("DROP SCHEMA IF EXISTS chemistry CASCADE;");
             conn.createStatement().execute("CREATE SCHEMA chemistry;");
-            conn.createStatement().execute("DROP TABLE IF EXISTS users CASCADE;");
+            conn.createStatement().execute("DROP TABLE IF EXISTS workspace_events CASCADE;");
+            conn.createStatement().execute("DROP TABLE IF EXISTS workspace_states CASCADE;");
+            conn.createStatement().execute("DROP TABLE IF EXISTS workspaces CASCADE;");
+            conn.createStatement().execute("DROP TABLE IF EXISTS flyway_schema_history_workspace CASCADE;");
             conn.createStatement().execute("DROP TABLE IF EXISTS refresh_tokens CASCADE;");
+            conn.createStatement().execute("DROP TABLE IF EXISTS users CASCADE;");
             conn.createStatement().execute("DROP TABLE IF EXISTS flyway_schema_history CASCADE;");
         } catch (Exception ignored) {
         }
