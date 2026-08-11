@@ -1,83 +1,86 @@
 import { api } from './client';
-import type { Workspace } from '@/types';
+import type {
+  AutosaveRequest,
+  SandboxEventCommand,
+  Workspace,
+  WorkspaceEventAck,
+  WorkspacePageResponse,
+  WorkspaceState,
+} from '@/types';
 
-const MOCK_MODE = true;
+export interface WorkspaceListQuery {
+  science?: Workspace['science'];
+  search?: string;
+  sort?: string;
+  page?: number;
+  size?: number;
+  includeDeleted?: boolean;
+}
 
-const mockStore = {
-  getWorkspaces: (): Workspace[] => {
-    if (typeof window === 'undefined') return [];
-    try {
-      return JSON.parse(localStorage.getItem('ailab_workspaces') || '[]');
-    } catch { return []; }
-  },
-  saveWorkspaces: (workspaces: Workspace[]) => {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem('ailab_workspaces', JSON.stringify(workspaces));
-  },
-};
-
-function generateId(): string {
-  return `ws_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+function queryString(query: WorkspaceListQuery = {}): string {
+  const params = new URLSearchParams();
+  Object.entries(query).forEach(([key, value]) => {
+    if (value !== undefined && value !== '') params.set(key, String(value));
+  });
+  const result = params.toString();
+  return result ? `?${result}` : '';
 }
 
 export const workspacesApi = {
-  list: async (): Promise<Workspace[]> => {
-    if (MOCK_MODE) return mockStore.getWorkspaces();
-    return api.get<Workspace[]>('/api/v1/workspaces');
+  list: async (query: WorkspaceListQuery = {}): Promise<Workspace[]> => {
+    const response = await api.get<WorkspacePageResponse<Workspace>>(`/api/v1/workspaces${queryString(query)}`);
+    return response.items;
   },
 
-  get: async (id: string): Promise<Workspace> => {
-    if (MOCK_MODE) {
-      const ws = mockStore.getWorkspaces().find(w => w.id === id);
-      if (!ws) throw new Error('Workspace not found');
-      return ws;
-    }
-    return api.get<Workspace>(`/api/v1/workspaces/${id}`);
+  get: (id: string) => api.get<Workspace>(`/api/v1/workspaces/${id}`),
+
+  create: (name: string, science: Workspace['science'] = 'chemistry') =>
+    api.post<Workspace>('/api/v1/workspaces', { name, science }),
+
+  update: (
+    id: string,
+    data: Partial<Pick<Workspace, 'name' | 'isFavorite' | 'isDeleted' | 'thumbnail'>> & { stateVersion?: number },
+  ) => api.put<Workspace>(`/api/v1/workspaces/${id}`, data),
+
+  duplicate: (id: string, name?: string) =>
+    api.post<Workspace>(`/api/v1/workspaces/${id}/duplicate`, name ? { name } : undefined),
+
+  delete: (id: string) => api.delete<{ message: string }>(`/api/v1/workspaces/${id}`),
+
+  restore: (id: string) => api.post<Workspace>(`/api/v1/workspaces/${id}/restore`),
+
+  saveThumbnail: (id: string, data: { svg?: string; width?: number; height?: number; imageData?: string }) =>
+    api.post<{ thumbnailUrl: string; updatedAt: string }>(`/api/v1/workspaces/${id}/thumbnail`, data),
+
+  getState: (id: string) => api.get<WorkspaceState>(`/api/v1/workspaces/${id}/state`),
+
+  saveState: (id: string, state: WorkspaceState, expectedVersion?: number) =>
+    api.put<WorkspaceState>(
+      `/api/v1/workspaces/${id}/state${expectedVersion === undefined ? '' : `?expectedVersion=${expectedVersion}`}`,
+      state,
+    ),
+
+  appendEvent: (id: string, event: SandboxEventCommand) =>
+    api.post<WorkspaceEventAck>(`/api/v1/workspaces/${id}/events`, event),
+
+  getEvents: (id: string, afterVersion?: number, limit?: number) => {
+    const params = new URLSearchParams();
+    if (afterVersion !== undefined) params.set('afterVersion', String(afterVersion));
+    if (limit !== undefined) params.set('limit', String(limit));
+    const encoded = params.toString();
+    const query = encoded ? `?${encoded}` : '';
+    return api.get<Array<Record<string, unknown>>>(`/api/v1/workspaces/${id}/events${query}`);
   },
 
-  create: async (name: string, science: Workspace['science'] = 'chemistry'): Promise<Workspace> => {
-    if (MOCK_MODE) {
-      const now = new Date().toISOString();
-      const ws: Workspace = { id: generateId(), name, science, createdAt: now, updatedAt: now, isFavorite: false, isDeleted: false };
-      const all = mockStore.getWorkspaces();
-      all.unshift(ws);
-      mockStore.saveWorkspaces(all);
-      return ws;
-    }
-    return api.post<Workspace>('/api/v1/workspaces', { name, science });
-  },
+  undo: (id: string, expectedVersion?: number) =>
+    api.post<WorkspaceState>(`/api/v1/workspaces/${id}/undo${expectedVersion === undefined ? '' : `?expectedVersion=${expectedVersion}`}`),
 
-  update: async (id: string, data: Partial<Pick<Workspace, 'name' | 'isFavorite' | 'isDeleted'>>): Promise<Workspace> => {
-    if (MOCK_MODE) {
-      const all = mockStore.getWorkspaces();
-      const idx = all.findIndex(w => w.id === id);
-      if (idx === -1) throw new Error('Workspace not found');
-      all[idx] = { ...all[idx], ...data, updatedAt: new Date().toISOString() };
-      mockStore.saveWorkspaces(all);
-      return all[idx];
-    }
-    return api.put<Workspace>(`/api/v1/workspaces/${id}`, data);
-  },
+  redo: (id: string, expectedVersion?: number) =>
+    api.post<WorkspaceState>(`/api/v1/workspaces/${id}/redo${expectedVersion === undefined ? '' : `?expectedVersion=${expectedVersion}`}`),
 
-  duplicate: async (id: string): Promise<Workspace> => {
-    if (MOCK_MODE) {
-      const original = mockStore.getWorkspaces().find(w => w.id === id);
-      if (!original) throw new Error('Workspace not found');
-      const copy: Workspace = { ...original, id: generateId(), name: `${original.name} (copy)`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-      const all = mockStore.getWorkspaces();
-      all.unshift(copy);
-      mockStore.saveWorkspaces(all);
-      return copy;
-    }
-    return api.post<Workspace>(`/api/v1/workspaces/${id}/duplicate`);
-  },
+  publish: (id: string, data?: { title?: string; description?: string }) =>
+    api.post<{ workspaceId: string; shareUrl?: string; publishedAt?: string }>(`/api/v1/workspaces/${id}/publish`, data),
 
-  delete: async (id: string): Promise<{ message: string }> => {
-    if (MOCK_MODE) {
-      const all = mockStore.getWorkspaces().filter(w => w.id !== id);
-      mockStore.saveWorkspaces(all);
-      return { message: 'Deleted' };
-    }
-    return api.delete<{ message: string }>(`/api/v1/workspaces/${id}`);
-  },
+  autosave: (id: string, data: AutosaveRequest) =>
+    api.post<{ stateVersion: number; savedAt: string }>(`/api/v1/workspaces/${id}/autosave`, data),
 };

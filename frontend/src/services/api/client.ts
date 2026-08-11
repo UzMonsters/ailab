@@ -7,6 +7,10 @@ const API_BASE = configuredApiBase || (
     : 'http://localhost:8080'
 );
 
+export function getApiBaseUrl(): string {
+  return API_BASE;
+}
+
 let accessToken: string | null = null;
 let refreshPromise: Promise<boolean> | null = null;
 

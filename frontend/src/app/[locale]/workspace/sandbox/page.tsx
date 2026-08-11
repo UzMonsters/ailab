@@ -9,6 +9,11 @@ import ThemeToggle from '@/components/common/ThemeToggle';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import EquipmentIcon, { type EquipmentOperation } from '@/components/sandbox/equipment/EquipmentIcon';
 import OnboardingHint from '@/components/common/OnboardingHint';
+import { experimentApi } from '@/services/api/experiment.api';
+import { catalogApi } from '@/services/api/catalog.api';
+import { connectWorkspaceRealtime } from '@/services/realtime/workspace-realtime';
+import { workspacesApi } from '@/services/api/workspaces.api';
+import type { EquipmentSummary, MaterialSummary, WorkspaceState } from '@/types';
 
 const ru = (locale: string) => locale === 'ru';
 const uz = (locale: string) => locale === 'uz';
@@ -20,6 +25,15 @@ type Port = 'Glass' | 'Liquid' | 'Gas' | 'Thermal' | 'Electrical' | 'Vacuum';
 type Connection = { id: string; from: string; to: string; port: Port; direction: 'source-to-target' | 'target-to-source' };
 type LibraryItem = { id: EquipmentType; name: string; w: number; h: number; icon: typeof Beaker };
 type LibraryTab = 'equipment' | 'materials' | 'elements' | 'ai';
+
+const backendMaterialId = (id: string) => ({
+  water: 'COMP-H2O',
+  ethanol: 'COMP-ETHANOL',
+  acid: 'COMP-HCL',
+  nacl: 'COMP-NACL',
+  naoh: 'COMP-NAOH',
+  cuso4: 'COMP-CUSO4',
+}[id] || id);
 
 const liquids: Material[] = [
   { id: 'water', name: 'Water', formula: 'H₂O', color: '#22D3EE', state: 'liquid' },
@@ -51,6 +65,59 @@ const isVessel = (item: Item) => ['beaker', 'beaker50', 'beaker100', 'beaker250'
 const vesselCapacities: Record<string, number> = { beaker50: 50, beaker100: 100, beaker250: 250, beaker500: 500, testtube: 50, graduated: 100, erlenmeyer: 250, roundflask: 500, volumetric: 100 };
 const capacityFor = (item: Item) => item.capacityMl ?? vesselCapacities[item.type] ?? 100;
 
+const materialFromSummary = (material: MaterialSummary): Material => ({
+  id: material.materialId,
+  name: material.name,
+  formula: material.formula,
+  color: material.phase.toLowerCase() === 'gas' ? '#A78BFA' : material.phase.toLowerCase() === 'solid' ? '#CBD5E1' : '#22D3EE',
+  state: material.phase.toLowerCase() === 'gas' || material.phase.toLowerCase() === 'solid' ? material.phase.toLowerCase() as MaterialState : 'liquid',
+});
+const equipmentTypeFromProfile = (profile: EquipmentSummary): EquipmentType => {
+  const value = `${profile.profileId} ${profile.type}`.toLowerCase();
+  if (value.includes('burner')) return 'burner';
+  if (value.includes('beaker')) return 'beaker';
+  if (value.includes('erlenmeyer')) return 'erlenmeyer';
+  if (value.includes('test') && value.includes('tube')) return 'testtube';
+  if (value.includes('thermometer')) return 'thermometer';
+  if (value.includes('condenser')) return 'condenser';
+  return 'beaker';
+};
+
+const itemFromState = (value: Record<string, unknown>): Item => {
+  const materialValue = value.material;
+  const materialRecord = materialValue && typeof materialValue === 'object' ? materialValue as Record<string, unknown> : undefined;
+  const material = materialRecord && typeof materialRecord.id === 'string' ? {
+    id: materialRecord.id,
+    name: String(materialRecord.name ?? materialRecord.id),
+    formula: String(materialRecord.formula ?? ''),
+    color: String(materialRecord.color ?? '#22D3EE'),
+    state: String(materialRecord.state ?? 'liquid') as MaterialState,
+  } : undefined;
+  const type = String(value.type ?? value.equipmentType ?? 'beaker') as EquipmentType;
+  const volumeMl = Number(value.volumeMl ?? 0);
+  const capacityMl = Number(value.capacityMl ?? vesselCapacities[type] ?? 100);
+  return {
+    id: String(value.id ?? crypto.randomUUID()),
+    type,
+    name: String(value.name ?? value.equipmentType ?? type),
+    x: Number(value.x ?? (value.position as { x?: number } | undefined)?.x ?? 0),
+    y: Number(value.y ?? (value.position as { y?: number } | undefined)?.y ?? 90),
+    w: Number(value.w ?? (value.size as { width?: number } | undefined)?.width ?? 100),
+    h: Number(value.h ?? (value.size as { height?: number } | undefined)?.height ?? 100),
+    scale: Number(value.scale ?? 1),
+    rotation: Number(value.rotation ?? 0),
+    material,
+    volumeMl,
+    capacityMl,
+    liquidLevel: Number(value.liquidLevel ?? (capacityMl ? volumeMl / capacityMl : 0)),
+    temperature: Number(value.temperature ?? value.temperatureC ?? 24.5),
+    targetTemperature: typeof value.targetTemperature === 'number' ? value.targetTemperature : undefined,
+    operation: String(value.operation ?? 'idle') as EquipmentOperation,
+    attachedTo: typeof value.attachedTo === 'string' ? value.attachedTo : undefined,
+    broken: value.broken === true,
+  };
+};
+
 export default function SandboxPage() {
   const pathname = usePathname();
   const query = useSearchParams();
@@ -79,7 +146,137 @@ export default function SandboxPage() {
   const panRef = useRef<{ x: number; y: number; startX: number; startY: number } | null>(null);
   const pointerRef = useRef({ x: 0, y: 0 });
   const templateLoaded = useRef(false);
+  const hydrated = useRef(false);
+  const stateVersionRef = useRef(0);
+  const persistenceQueue = useRef(Promise.resolve());
+  const saveTimer = useRef<number | null>(null);
+  const [, setStateVersion] = useState(0);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const selected = items.find((item) => item.id === selectedId);
+  const queueWorkspaceEvent = useCallback((eventType: string, payload: Record<string, unknown>) => {
+    if (!workspaceId || !hydrated.current) return;
+    persistenceQueue.current = persistenceQueue.current.then(async () => {
+      const ack = await workspacesApi.appendEvent(workspaceId, {
+        clientEventId: crypto.randomUUID(),
+        expectedVersion: stateVersionRef.current,
+        eventType,
+        payload,
+      });
+      stateVersionRef.current = ack.stateVersion;
+      setStateVersion(ack.stateVersion);
+    }).catch((error: unknown) => {
+      setNotice(error instanceof Error ? error.message : 'Workspace event could not be saved');
+    });
+  }, [workspaceId]);
+
+  const workspaceState = useCallback((): WorkspaceState => ({
+    workspaceId: workspaceId || '',
+    sessionId,
+    stateVersion: stateVersionRef.current,
+    viewport: { x: pan.x, y: pan.y, zoom },
+    grid: { enabled: true, size: 20, snap: true },
+    items: items as unknown as Record<string, unknown>[],
+    connections: connections.map((connection) => ({
+      id: connection.id,
+      fromItemId: connection.from,
+      toItemId: connection.to,
+      port: connection.port,
+      direction: connection.direction,
+    })),
+    log: [],
+    updatedAt: new Date().toISOString(),
+  }), [connections, items, pan.x, pan.y, sessionId, workspaceId, zoom]);
+
+  useEffect(() => {
+    if (!workspaceId) {
+      hydrated.current = true;
+      return;
+    }
+    let cancelled = false;
+    void workspacesApi.getState(workspaceId).then((state) => {
+      if (cancelled) return;
+      const viewport = state.viewport as { x?: number; y?: number; zoom?: number };
+      setItems(state.items.map(itemFromState));
+      setConnections(state.connections.map((value) => ({
+        id: String(value.id ?? crypto.randomUUID()),
+        from: String(value.from ?? value.fromItemId ?? ''),
+        to: String(value.to ?? value.toItemId ?? ''),
+        port: String(value.port ?? 'Glass') as Port,
+        direction: String(value.direction ?? 'source-to-target') as Connection['direction'],
+      })).filter((connection) => connection.from && connection.to));
+      setPan({ x: Number(viewport.x ?? 0), y: Number(viewport.y ?? 0) });
+      setZoom(Number(viewport.zoom ?? 1));
+      stateVersionRef.current = state.stateVersion;
+      setStateVersion(state.stateVersion);
+      setSessionId(state.sessionId ?? null);
+      hydrated.current = true;
+      if (state.sessionId) {
+        void experimentApi.getExperiment(state.sessionId).catch(() => undefined);
+      }
+    }).catch((error: unknown) => {
+      if (!cancelled) setNotice(error instanceof Error ? error.message : 'Workspace state could not be loaded');
+      hydrated.current = true;
+    });
+    return () => { cancelled = true; };
+  }, [workspaceId]);
+
+  useEffect(() => {
+    if (!workspaceId || !hydrated.current) return;
+    if (saveTimer.current !== null) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => {
+      const state = workspaceState();
+      persistenceQueue.current = persistenceQueue.current.then(async () => {
+        const saved = await workspacesApi.saveState(workspaceId, state, stateVersionRef.current);
+        stateVersionRef.current = saved.stateVersion;
+        setStateVersion(saved.stateVersion);
+      }).catch((error: unknown) => {
+        setNotice(error instanceof Error ? error.message : 'Workspace state could not be saved');
+      });
+    }, 700);
+    return () => { if (saveTimer.current !== null) window.clearTimeout(saveTimer.current); };
+  }, [connections, items, pan.x, pan.y, sessionId, workspaceId, workspaceState, zoom]);
+
+  useEffect(() => {
+    if (!workspaceId || !hydrated.current) return;
+    const realtime = connectWorkspaceRealtime(workspaceId, sessionId, {
+      onWorkspaceEvent: (raw) => {
+        const event = raw as { stateDelta?: { items?: Record<string, unknown>[]; connections?: Record<string, unknown>[] }; stateVersion?: number };
+        if (event.stateDelta?.items) setItems(event.stateDelta.items.map(itemFromState));
+        if (event.stateDelta?.connections) setConnections(event.stateDelta.connections.map((value) => ({
+          id: String(value.id ?? crypto.randomUUID()),
+          from: String(value.from ?? value.fromItemId ?? ''),
+          to: String(value.to ?? value.toItemId ?? ''),
+          port: String(value.port ?? 'Glass') as Port,
+          direction: String(value.direction ?? 'source-to-target') as Connection['direction'],
+        })).filter((connection) => connection.from && connection.to));
+        if (typeof event.stateVersion === 'number') {
+          stateVersionRef.current = Math.max(stateVersionRef.current, event.stateVersion);
+          setStateVersion(stateVersionRef.current);
+        }
+      },
+      onError: (raw) => {
+        const error = raw as { message?: string };
+        if (error.message) setNotice(error.message);
+      },
+    });
+    return () => realtime.close();
+  }, [sessionId, workspaceId]);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    const flush = () => {
+      if (!hydrated.current) return;
+      const state = workspaceState();
+      void workspacesApi.autosave(workspaceId, {
+        expectedVersion: stateVersionRef.current,
+        stateHash: JSON.stringify(state).length.toString(16),
+        state: state as unknown as Record<string, unknown>,
+      }).catch(() => undefined);
+    };
+    window.addEventListener('beforeunload', flush);
+    return () => window.removeEventListener('beforeunload', flush);
+  }, [workspaceId, workspaceState]);
+
   useEffect(() => {
     const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
     if (!dialog) return;
@@ -140,7 +337,8 @@ export default function SandboxPage() {
     const index = items.length;
     const next: Item = { id: `${libraryItem.id}-${crypto.randomUUID()}`, type: libraryItem.id, name: libraryItem.name, x: Math.max(24, (bounds?.width || 800) / 2 - libraryItem.w / 2 + index * 18), y: Math.max(90, (bounds?.height || 600) / 2 - libraryItem.h / 2), w: libraryItem.w, h: libraryItem.h, scale: 1, rotation: 0, volumeMl: 0, liquidLevel: 0, temperature: 24.5, operation: 'idle' };
     setItems((current) => [...current, next]); setSelectedId(next.id);
-  }, [items.length]);
+    queueWorkspaceEvent('ITEM_ADDED', { id: next.id, equipmentType: next.type, name: next.name, x: next.x, y: next.y, w: next.w, h: next.h, scale: next.scale, rotation: next.rotation, capacityMl: next.capacityMl });
+  }, [items.length, queueWorkspaceEvent]);
 
   const updateItem = (id: string, patch: Partial<Item>) => setItems((current) => current.map((item) => {
     if (item.id !== id) return item;
@@ -152,6 +350,7 @@ export default function SandboxPage() {
     if (!selected || !isVessel(selected)) { setNotice('Select a vessel first'); return; }
     if (material.state === 'gas') { setNotice('Oxygen is a gas: an open flask cannot retain it. Use a sealed Gas connector.'); return; }
     updateItem(selected.id, { material, volumeMl: material.state === 'liquid' ? Math.max(25, selected.volumeMl) : selected.volumeMl, liquidLevel: material.state === 'liquid' ? Math.max(.35, selected.liquidLevel) : selected.liquidLevel });
+    queueWorkspaceEvent('MATERIAL_ADDED', { itemId: selected.id, materialId: backendMaterialId(material.id), amountMl: material.state === 'liquid' ? 25 : 1, phase: material.state });
     setPourAnimation(selected.id); window.setTimeout(() => setPourAnimation(null), 900); setNotice(`${material.name} added · ${material.state === 'liquid' ? '25 mL' : 'solid sample'}`);
   };
   const applyOperation = (item: Item, operation: EquipmentOperation) => {
@@ -160,6 +359,17 @@ export default function SandboxPage() {
     const target = Number.isFinite(requestedTarget) ? Math.max(0, requestedTarget) : defaultTarget;
     setItems((current) => current.map((value) => value.id === item.id || (item.type === 'burner' && item.attachedTo === value.id) || (value.type === 'burner' && value.attachedTo === item.id) ? { ...value, operation, targetTemperature: operation === 'idle' || operation === 'stirring' ? value.targetTemperature : target } : value));
     if (operation === 'heating' && item.type === 'burner' && !item.attachedTo) setNotice(ru(locale) ? 'Сначала приблизьте горелку к сосуду.' : uz(locale) ? 'Avval gorelkani idishga yaqinlashtiring.' : 'Move the burner close to a vessel first.');
+    if (sessionId) {
+      void experimentApi.executeOperation(sessionId, {
+        expectedStateVersion: stateVersionRef.current,
+        idempotencyKey: crypto.randomUUID(),
+        command: { type: operation === 'heating' ? 'HEAT' : operation === 'cooling' ? 'COOL' : operation === 'stirring' ? 'STIR' : 'STOP', targetVesselId: item.id, targetTemperatureC: target },
+      }).then((result) => {
+        stateVersionRef.current = result.newVersion;
+        setStateVersion(result.newVersion);
+      }).catch((error: unknown) => setNotice(error instanceof Error ? error.message : 'Scientific operation failed'));
+    }
+    queueWorkspaceEvent(operation === 'heating' ? 'HEAT_START' : operation === 'cooling' ? 'COOL' : operation === 'stirring' ? 'STIR_START' : 'HEAT_STOP', { equipmentId: item.id, vesselId: item.id, targetTemperatureC: target });
   };
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -186,6 +396,10 @@ export default function SandboxPage() {
       const nearest = items.filter(isVessel).map((item) => ({ item, distance: Math.hypot(item.x - burner.x, item.y - burner.y) })).sort((a, b) => a.distance - b.distance)[0];
       if (nearest && nearest.distance < 130) { updateItem(burner.id, { x: nearest.item.x + nearest.item.w / 2 - burner.w / 2, y: nearest.item.y + nearest.item.h - burner.h * .1, attachedTo: nearest.item.id }); setNotice(`Burner attached to ${nearest.item.name}`); }
     }
+    if (drag) {
+      const moved = items.find((item) => item.id === drag.id);
+      if (moved) queueWorkspaceEvent('ITEM_MOVED', { itemId: moved.id, x: moved.x, y: moved.y });
+    }
     dragRef.current = null;
   };
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>, id: string) => {
@@ -196,8 +410,8 @@ export default function SandboxPage() {
     event.currentTarget.setPointerCapture(event.pointerId); dragRef.current = { id, dx: (event.clientX - bounds.left) / zoom - item.x, dy: (event.clientY - bounds.top) / zoom - item.y };
   };
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => { pointerRef.current = { x: event.clientX, y: event.clientY }; const bounds = canvasRef.current?.getBoundingClientRect(); if (tool === 'pan' && panRef.current) { setPan({ x: panRef.current.x + event.clientX - panRef.current.startX, y: panRef.current.y + event.clientY - panRef.current.startY }); return; } const drag = dragRef.current; if (!drag || !bounds) return; setItems((current) => { const nextX = Math.max(0, (event.clientX - bounds.left) / zoom - drag.dx); const nextY = Math.max(70, (event.clientY - bounds.top) / zoom - drag.dy); const moved = current.map((item) => item.id === drag.id ? { ...item, x: nextX, y: nextY } : item); const vessel = moved.find((item) => item.id === drag.id); return vessel && isVessel(vessel) ? moved.map((item) => item.type === 'burner' && item.attachedTo === vessel.id ? { ...item, x: vessel.x + vessel.w / 2 - item.w / 2, y: vessel.y + vessel.h - item.h * .1 } : item) : moved; }); };
-  const pour = (targetId: string) => { const source = items.find((item) => item.id === pourSource); const target = items.find((item) => item.id === targetId); if (!source?.material || source.material.state !== 'liquid' || !target || !isVessel(target)) { setNotice('Only liquids can be poured between open vessels.'); return; } const amount = Math.min(pourAmount, source.volumeMl); updateItem(source.id, { volumeMl: source.volumeMl - amount, liquidLevel: Math.max(0, source.liquidLevel - amount / 100) }); updateItem(target.id, { material: source.material, volumeMl: target.volumeMl + amount, liquidLevel: Math.min(1, target.liquidLevel + amount / 100) }); setPourAnimation(target.id); window.setTimeout(() => setPourAnimation(null), 900); setPourSource(null); setNotice(`Poured ${amount} mL into ${target.name}`); };
-  const remove = () => { if (!selectedId) return; setItems((current) => current.filter((item) => item.id !== selectedId)); setConnections((current) => current.filter((link) => link.from !== selectedId && link.to !== selectedId)); setSelectedId(null); };
+  const pour = (targetId: string) => { const source = items.find((item) => item.id === pourSource); const target = items.find((item) => item.id === targetId); if (!source?.material || source.material.state !== 'liquid' || !target || !isVessel(target)) { setNotice('Only liquids can be poured between open vessels.'); return; } const amount = Math.min(pourAmount, source.volumeMl); updateItem(source.id, { volumeMl: source.volumeMl - amount, liquidLevel: Math.max(0, source.liquidLevel - amount / 100) }); updateItem(target.id, { material: source.material, volumeMl: target.volumeMl + amount, liquidLevel: Math.min(1, target.liquidLevel + amount / 100) }); queueWorkspaceEvent('POUR', { sourceId: source.id, targetId: target.id, amountMl: amount, materialId: backendMaterialId(source.material.id) }); setPourAnimation(target.id); window.setTimeout(() => setPourAnimation(null), 900); setPourSource(null); setNotice(`Poured ${amount} mL into ${target.name}`); };
+  const remove = () => { if (!selectedId) return; setItems((current) => current.filter((item) => item.id !== selectedId)); setConnections((current) => current.filter((link) => link.from !== selectedId && link.to !== selectedId)); queueWorkspaceEvent('ITEM_DELETED', { itemId: selectedId }); setSelectedId(null); };
   const duplicate = () => { if (!selected) return; const copy = { ...selected, id: `${selected.type}-${crypto.randomUUID()}`, x: selected.x + 24, y: selected.y + 24 }; setItems((current) => [...current, copy]); setSelectedId(copy.id); };
   const sendChat = () => { if (!chatInput.trim()) return; const question = chatInput.trim(); setChat((current) => [...current, { role: 'user', text: question }, { role: 'assistant', text: locale === 'ru' ? 'Для нагрева приблизьте горелку к колбе до появления Attached, затем нажмите Heat. Газ помещайте только через герметичный Gas-порт.' : 'Move the burner close to the flask until Attached appears, then press Heat. Add gases only through a sealed Gas port.' }]); setChatInput(''); };
   useEffect(() => { const key = (event: KeyboardEvent) => { if (event.key === 'Delete') remove(); if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'd') { event.preventDefault(); duplicate(); } }; window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key); });
@@ -214,15 +428,23 @@ function LegacyLibrary({ tab, setTab, addItem, addMaterial, selected }: { tab: '
 function SelectionToolbar({ duplicate, remove, connect }: { duplicate: () => void; remove: () => void; connect: () => void }) { return <div className="absolute -top-12 left-1/2 flex -translate-x-1/2 gap-1 rounded-lg border border-[var(--border)] bg-[var(--card)] p-1 shadow-lg"><ToolButton label="Duplicate" onClick={duplicate}><Copy size={15} /></ToolButton><ToolButton label="Delete" onClick={remove}><Trash2 size={15} /></ToolButton><ToolButton label="Connect" onClick={connect}><Link2 size={15} /></ToolButton></div>; }
 function Library({ tab, setTab, addItem, addMaterial, selected, onAskAi }: { tab: LibraryTab; setTab: (tab: LibraryTab) => void; addItem: (item: LibraryItem) => void; addMaterial: (material: Material) => void; selected?: Item; onAskAi?: () => void }) { const ts = useTranslations('sandbox');
   const [query, setQuery] = useState('');
+  const [remoteEquipment, setRemoteEquipment] = useState<EquipmentSummary[]>([]);
+  const [remoteMaterials, setRemoteMaterials] = useState<MaterialSummary[]>([]);
+  useEffect(() => {
+    void catalogApi.listEquipment().then(setRemoteEquipment).catch(() => undefined);
+    void catalogApi.listMaterials().then(setRemoteMaterials).catch(() => undefined);
+  }, []);
   const [open, setOpen] = useState<Record<string, boolean>>({ Containers: true, Heating: true, Cooling: true, Measuring: true, Separation: false, Support: false });
   const normalized = query.trim().toLowerCase();
   const filteredGroups = groups.map((group) => ({ ...group, items: group.items.filter((item) => !normalized || item.name.toLowerCase().includes(normalized)) })).filter((group) => group.items.length);
-  const materials = [...liquids, ...compounds].filter((material) => !normalized || `${material.name} ${material.formula}`.toLowerCase().includes(normalized));
+  const remoteGroup = remoteEquipment.length ? [{ title: 'Backend equipment', items: remoteEquipment.filter((item) => !normalized || `${item.displayName} ${item.type}`.toLowerCase().includes(normalized)).map((item) => ({ id: equipmentTypeFromProfile(item), name: item.displayName, w: 100, h: 100, icon: Beaker })) }] : [];
+  const visibleGroups = [...filteredGroups, ...remoteGroup];
+  const materials = [...liquids, ...compounds, ...remoteMaterials.map(materialFromSummary)].filter((material) => !normalized || `${material.name} ${material.formula}`.toLowerCase().includes(normalized));
   const tabs: Array<{ id: LibraryTab; label: string }> = [{ id: 'equipment', label: ts('equipment') }, { id: 'materials', label: ts('materials') }, { id: 'elements', label: ts('cat_elements') }, { id: 'ai', label: 'AI' }];
   return <div className="flex min-h-0 flex-1 flex-col">
     <div className="border-b border-[var(--border)] p-2"><div className="grid grid-cols-4 gap-1 rounded-xl bg-[var(--background)] p-1" role="tablist">{tabs.map((item) => <button key={item.id} role="tab" aria-selected={tab === item.id} className={`min-h-11 min-w-0 rounded-lg px-2 text-[11px] font-semibold transition-colors ${tab === item.id ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)]'}`} onClick={() => setTab(item.id)}>{item.label}</button>)}</div><label className="mt-2 block"><span className="sr-only">Search equipment and materials</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search..." className="h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm outline-none focus:border-[var(--primary)]" /></label></div>
     <div className="flex-1 overflow-y-auto p-3">
-      {tab === 'equipment' && filteredGroups.map((group) => <section key={group.title} className="mb-4"><button className="mb-2 flex w-full items-center justify-between px-1 text-left text-[11px] font-bold uppercase tracking-[.14em] text-[var(--muted-foreground)]" onClick={() => setOpen((current) => ({ ...current, [group.title]: !current[group.title] }))}><span>{group.title}</span><span aria-hidden="true">{open[group.title] ? '−' : '+'}</span></button>{open[group.title] && <div className="grid grid-cols-2 gap-2">{group.items.map((item) => <button key={item.id} className="group min-h-28 rounded-xl border border-[var(--border)] bg-[var(--card)] p-2 text-center transition-all hover:-translate-y-0.5 hover:border-[var(--primary)] hover:shadow-lg" onClick={() => addItem(item)}><EquipmentIcon type={item.id} size={48} /><span className="block text-[11px] font-semibold leading-tight">{item.name}</span><span className="mt-1 block text-[10px] font-bold uppercase text-[var(--primary)]">Add</span></button>)}</div>}</section>)}
+      {tab === 'equipment' && visibleGroups.map((group) => <section key={group.title} className="mb-4"><button className="mb-2 flex w-full items-center justify-between px-1 text-left text-[11px] font-bold uppercase tracking-[.14em] text-[var(--muted-foreground)]" onClick={() => setOpen((current) => ({ ...current, [group.title]: !current[group.title] }))}><span>{group.title}</span><span aria-hidden="true">{open[group.title] ? '−' : '+'}</span></button>{open[group.title] && <div className="grid grid-cols-2 gap-2">{group.items.map((item) => <button key={item.id} className="group min-h-28 rounded-xl border border-[var(--border)] bg-[var(--card)] p-2 text-center transition-all hover:-translate-y-0.5 hover:border-[var(--primary)] hover:shadow-lg" onClick={() => addItem(item)}><EquipmentIcon type={item.id} size={48} /><span className="block text-[11px] font-semibold leading-tight">{item.name}</span><span className="mt-1 block text-[10px] font-bold uppercase text-[var(--primary)]">Add</span></button>)}</div>}</section>)}
       {tab === 'materials' && <div className="space-y-2">{materials.map((material) => <button key={material.id} onClick={() => addMaterial(material)} className="flex min-h-16 w-full items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-left transition-colors hover:border-[var(--primary)]"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 border-white/20 text-[10px] font-bold" style={{ background: material.color }}>{material.state === 'gas' ? 'GAS' : material.state === 'solid' ? 'SOL' : 'LIQ'}</span><span><span className="block text-sm font-semibold">{material.name}</span><span className="text-xs text-[var(--muted-foreground)]">{material.formula} · {material.state}</span></span></button>)}{!selected && <p className="mt-4 text-xs text-[var(--muted-foreground)]">Select a vessel before adding a sample.</p>}</div>}
       {tab === 'elements' && <div className="grid grid-cols-2 gap-2">{elements.filter((item) => !normalized || `${item.name} ${item.formula}`.toLowerCase().includes(normalized)).map((element) => <button key={element.id} onClick={() => addMaterial(element)} className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-left hover:border-[var(--primary)]"><span className="text-xl font-bold" style={{ color: element.color }}>{element.formula}</span><span className="mt-1 block text-xs font-semibold">{element.name}</span><span className="text-[10px] text-[var(--muted-foreground)]">Solid sample</span></button>)}</div>}
       {tab === 'ai' && <div className="rounded-2xl border border-[var(--primary)]/30 bg-[var(--primary)]/10 p-4"><Sparkles className="text-[var(--primary)]" /><h3 className="mt-3 font-semibold">AI Lab Assistant</h3><p className="mt-2 text-xs leading-relaxed text-[var(--muted-foreground)]">Describe an experiment and the assistant will prepare equipment, materials and a safe action sequence.</p><button className="mt-4 min-h-11 w-full rounded-xl bg-[var(--primary)] px-3 text-sm font-semibold text-white" onClick={() => onAskAi?.()}>Open assistant</button></div>}
