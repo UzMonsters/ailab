@@ -7592,3 +7592,41 @@ https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-d
 
 
 ✓ Compiled in 3.6s
+Error [ModuleBuildError]: ./src/app
+Error: Could not find the Next.js package (next/package.json)
+Resolved from: D:\web-sites\заказ\aichemistry\frontend\src\app
+Filesystem root used for resolution: D:\web-sites\заказ\aichemistry\frontend
+
+Possible causes:
+  - node_modules is being reorganized by a concurrent install (e.g. pnpm adding a package with a `next` peer dependency). This is transient and should clear once the install completes.
+  - node_modules/next was removed, renamed, or has a broken symlink.
+  - The workspace root is incorrect — see turbopack.root in the Next.js config docs for how to configure it.
+  - In a monorepo, the Next.js package may only exist in a directory above the closest directory containing a package manager lockfile. The workspace root is detected by locating the nearest package manager lockfile.
+  - Next.js is installed globally rather than as a project dependency. This is not supported; install it locally.
+
+Note: To ensure a hermetic build and a portable cache, files outside of the workspace root are not compiled.
+
+https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory
+
+
+    at <unknown> (Filesystem root used for resolution: D:\web-sites\заказ\aichemistry\frontend)
+    at <unknown> (https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory)
+Error: Cannot find module 'next/dist/pages/_error'
+Require stack:
+- D:\web-sites\заказ\aichemistry\frontend\node_modules\.pnpm\next@16.3.0_@babel+core@7.2_b37c24bdbceeb037ac6774425ae6d83b\node_modules\next\dist\server\dev\on-demand-entry-handler.js
+- D:\web-sites\заказ\aichemistry\frontend\node_modules\.pnpm\next@16.3.0_@babel+core@7.2_b37c24bdbceeb037ac6774425ae6d83b\node_modules\next\dist\server\dev\hot-reloader-turbopack.js
+- D:\web-sites\заказ\aichemistry\frontend\node_modules\.pnpm\next@16.3.0_@babel+core@7.2_b37c24bdbceeb037ac6774425ae6d83b\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- D:\web-sites\заказ\aichemistry\frontend\node_modules\.pnpm\next@16.3.0_@babel+core@7.2_b37c24bdbceeb037ac6774425ae6d83b\node_modules\next\dist\server\lib\router-server.js
+- D:\web-sites\заказ\aichemistry\frontend\node_modules\.pnpm\next@16.3.0_@babel+core@7.2_b37c24bdbceeb037ac6774425ae6d83b\node_modules\next\dist\server\lib\start-server.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\web-sites\\заказ\\aichemistry\\frontend\\node_modules\\.pnpm\\next@16.3.0_@babel+core@7.2_b37c24bdbceeb037ac6774425ae6d83b\\node_modules\\next\\dist\\server\\dev\\on-demand-entry-handler.js',
+    'D:\\web-sites\\заказ\\aichemistry\\frontend\\node_modules\\.pnpm\\next@16.3.0_@babel+core@7.2_b37c24bdbceeb037ac6774425ae6d83b\\node_modules\\next\\dist\\server\\dev\\hot-reloader-turbopack.js',
+    'D:\\web-sites\\заказ\\aichemistry\\frontend\\node_modules\\.pnpm\\next@16.3.0_@babel+core@7.2_b37c24bdbceeb037ac6774425ae6d83b\\node_modules\\next\\dist\\server\\lib\\router-utils\\setup-dev-bundler.js',
+    'D:\\web-sites\\заказ\\aichemistry\\frontend\\node_modules\\.pnpm\\next@16.3.0_@babel+core@7.2_b37c24bdbceeb037ac6774425ae6d83b\\node_modules\\next\\dist\\server\\lib\\router-server.js',
+    'D:\\web-sites\\заказ\\aichemistry\\frontend\\node_modules\\.pnpm\\next@16.3.0_@babel+core@7.2_b37c24bdbceeb037ac6774425ae6d83b\\node_modules\\next\\dist\\server\\lib\\start-server.js'
+  ]
+}
+[?25h
+The system cannot find the path specified.
