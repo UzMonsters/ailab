@@ -9,16 +9,31 @@ import ThemeToggle from '@/components/common/ThemeToggle';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import EquipmentIcon, { type EquipmentOperation } from '@/components/sandbox/equipment/EquipmentIcon';
 import OnboardingHint from '@/components/common/OnboardingHint';
+import { experimentApi } from '@/services/api/experiment.api';
+import { catalogApi } from '@/services/api/catalog.api';
+import { connectWorkspaceRealtime } from '@/services/realtime/workspace-realtime';
+import { workspacesApi } from '@/services/api/workspaces.api';
+import type { EquipmentSummary, MaterialSummary, WorkspaceState } from '@/types';
 
 const ru = (locale: string) => locale === 'ru';
 const uz = (locale: string) => locale === 'uz';
-type EquipmentType = 'beaker' | 'erlenmeyer' | 'roundflask' | 'testtube' | 'burner' | 'hotplate' | 'thermometer' | 'condenser' | 'icebath' | 'phmeter' | 'scales';
+type EquipmentType = 'testtube' | 'beaker' | 'beaker50' | 'beaker100' | 'beaker250' | 'beaker500' | 'erlenmeyer' | 'roundflask' | 'volumetric' | 'graduated' | 'petridish' | 'watchglass' | 'burner' | 'hotplate' | 'mantle' | 'icebath' | 'coolingbath' | 'refrigerator' | 'thermometer' | 'phmeter' | 'scales' | 'digitalbalance' | 'pipette' | 'burette' | 'condenser' | 'funnel' | 'buchner' | 'filterpaper' | 'clamp' | 'stand' | 'ringstand';
 type MaterialState = 'liquid' | 'gas' | 'solid';
 type Material = { id: string; name: string; formula: string; color: string; state: MaterialState };
-type Item = { id: string; type: EquipmentType; name: string; x: number; y: number; w: number; h: number; scale: number; rotation: number; material?: Material; volumeMl: number; liquidLevel: number; temperature: number; targetTemperature?: number; operation: EquipmentOperation; attachedTo?: string; broken?: boolean };
-type Port = 'Glass' | 'Liquid' | 'Gas' | 'Thermal' | 'Electrical';
+type Item = { id: string; type: EquipmentType; name: string; x: number; y: number; w: number; h: number; scale: number; rotation: number; material?: Material; volumeMl: number; capacityMl?: number; liquidLevel: number; temperature: number; targetTemperature?: number; operation: EquipmentOperation; attachedTo?: string; broken?: boolean };
+type Port = 'Glass' | 'Liquid' | 'Gas' | 'Thermal' | 'Electrical' | 'Vacuum';
 type Connection = { id: string; from: string; to: string; port: Port; direction: 'source-to-target' | 'target-to-source' };
 type LibraryItem = { id: EquipmentType; name: string; w: number; h: number; icon: typeof Beaker };
+type LibraryTab = 'equipment' | 'materials' | 'elements' | 'ai';
+
+const backendMaterialId = (id: string) => ({
+  water: 'COMP-H2O',
+  ethanol: 'COMP-ETHANOL',
+  acid: 'COMP-HCL',
+  nacl: 'COMP-NACL',
+  naoh: 'COMP-NAOH',
+  cuso4: 'COMP-CUSO4',
+}[id] || id);
 
 const liquids: Material[] = [
   { id: 'water', name: 'Water', formula: 'H₂O', color: '#22D3EE', state: 'liquid' },
@@ -37,11 +52,71 @@ const elements: Material[] = [
   { id: 'sulfur', name: 'Sulfur', formula: 'S', color: '#FACC15', state: 'solid' },
 ];
 const groups: { title: string; items: LibraryItem[] }[] = [
-  { title: 'Containers', items: [{ id: 'beaker', name: 'Beaker', w: 100, h: 100, icon: Beaker }, { id: 'erlenmeyer', name: 'Erlenmeyer Flask', w: 100, h: 105, icon: Beaker }, { id: 'roundflask', name: 'Round-bottom Flask', w: 100, h: 110, icon: Beaker }, { id: 'testtube', name: 'Test Tube', w: 72, h: 110, icon: Beaker }] },
-  { title: 'Heating', items: [{ id: 'burner', name: 'Bunsen Burner', w: 56, h: 82, icon: Flame }, { id: 'hotplate', name: 'Hot Plate', w: 140, h: 75, icon: Flame }] },
-  { title: 'Cooling & Sensors', items: [{ id: 'icebath', name: 'Ice Bath', w: 120, h: 80, icon: Snowflake }, { id: 'thermometer', name: 'Thermometer', w: 70, h: 110, icon: Beaker }, { id: 'phmeter', name: 'pH Meter', w: 80, h: 105, icon: Beaker }, { id: 'scales', name: 'Precision Scale', w: 100, h: 80, icon: Beaker }, { id: 'condenser', name: 'Condenser', w: 220, h: 100, icon: Wind }] },
+  { title: 'Containers', items: [
+    { id: 'testtube', name: 'Test Tube', w: 72, h: 110, icon: Beaker }, { id: 'beaker50', name: 'Beaker 50', w: 80, h: 92, icon: Beaker }, { id: 'beaker100', name: 'Beaker 100', w: 90, h: 96, icon: Beaker }, { id: 'beaker250', name: 'Beaker 250', w: 100, h: 100, icon: Beaker }, { id: 'beaker500', name: 'Beaker 500', w: 112, h: 108, icon: Beaker }, { id: 'erlenmeyer', name: 'Erlenmeyer Flask', w: 100, h: 105, icon: Beaker }, { id: 'roundflask', name: 'Round-bottom Flask', w: 100, h: 110, icon: Beaker }, { id: 'volumetric', name: 'Volumetric Flask', w: 100, h: 112, icon: Beaker }, { id: 'graduated', name: 'Graduated Cylinder', w: 70, h: 120, icon: Beaker }, { id: 'petridish', name: 'Petri Dish', w: 110, h: 55, icon: Beaker }, { id: 'watchglass', name: 'Watch Glass', w: 105, h: 45, icon: Beaker },
+  ] },
+  { title: 'Heating', items: [{ id: 'burner', name: 'Bunsen Burner', w: 56, h: 72, icon: Flame }, { id: 'hotplate', name: 'Hot Plate', w: 140, h: 75, icon: Flame }, { id: 'mantle', name: 'Heating Mantle', w: 120, h: 85, icon: Flame }] },
+  { title: 'Cooling', items: [{ id: 'icebath', name: 'Ice Bath', w: 120, h: 80, icon: Snowflake }, { id: 'coolingbath', name: 'Cooling Bath', w: 120, h: 80, icon: Snowflake }, { id: 'refrigerator', name: 'Refrigerator', w: 95, h: 125, icon: Snowflake }] },
+  { title: 'Measuring', items: [{ id: 'thermometer', name: 'Thermometer', w: 70, h: 110, icon: Beaker }, { id: 'phmeter', name: 'pH Meter', w: 80, h: 105, icon: Beaker }, { id: 'scales', name: 'Precision Balance', w: 100, h: 80, icon: Beaker }, { id: 'digitalbalance', name: 'Digital Balance', w: 100, h: 80, icon: Beaker }, { id: 'pipette', name: 'Pipette', w: 120, h: 50, icon: Beaker }, { id: 'burette', name: 'Burette', w: 70, h: 135, icon: Beaker }] },
+  { title: 'Separation', items: [{ id: 'condenser', name: 'Condenser', w: 220, h: 100, icon: Wind }, { id: 'funnel', name: 'Funnel', w: 90, h: 110, icon: Beaker }, { id: 'buchner', name: 'Buchner Funnel', w: 100, h: 90, icon: Beaker }, { id: 'filterpaper', name: 'Filter Paper', w: 90, h: 45, icon: Beaker }] },
+  { title: 'Support', items: [{ id: 'clamp', name: 'Clamp', w: 100, h: 55, icon: Beaker }, { id: 'stand', name: 'Stand', w: 90, h: 120, icon: Beaker }, { id: 'ringstand', name: 'Ring Stand', w: 110, h: 125, icon: Beaker }] },
 ];
-const isVessel = (item: Item) => ['beaker', 'erlenmeyer', 'roundflask', 'testtube'].includes(item.type);
+const isVessel = (item: Item) => ['beaker', 'beaker50', 'beaker100', 'beaker250', 'beaker500', 'erlenmeyer', 'roundflask', 'volumetric', 'graduated', 'testtube', 'petridish', 'watchglass'].includes(item.type);
+const vesselCapacities: Record<string, number> = { beaker50: 50, beaker100: 100, beaker250: 250, beaker500: 500, testtube: 50, graduated: 100, erlenmeyer: 250, roundflask: 500, volumetric: 100 };
+const capacityFor = (item: Item) => item.capacityMl ?? vesselCapacities[item.type] ?? 100;
+
+const materialFromSummary = (material: MaterialSummary): Material => ({
+  id: material.materialId,
+  name: material.name,
+  formula: material.formula,
+  color: material.phase.toLowerCase() === 'gas' ? '#A78BFA' : material.phase.toLowerCase() === 'solid' ? '#CBD5E1' : '#22D3EE',
+  state: material.phase.toLowerCase() === 'gas' || material.phase.toLowerCase() === 'solid' ? material.phase.toLowerCase() as MaterialState : 'liquid',
+});
+const equipmentTypeFromProfile = (profile: EquipmentSummary): EquipmentType => {
+  const value = `${profile.profileId} ${profile.type}`.toLowerCase();
+  if (value.includes('burner')) return 'burner';
+  if (value.includes('beaker')) return 'beaker';
+  if (value.includes('erlenmeyer')) return 'erlenmeyer';
+  if (value.includes('test') && value.includes('tube')) return 'testtube';
+  if (value.includes('thermometer')) return 'thermometer';
+  if (value.includes('condenser')) return 'condenser';
+  return 'beaker';
+};
+
+const itemFromState = (value: Record<string, unknown>): Item => {
+  const materialValue = value.material;
+  const materialRecord = materialValue && typeof materialValue === 'object' ? materialValue as Record<string, unknown> : undefined;
+  const material = materialRecord && typeof materialRecord.id === 'string' ? {
+    id: materialRecord.id,
+    name: String(materialRecord.name ?? materialRecord.id),
+    formula: String(materialRecord.formula ?? ''),
+    color: String(materialRecord.color ?? '#22D3EE'),
+    state: String(materialRecord.state ?? 'liquid') as MaterialState,
+  } : undefined;
+  const type = String(value.type ?? value.equipmentType ?? 'beaker') as EquipmentType;
+  const volumeMl = Number(value.volumeMl ?? 0);
+  const capacityMl = Number(value.capacityMl ?? vesselCapacities[type] ?? 100);
+  return {
+    id: String(value.id ?? crypto.randomUUID()),
+    type,
+    name: String(value.name ?? value.equipmentType ?? type),
+    x: Number(value.x ?? (value.position as { x?: number } | undefined)?.x ?? 0),
+    y: Number(value.y ?? (value.position as { y?: number } | undefined)?.y ?? 90),
+    w: Number(value.w ?? (value.size as { width?: number } | undefined)?.width ?? 100),
+    h: Number(value.h ?? (value.size as { height?: number } | undefined)?.height ?? 100),
+    scale: Number(value.scale ?? 1),
+    rotation: Number(value.rotation ?? 0),
+    material,
+    volumeMl,
+    capacityMl,
+    liquidLevel: Number(value.liquidLevel ?? (capacityMl ? volumeMl / capacityMl : 0)),
+    temperature: Number(value.temperature ?? value.temperatureC ?? 24.5),
+    targetTemperature: typeof value.targetTemperature === 'number' ? value.targetTemperature : undefined,
+    operation: String(value.operation ?? 'idle') as EquipmentOperation,
+    attachedTo: typeof value.attachedTo === 'string' ? value.attachedTo : undefined,
+    broken: value.broken === true,
+  };
+};
 
 export default function SandboxPage() {
   const pathname = usePathname();
@@ -53,7 +128,7 @@ export default function SandboxPage() {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [libraryTab, setLibraryTab] = useState<'equipment' | 'liquids' | 'compounds' | 'elements'>('equipment');
+  const [libraryTab, setLibraryTab] = useState<LibraryTab>('equipment');
   const [tool, setTool] = useState<'select' | 'pan' | 'connect'>('select');
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -71,7 +146,137 @@ export default function SandboxPage() {
   const panRef = useRef<{ x: number; y: number; startX: number; startY: number } | null>(null);
   const pointerRef = useRef({ x: 0, y: 0 });
   const templateLoaded = useRef(false);
+  const hydrated = useRef(false);
+  const stateVersionRef = useRef(0);
+  const persistenceQueue = useRef(Promise.resolve());
+  const saveTimer = useRef<number | null>(null);
+  const [, setStateVersion] = useState(0);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const selected = items.find((item) => item.id === selectedId);
+  const queueWorkspaceEvent = useCallback((eventType: string, payload: Record<string, unknown>) => {
+    if (!workspaceId || !hydrated.current) return;
+    persistenceQueue.current = persistenceQueue.current.then(async () => {
+      const ack = await workspacesApi.appendEvent(workspaceId, {
+        clientEventId: crypto.randomUUID(),
+        expectedVersion: stateVersionRef.current,
+        eventType,
+        payload,
+      });
+      stateVersionRef.current = ack.stateVersion;
+      setStateVersion(ack.stateVersion);
+    }).catch((error: unknown) => {
+      setNotice(error instanceof Error ? error.message : 'Workspace event could not be saved');
+    });
+  }, [workspaceId]);
+
+  const workspaceState = useCallback((): WorkspaceState => ({
+    workspaceId: workspaceId || '',
+    sessionId,
+    stateVersion: stateVersionRef.current,
+    viewport: { x: pan.x, y: pan.y, zoom },
+    grid: { enabled: true, size: 20, snap: true },
+    items: items as unknown as Record<string, unknown>[],
+    connections: connections.map((connection) => ({
+      id: connection.id,
+      fromItemId: connection.from,
+      toItemId: connection.to,
+      port: connection.port,
+      direction: connection.direction,
+    })),
+    log: [],
+    updatedAt: new Date().toISOString(),
+  }), [connections, items, pan.x, pan.y, sessionId, workspaceId, zoom]);
+
+  useEffect(() => {
+    if (!workspaceId) {
+      hydrated.current = true;
+      return;
+    }
+    let cancelled = false;
+    void workspacesApi.getState(workspaceId).then((state) => {
+      if (cancelled) return;
+      const viewport = state.viewport as { x?: number; y?: number; zoom?: number };
+      setItems(state.items.map(itemFromState));
+      setConnections(state.connections.map((value) => ({
+        id: String(value.id ?? crypto.randomUUID()),
+        from: String(value.from ?? value.fromItemId ?? ''),
+        to: String(value.to ?? value.toItemId ?? ''),
+        port: String(value.port ?? 'Glass') as Port,
+        direction: String(value.direction ?? 'source-to-target') as Connection['direction'],
+      })).filter((connection) => connection.from && connection.to));
+      setPan({ x: Number(viewport.x ?? 0), y: Number(viewport.y ?? 0) });
+      setZoom(Number(viewport.zoom ?? 1));
+      stateVersionRef.current = state.stateVersion;
+      setStateVersion(state.stateVersion);
+      setSessionId(state.sessionId ?? null);
+      hydrated.current = true;
+      if (state.sessionId) {
+        void experimentApi.getExperiment(state.sessionId).catch(() => undefined);
+      }
+    }).catch((error: unknown) => {
+      if (!cancelled) setNotice(error instanceof Error ? error.message : 'Workspace state could not be loaded');
+      hydrated.current = true;
+    });
+    return () => { cancelled = true; };
+  }, [workspaceId]);
+
+  useEffect(() => {
+    if (!workspaceId || !hydrated.current) return;
+    if (saveTimer.current !== null) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => {
+      const state = workspaceState();
+      persistenceQueue.current = persistenceQueue.current.then(async () => {
+        const saved = await workspacesApi.saveState(workspaceId, state, stateVersionRef.current);
+        stateVersionRef.current = saved.stateVersion;
+        setStateVersion(saved.stateVersion);
+      }).catch((error: unknown) => {
+        setNotice(error instanceof Error ? error.message : 'Workspace state could not be saved');
+      });
+    }, 700);
+    return () => { if (saveTimer.current !== null) window.clearTimeout(saveTimer.current); };
+  }, [connections, items, pan.x, pan.y, sessionId, workspaceId, workspaceState, zoom]);
+
+  useEffect(() => {
+    if (!workspaceId || !hydrated.current) return;
+    const realtime = connectWorkspaceRealtime(workspaceId, sessionId, {
+      onWorkspaceEvent: (raw) => {
+        const event = raw as { stateDelta?: { items?: Record<string, unknown>[]; connections?: Record<string, unknown>[] }; stateVersion?: number };
+        if (event.stateDelta?.items) setItems(event.stateDelta.items.map(itemFromState));
+        if (event.stateDelta?.connections) setConnections(event.stateDelta.connections.map((value) => ({
+          id: String(value.id ?? crypto.randomUUID()),
+          from: String(value.from ?? value.fromItemId ?? ''),
+          to: String(value.to ?? value.toItemId ?? ''),
+          port: String(value.port ?? 'Glass') as Port,
+          direction: String(value.direction ?? 'source-to-target') as Connection['direction'],
+        })).filter((connection) => connection.from && connection.to));
+        if (typeof event.stateVersion === 'number') {
+          stateVersionRef.current = Math.max(stateVersionRef.current, event.stateVersion);
+          setStateVersion(stateVersionRef.current);
+        }
+      },
+      onError: (raw) => {
+        const error = raw as { message?: string };
+        if (error.message) setNotice(error.message);
+      },
+    });
+    return () => realtime.close();
+  }, [sessionId, workspaceId]);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    const flush = () => {
+      if (!hydrated.current) return;
+      const state = workspaceState();
+      void workspacesApi.autosave(workspaceId, {
+        expectedVersion: stateVersionRef.current,
+        stateHash: JSON.stringify(state).length.toString(16),
+        state: state as unknown as Record<string, unknown>,
+      }).catch(() => undefined);
+    };
+    window.addEventListener('beforeunload', flush);
+    return () => window.removeEventListener('beforeunload', flush);
+  }, [workspaceId, workspaceState]);
+
   useEffect(() => {
     const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
     if (!dialog) return;
@@ -132,13 +337,20 @@ export default function SandboxPage() {
     const index = items.length;
     const next: Item = { id: `${libraryItem.id}-${crypto.randomUUID()}`, type: libraryItem.id, name: libraryItem.name, x: Math.max(24, (bounds?.width || 800) / 2 - libraryItem.w / 2 + index * 18), y: Math.max(90, (bounds?.height || 600) / 2 - libraryItem.h / 2), w: libraryItem.w, h: libraryItem.h, scale: 1, rotation: 0, volumeMl: 0, liquidLevel: 0, temperature: 24.5, operation: 'idle' };
     setItems((current) => [...current, next]); setSelectedId(next.id);
-  }, [items.length]);
+    queueWorkspaceEvent('ITEM_ADDED', { id: next.id, equipmentType: next.type, name: next.name, x: next.x, y: next.y, w: next.w, h: next.h, scale: next.scale, rotation: next.rotation, capacityMl: next.capacityMl });
+  }, [items.length, queueWorkspaceEvent]);
 
-  const updateItem = (id: string, patch: Partial<Item>) => setItems((current) => current.map((item) => item.id === id ? { ...item, ...patch } : item));
+  const updateItem = (id: string, patch: Partial<Item>) => setItems((current) => current.map((item) => {
+    if (item.id !== id) return item;
+    const next = { ...item, capacityMl: capacityFor(item), ...patch };
+    if (typeof patch.volumeMl === 'number' && isVessel(next)) next.liquidLevel = Math.min(1, Math.max(0, next.volumeMl / (next.capacityMl || 100)));
+    return next;
+  }));
   const addMaterial = (material: Material) => {
     if (!selected || !isVessel(selected)) { setNotice('Select a vessel first'); return; }
     if (material.state === 'gas') { setNotice('Oxygen is a gas: an open flask cannot retain it. Use a sealed Gas connector.'); return; }
     updateItem(selected.id, { material, volumeMl: material.state === 'liquid' ? Math.max(25, selected.volumeMl) : selected.volumeMl, liquidLevel: material.state === 'liquid' ? Math.max(.35, selected.liquidLevel) : selected.liquidLevel });
+    queueWorkspaceEvent('MATERIAL_ADDED', { itemId: selected.id, materialId: backendMaterialId(material.id), amountMl: material.state === 'liquid' ? 25 : 1, phase: material.state });
     setPourAnimation(selected.id); window.setTimeout(() => setPourAnimation(null), 900); setNotice(`${material.name} added · ${material.state === 'liquid' ? '25 mL' : 'solid sample'}`);
   };
   const applyOperation = (item: Item, operation: EquipmentOperation) => {
@@ -147,6 +359,17 @@ export default function SandboxPage() {
     const target = Number.isFinite(requestedTarget) ? Math.max(0, requestedTarget) : defaultTarget;
     setItems((current) => current.map((value) => value.id === item.id || (item.type === 'burner' && item.attachedTo === value.id) || (value.type === 'burner' && value.attachedTo === item.id) ? { ...value, operation, targetTemperature: operation === 'idle' || operation === 'stirring' ? value.targetTemperature : target } : value));
     if (operation === 'heating' && item.type === 'burner' && !item.attachedTo) setNotice(ru(locale) ? 'Сначала приблизьте горелку к сосуду.' : uz(locale) ? 'Avval gorelkani idishga yaqinlashtiring.' : 'Move the burner close to a vessel first.');
+    if (sessionId) {
+      void experimentApi.executeOperation(sessionId, {
+        expectedStateVersion: stateVersionRef.current,
+        idempotencyKey: crypto.randomUUID(),
+        command: { type: operation === 'heating' ? 'HEAT' : operation === 'cooling' ? 'COOL' : operation === 'stirring' ? 'STIR' : 'STOP', targetVesselId: item.id, targetTemperatureC: target },
+      }).then((result) => {
+        stateVersionRef.current = result.newVersion;
+        setStateVersion(result.newVersion);
+      }).catch((error: unknown) => setNotice(error instanceof Error ? error.message : 'Scientific operation failed'));
+    }
+    queueWorkspaceEvent(operation === 'heating' ? 'HEAT_START' : operation === 'cooling' ? 'COOL' : operation === 'stirring' ? 'STIR_START' : 'HEAT_STOP', { equipmentId: item.id, vesselId: item.id, targetTemperatureC: target });
   };
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -173,6 +396,10 @@ export default function SandboxPage() {
       const nearest = items.filter(isVessel).map((item) => ({ item, distance: Math.hypot(item.x - burner.x, item.y - burner.y) })).sort((a, b) => a.distance - b.distance)[0];
       if (nearest && nearest.distance < 130) { updateItem(burner.id, { x: nearest.item.x + nearest.item.w / 2 - burner.w / 2, y: nearest.item.y + nearest.item.h - burner.h * .1, attachedTo: nearest.item.id }); setNotice(`Burner attached to ${nearest.item.name}`); }
     }
+    if (drag) {
+      const moved = items.find((item) => item.id === drag.id);
+      if (moved) queueWorkspaceEvent('ITEM_MOVED', { itemId: moved.id, x: moved.x, y: moved.y });
+    }
     dragRef.current = null;
   };
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>, id: string) => {
@@ -183,8 +410,8 @@ export default function SandboxPage() {
     event.currentTarget.setPointerCapture(event.pointerId); dragRef.current = { id, dx: (event.clientX - bounds.left) / zoom - item.x, dy: (event.clientY - bounds.top) / zoom - item.y };
   };
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => { pointerRef.current = { x: event.clientX, y: event.clientY }; const bounds = canvasRef.current?.getBoundingClientRect(); if (tool === 'pan' && panRef.current) { setPan({ x: panRef.current.x + event.clientX - panRef.current.startX, y: panRef.current.y + event.clientY - panRef.current.startY }); return; } const drag = dragRef.current; if (!drag || !bounds) return; setItems((current) => { const nextX = Math.max(0, (event.clientX - bounds.left) / zoom - drag.dx); const nextY = Math.max(70, (event.clientY - bounds.top) / zoom - drag.dy); const moved = current.map((item) => item.id === drag.id ? { ...item, x: nextX, y: nextY } : item); const vessel = moved.find((item) => item.id === drag.id); return vessel && isVessel(vessel) ? moved.map((item) => item.type === 'burner' && item.attachedTo === vessel.id ? { ...item, x: vessel.x + vessel.w / 2 - item.w / 2, y: vessel.y + vessel.h - item.h * .1 } : item) : moved; }); };
-  const pour = (targetId: string) => { const source = items.find((item) => item.id === pourSource); const target = items.find((item) => item.id === targetId); if (!source?.material || source.material.state !== 'liquid' || !target || !isVessel(target)) { setNotice('Only liquids can be poured between open vessels.'); return; } const amount = Math.min(pourAmount, source.volumeMl); updateItem(source.id, { volumeMl: source.volumeMl - amount, liquidLevel: Math.max(0, source.liquidLevel - amount / 100) }); updateItem(target.id, { material: source.material, volumeMl: target.volumeMl + amount, liquidLevel: Math.min(1, target.liquidLevel + amount / 100) }); setPourAnimation(target.id); window.setTimeout(() => setPourAnimation(null), 900); setPourSource(null); setNotice(`Poured ${amount} mL into ${target.name}`); };
-  const remove = () => { if (!selectedId) return; setItems((current) => current.filter((item) => item.id !== selectedId)); setConnections((current) => current.filter((link) => link.from !== selectedId && link.to !== selectedId)); setSelectedId(null); };
+  const pour = (targetId: string) => { const source = items.find((item) => item.id === pourSource); const target = items.find((item) => item.id === targetId); if (!source?.material || source.material.state !== 'liquid' || !target || !isVessel(target)) { setNotice('Only liquids can be poured between open vessels.'); return; } const amount = Math.min(pourAmount, source.volumeMl); updateItem(source.id, { volumeMl: source.volumeMl - amount, liquidLevel: Math.max(0, source.liquidLevel - amount / 100) }); updateItem(target.id, { material: source.material, volumeMl: target.volumeMl + amount, liquidLevel: Math.min(1, target.liquidLevel + amount / 100) }); queueWorkspaceEvent('POUR', { sourceId: source.id, targetId: target.id, amountMl: amount, materialId: backendMaterialId(source.material.id) }); setPourAnimation(target.id); window.setTimeout(() => setPourAnimation(null), 900); setPourSource(null); setNotice(`Poured ${amount} mL into ${target.name}`); };
+  const remove = () => { if (!selectedId) return; setItems((current) => current.filter((item) => item.id !== selectedId)); setConnections((current) => current.filter((link) => link.from !== selectedId && link.to !== selectedId)); queueWorkspaceEvent('ITEM_DELETED', { itemId: selectedId }); setSelectedId(null); };
   const duplicate = () => { if (!selected) return; const copy = { ...selected, id: `${selected.type}-${crypto.randomUUID()}`, x: selected.x + 24, y: selected.y + 24 }; setItems((current) => [...current, copy]); setSelectedId(copy.id); };
   const sendChat = () => { if (!chatInput.trim()) return; const question = chatInput.trim(); setChat((current) => [...current, { role: 'user', text: question }, { role: 'assistant', text: locale === 'ru' ? 'Для нагрева приблизьте горелку к колбе до появления Attached, затем нажмите Heat. Газ помещайте только через герметичный Gas-порт.' : 'Move the burner close to the flask until Attached appears, then press Heat. Add gases only through a sealed Gas port.' }]); setChatInput(''); };
   useEffect(() => { const key = (event: KeyboardEvent) => { if (event.key === 'Delete') remove(); if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'd') { event.preventDefault(); duplicate(); } }; window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key); });
@@ -197,8 +424,34 @@ export default function SandboxPage() {
 
 function ToolButton({ label, active, onClick, children }: { label: string; active?: boolean; onClick: () => void; children: ReactNode }) { return <button aria-label={label} title={label} onPointerDown={(event) => event.stopPropagation()} onClick={onClick} className={`min-h-11 min-w-11 rounded-lg p-2 ${active ? 'bg-[var(--primary)] text-white' : 'hover:bg-[var(--accent)]'}`}>{children}</button>; }
 function Port({ name, color, onClick }: { name: string; color: string; onClick: () => void }) { return <button aria-label={`${name} port`} title={`${name} port — click to connect`} onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); onClick(); }} className="group flex min-h-7 items-center gap-1"><span className={`h-5 w-5 shrink-0 rounded-full border-2 border-[var(--card)] shadow-sm ${color}`} /><span className="pointer-events-none absolute right-6 hidden whitespace-nowrap rounded bg-[var(--card)] px-1.5 py-0.5 text-[10px] font-semibold shadow-md group-hover:block">{name}</span></button>; }
-function Library({ tab, setTab, addItem, addMaterial, selected }: { tab: 'equipment' | 'liquids' | 'compounds' | 'elements'; setTab: (tab: 'equipment' | 'liquids' | 'compounds' | 'elements') => void; addItem: (item: LibraryItem) => void; addMaterial: (material: Material) => void; selected?: Item }) { const list = tab === 'liquids' ? liquids : tab === 'compounds' ? compounds : elements; return <div className="flex min-h-0 flex-1 flex-col"><div className="grid grid-cols-4 gap-1 border-b border-[var(--border)] p-2"><button className={`min-h-11 rounded-lg text-[10px] font-semibold ${tab === 'equipment' ? 'bg-[var(--primary)] text-white' : 'hover:bg-[var(--accent)]'}`} onClick={() => setTab('equipment')}>Equipment</button><button className={`min-h-11 rounded-lg text-[10px] font-semibold ${tab === 'liquids' ? 'bg-[var(--primary)] text-white' : 'hover:bg-[var(--accent)]'}`} onClick={() => setTab('liquids')}>Materials</button><button className={`min-h-11 rounded-lg text-[10px] font-semibold ${tab === 'compounds' ? 'bg-[var(--primary)] text-white' : 'hover:bg-[var(--accent)]'}`} onClick={() => setTab('compounds')}>Compounds</button><button className={`min-h-11 rounded-lg text-[10px] font-semibold ${tab === 'elements' ? 'bg-[var(--primary)] text-white' : 'hover:bg-[var(--accent)]'}`} onClick={() => setTab('elements')}>Elements</button></div><div className="flex-1 overflow-y-auto p-4">{tab === 'equipment' ? groups.map((group) => <section key={group.title} className="mb-5"><h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">{group.title}</h3><div className="grid grid-cols-2 gap-3">{group.items.map((item) => <button key={item.id} className="min-h-24 rounded-xl border border-[var(--border)] p-3 text-center hover:border-[var(--primary)]" onClick={() => addItem(item)}><item.icon size={24} className="mx-auto mb-2 text-[var(--primary)]" /><span className="block text-xs font-medium">{item.name}</span><span className="mt-1 block text-[10px] font-bold uppercase text-[var(--primary)]">Add</span></button>)}</div></section>) : <div className="space-y-3">{list.map((material) => <button key={material.id} onClick={() => addMaterial(material)} className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-[var(--border)] p-3 text-left hover:border-[var(--primary)]"><span className="h-9 w-9 rounded-full border-2 border-white/20" style={{ background: material.color }} /><span><span className="block text-sm font-semibold">{material.name}</span><span className="text-xs text-[var(--muted-foreground)]">{material.formula} · {material.state}</span></span></button>)}{!selected && <p className="mt-4 text-xs text-[var(--muted-foreground)]">Select a vessel before adding a sample.</p>}</div>}</div></div>; }
+function LegacyLibrary({ tab, setTab, addItem, addMaterial, selected }: { tab: 'equipment' | 'liquids' | 'compounds' | 'elements'; setTab: (tab: 'equipment' | 'liquids' | 'compounds' | 'elements') => void; addItem: (item: LibraryItem) => void; addMaterial: (material: Material) => void; selected?: Item }) { const list = tab === 'liquids' ? liquids : tab === 'compounds' ? compounds : elements; return <div className="flex min-h-0 flex-1 flex-col"><div className="grid grid-cols-4 gap-1 border-b border-[var(--border)] p-2"><button className={`min-h-11 rounded-lg text-[10px] font-semibold ${tab === 'equipment' ? 'bg-[var(--primary)] text-white' : 'hover:bg-[var(--accent)]'}`} onClick={() => setTab('equipment')}>Equipment</button><button className={`min-h-11 rounded-lg text-[10px] font-semibold ${tab === 'liquids' ? 'bg-[var(--primary)] text-white' : 'hover:bg-[var(--accent)]'}`} onClick={() => setTab('liquids')}>Materials</button><button className={`min-h-11 rounded-lg text-[10px] font-semibold ${tab === 'compounds' ? 'bg-[var(--primary)] text-white' : 'hover:bg-[var(--accent)]'}`} onClick={() => setTab('compounds')}>Compounds</button><button className={`min-h-11 rounded-lg text-[10px] font-semibold ${tab === 'elements' ? 'bg-[var(--primary)] text-white' : 'hover:bg-[var(--accent)]'}`} onClick={() => setTab('elements')}>Elements</button></div><div className="flex-1 overflow-y-auto p-4">{tab === 'equipment' ? groups.map((group) => <section key={group.title} className="mb-5"><h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">{group.title}</h3><div className="grid grid-cols-2 gap-3">{group.items.map((item) => <button key={item.id} className="min-h-24 rounded-xl border border-[var(--border)] p-3 text-center hover:border-[var(--primary)]" onClick={() => addItem(item)}><item.icon size={24} className="mx-auto mb-2 text-[var(--primary)]" /><span className="block text-xs font-medium">{item.name}</span><span className="mt-1 block text-[10px] font-bold uppercase text-[var(--primary)]">Add</span></button>)}</div></section>) : <div className="space-y-3">{list.map((material) => <button key={material.id} onClick={() => addMaterial(material)} className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-[var(--border)] p-3 text-left hover:border-[var(--primary)]"><span className="h-9 w-9 rounded-full border-2 border-white/20" style={{ background: material.color }} /><span><span className="block text-sm font-semibold">{material.name}</span><span className="text-xs text-[var(--muted-foreground)]">{material.formula} · {material.state}</span></span></button>)}{!selected && <p className="mt-4 text-xs text-[var(--muted-foreground)]">Select a vessel before adding a sample.</p>}</div>}</div></div>; }
 function SelectionToolbar({ duplicate, remove, connect }: { duplicate: () => void; remove: () => void; connect: () => void }) { return <div className="absolute -top-12 left-1/2 flex -translate-x-1/2 gap-1 rounded-lg border border-[var(--border)] bg-[var(--card)] p-1 shadow-lg"><ToolButton label="Duplicate" onClick={duplicate}><Copy size={15} /></ToolButton><ToolButton label="Delete" onClick={remove}><Trash2 size={15} /></ToolButton><ToolButton label="Connect" onClick={connect}><Link2 size={15} /></ToolButton></div>; }
+function Library({ tab, setTab, addItem, addMaterial, selected, onAskAi }: { tab: LibraryTab; setTab: (tab: LibraryTab) => void; addItem: (item: LibraryItem) => void; addMaterial: (material: Material) => void; selected?: Item; onAskAi?: () => void }) { const ts = useTranslations('sandbox');
+  const [query, setQuery] = useState('');
+  const [remoteEquipment, setRemoteEquipment] = useState<EquipmentSummary[]>([]);
+  const [remoteMaterials, setRemoteMaterials] = useState<MaterialSummary[]>([]);
+  useEffect(() => {
+    void catalogApi.listEquipment().then(setRemoteEquipment).catch(() => undefined);
+    void catalogApi.listMaterials().then(setRemoteMaterials).catch(() => undefined);
+  }, []);
+  const [open, setOpen] = useState<Record<string, boolean>>({ Containers: true, Heating: true, Cooling: true, Measuring: true, Separation: false, Support: false });
+  const normalized = query.trim().toLowerCase();
+  const filteredGroups = groups.map((group) => ({ ...group, items: group.items.filter((item) => !normalized || item.name.toLowerCase().includes(normalized)) })).filter((group) => group.items.length);
+  const remoteGroup = remoteEquipment.length ? [{ title: 'Backend equipment', items: remoteEquipment.filter((item) => !normalized || `${item.displayName} ${item.type}`.toLowerCase().includes(normalized)).map((item) => ({ id: equipmentTypeFromProfile(item), name: item.displayName, w: 100, h: 100, icon: Beaker })) }] : [];
+  const visibleGroups = [...filteredGroups, ...remoteGroup];
+  const materials = [...liquids, ...compounds, ...remoteMaterials.map(materialFromSummary)].filter((material) => !normalized || `${material.name} ${material.formula}`.toLowerCase().includes(normalized));
+  const tabs: Array<{ id: LibraryTab; label: string }> = [{ id: 'equipment', label: ts('equipment') }, { id: 'materials', label: ts('materials') }, { id: 'elements', label: ts('cat_elements') }, { id: 'ai', label: 'AI' }];
+  return <div className="flex min-h-0 flex-1 flex-col">
+    <div className="border-b border-[var(--border)] p-2"><div className="grid grid-cols-4 gap-1 rounded-xl bg-[var(--background)] p-1" role="tablist">{tabs.map((item) => <button key={item.id} role="tab" aria-selected={tab === item.id} className={`min-h-11 min-w-0 rounded-lg px-2 text-[11px] font-semibold transition-colors ${tab === item.id ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)]'}`} onClick={() => setTab(item.id)}>{item.label}</button>)}</div><label className="mt-2 block"><span className="sr-only">Search equipment and materials</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search..." className="h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm outline-none focus:border-[var(--primary)]" /></label></div>
+    <div className="flex-1 overflow-y-auto p-3">
+      {tab === 'equipment' && visibleGroups.map((group) => <section key={group.title} className="mb-4"><button className="mb-2 flex w-full items-center justify-between px-1 text-left text-[11px] font-bold uppercase tracking-[.14em] text-[var(--muted-foreground)]" onClick={() => setOpen((current) => ({ ...current, [group.title]: !current[group.title] }))}><span>{group.title}</span><span aria-hidden="true">{open[group.title] ? '−' : '+'}</span></button>{open[group.title] && <div className="grid grid-cols-2 gap-2">{group.items.map((item) => <button key={item.id} className="group min-h-28 rounded-xl border border-[var(--border)] bg-[var(--card)] p-2 text-center transition-all hover:-translate-y-0.5 hover:border-[var(--primary)] hover:shadow-lg" onClick={() => addItem(item)}><EquipmentIcon type={item.id} size={48} /><span className="block text-[11px] font-semibold leading-tight">{item.name}</span><span className="mt-1 block text-[10px] font-bold uppercase text-[var(--primary)]">Add</span></button>)}</div>}</section>)}
+      {tab === 'materials' && <div className="space-y-2">{materials.map((material) => <button key={material.id} onClick={() => addMaterial(material)} className="flex min-h-16 w-full items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-left transition-colors hover:border-[var(--primary)]"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 border-white/20 text-[10px] font-bold" style={{ background: material.color }}>{material.state === 'gas' ? 'GAS' : material.state === 'solid' ? 'SOL' : 'LIQ'}</span><span><span className="block text-sm font-semibold">{material.name}</span><span className="text-xs text-[var(--muted-foreground)]">{material.formula} · {material.state}</span></span></button>)}{!selected && <p className="mt-4 text-xs text-[var(--muted-foreground)]">Select a vessel before adding a sample.</p>}</div>}
+      {tab === 'elements' && <div className="grid grid-cols-2 gap-2">{elements.filter((item) => !normalized || `${item.name} ${item.formula}`.toLowerCase().includes(normalized)).map((element) => <button key={element.id} onClick={() => addMaterial(element)} className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-left hover:border-[var(--primary)]"><span className="text-xl font-bold" style={{ color: element.color }}>{element.formula}</span><span className="mt-1 block text-xs font-semibold">{element.name}</span><span className="text-[10px] text-[var(--muted-foreground)]">Solid sample</span></button>)}</div>}
+      {tab === 'ai' && <div className="rounded-2xl border border-[var(--primary)]/30 bg-[var(--primary)]/10 p-4"><Sparkles className="text-[var(--primary)]" /><h3 className="mt-3 font-semibold">AI Lab Assistant</h3><p className="mt-2 text-xs leading-relaxed text-[var(--muted-foreground)]">Describe an experiment and the assistant will prepare equipment, materials and a safe action sequence.</p><button className="mt-4 min-h-11 w-full rounded-xl bg-[var(--primary)] px-3 text-sm font-semibold text-white" onClick={() => onAskAi?.()}>Open assistant</button></div>}
+    </div>
+  </div>;
+}
+
 function Properties({ item, update, onOperation, setPourSource, pourSource }: { item: Item; update: (id: string, patch: Partial<Item>) => void; onOperation: (item: Item, operation: EquipmentOperation) => void; setPourSource: (id: string | null) => void; pourSource: string | null }) { return <div className="space-y-5 overflow-y-auto p-5"><div><p className="text-xs uppercase tracking-wider text-[var(--muted-foreground)]">Selected equipment</p><h3 className="mt-1 text-lg font-bold">{item.name}</h3><p className="mt-1 text-sm font-semibold text-[var(--primary)]">{item.temperature.toFixed(1)} °C · {item.volumeMl} mL</p></div><label className="block text-sm">Size<input aria-label="Equipment size" type="range" min=".6" max="1.6" step=".05" value={item.scale} onChange={(event) => update(item.id, { scale: Number(event.target.value) })} className="mt-2 w-full" /></label><div className="flex gap-2"><button className="touch-target flex-1 rounded-xl border border-[var(--border)]" onClick={() => update(item.id, { rotation: item.rotation - 15 })} aria-label="Rotate counterclockwise"><RotateCcw className="mx-auto" size={17} /></button><button className="touch-target flex-1 rounded-xl border border-[var(--border)]" onClick={() => update(item.id, { rotation: item.rotation + 15 })} aria-label="Rotate clockwise"><RotateCw className="mx-auto" size={17} /></button></div><div className="grid grid-cols-3 gap-2"><ActionButton label="Heat" icon={<Flame size={15} />} onClick={() => onOperation(item, item.operation === 'heating' ? 'idle' : 'heating')} /><ActionButton label="Cool" icon={<Snowflake size={15} />} onClick={() => onOperation(item, item.operation === 'cooling' ? 'idle' : 'cooling')} /><ActionButton label="Stir" icon={<Sparkles size={15} />} onClick={() => onOperation(item, item.operation === 'stirring' ? 'idle' : 'stirring')} /></div>{item.material && <div className="rounded-xl border border-[var(--border)] p-3"><p className="font-semibold">{item.material.name} · {item.material.formula}</p><label className="mt-3 block text-xs text-[var(--muted-foreground)]">Volume (mL)<input aria-label="Volume in milliliters" type="number" min="0" max="1000" value={item.volumeMl} onChange={(event) => update(item.id, { volumeMl: Number(event.target.value), liquidLevel: Math.min(1, Number(event.target.value) / 100) })} className="mt-2 w-full rounded-lg border border-[var(--border)] bg-[var(--background)] p-2" /></label></div>}{isVessel(item) && item.material?.state === 'liquid' && <button className="min-h-11 w-full rounded-xl border border-[var(--primary)] text-sm font-semibold text-[var(--primary)]" onClick={() => setPourSource(pourSource ? null : item.id)}><Droplets size={15} className="mr-2 inline" />Pour into another vessel</button>}</div>; }
 function ActionButton({ label, icon, onClick }: { label: string; icon: ReactNode; onClick: () => void }) { return <button className="flex min-h-11 items-center justify-center rounded-xl border border-[var(--border)] px-2 text-xs font-semibold hover:border-[var(--primary)]" onPointerDown={(event) => event.stopPropagation()} onClick={onClick}>{icon}<span className="ml-1">{label}</span></button>; }
 function ActivityLog({ items, selected }: { items: Item[]; selected?: Item }) { return <section className="hidden min-h-[92px] border-t border-[var(--border)] bg-[var(--card)] px-4 py-3 lg:block"><h3 className="text-xs font-semibold uppercase tracking-wider">Experiment log</h3><div className="mt-3 grid grid-cols-4 gap-3 text-xs"><div><span className="text-[var(--muted-foreground)]">Objects</span><strong className="mt-1 block">{items.length}</strong></div><div><span className="text-[var(--muted-foreground)]">Volume</span><strong className="mt-1 block">{selected?.volumeMl || 0} mL</strong></div><div><span className="text-[var(--muted-foreground)]">Temperature</span><strong className="mt-1 block">{selected?.temperature.toFixed(1) || '24.5'} °C</strong></div><div><span className="text-[var(--muted-foreground)]">State</span><strong className="mt-1 block capitalize">{selected?.operation || 'idle'}</strong></div></div></section>; }

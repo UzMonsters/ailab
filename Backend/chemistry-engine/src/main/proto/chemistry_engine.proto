@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package ailab.chemistry.v1;
+
+option java_multiple_files = true;
+option java_package = "com.ailab.chemistry.api.grpc.v1";
+
+service ChemistryEngineService {
+  rpc RunSimulation(RunSimulationRequest) returns (JsonResultResponse);
+  rpc ValidateReaction(ValidateReactionRequest) returns (JsonResultResponse);
+  rpc CalculateReaction(CalculateReactionRequest) returns (JsonResultResponse);
+  rpc CalculatePH(CalculatePHRequest) returns (JsonResultResponse);
+  rpc CalculateTemperature(CalculateTemperatureRequest) returns (JsonResultResponse);
+  rpc CalculatePressure(CalculatePressureRequest) returns (JsonResultResponse);
+  rpc CalculateEnergy(CalculateEnergyRequest) returns (JsonResultResponse);
+  rpc CalculateConcentration(CalculateConcentrationRequest) returns (JsonResultResponse);
+  rpc GetChemicalProperties(GetChemicalPropertiesRequest) returns (JsonResultResponse);
+  rpc GetElement(GetElementRequest) returns (JsonResultResponse);
+  rpc GetCompound(GetCompoundRequest) returns (JsonResultResponse);
+}
+
+message RequestContext {
+  string request_id = 1;
+  string actor_id = 2;
+  repeated string roles = 3;
+  string schema_version = 4;
+  int64 deadline_epoch_millis = 5;
+}
+
+message RunSimulationRequest {
+  RequestContext context = 1;
+  string workspace_id = 2;
+  string parameters_json = 3;
+}
+
+message ValidateReactionRequest {
+  RequestContext context = 1;
+  repeated string chemicals = 2;
+  string current_state_json = 3;
+}
+
+message CalculateReactionRequest {
+  RequestContext context = 1;
+  repeated string reactants = 2;
+  string conditions_json = 3;
+}
+
+message CalculatePHRequest {
+  RequestContext context = 1;
+  string compound_code = 2;
+  string concentration_molar = 3;
+  string temperature_k = 4;
+}
+
+message CalculateTemperatureRequest {
+  RequestContext context = 1;
+  string mass_grams = 2;
+  string heat_joules = 3;
+  string heat_capacity = 4;
+}
+
+message CalculatePressureRequest {
+  RequestContext context = 1;
+  string moles = 2;
+  string volume_liters = 3;
+  string temperature_k = 4;
+}
+
+message CalculateEnergyRequest {
+  RequestContext context = 1;
+  repeated string materials = 2;
+  string delta_t = 3;
+}
+
+message CalculateConcentrationRequest {
+  RequestContext context = 1;
+  string solute_moles = 2;
+  string volume_liters = 3;
+}
+
+message GetChemicalPropertiesRequest {
+  RequestContext context = 1;
+  string chemical_identifier = 2;
+}
+
+message GetElementRequest {
+  RequestContext context = 1;
+  string element_identifier = 2;
+}
+
+message GetCompoundRequest {
+  RequestContext context = 1;
+  string compound_identifier = 2;
+}
+
+message JsonResultResponse {
+  string request_id = 1;
+  string status = 2;
+  string result_json = 3;
+}

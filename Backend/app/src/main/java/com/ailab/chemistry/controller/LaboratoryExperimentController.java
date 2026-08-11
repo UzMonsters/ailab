@@ -11,12 +11,15 @@ import com.ailab.chemistry.domain.simulationengine.SimulationExecutionResult;
 import com.ailab.chemistry.domain.simulationstate.CreateSimulationSessionRequest;
 import com.ailab.chemistry.domain.simulationstate.SimulationSessionId;
 import com.ailab.chemistry.domain.simulationstate.SimulationState;
+import com.ailab.workspace.service.LaboratoryAccessService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -29,10 +32,21 @@ public class LaboratoryExperimentController {
 
     private final SimulationSessionService sessionService;
     private final SimulationEngineService engineService;
+    private final LaboratoryAccessService accessService;
 
-    public LaboratoryExperimentController(SimulationSessionService sessionService, SimulationEngineService engineService) {
+    public LaboratoryExperimentController(SimulationSessionService sessionService, SimulationEngineService engineService,
+                                          LaboratoryAccessService accessService) {
         this.sessionService = sessionService;
         this.engineService = engineService;
+        this.accessService = accessService;
+    }
+
+    private String getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null || auth.getName().isBlank() || "anonymousUser".equalsIgnoreCase(auth.getName())) {
+            throw new org.springframework.security.authentication.InsufficientAuthenticationException("User must be authenticated");
+        }
+        return auth.getName();
     }
 
     @PostMapping
@@ -43,20 +57,22 @@ public class LaboratoryExperimentController {
 
     @GetMapping("/{sessionId}")
     @Operation(summary = "Get experiment current state", description = "Retrieve current state, reactants, apparatus, temperature, pressure, and version of an active experiment session.")
-    public SimulationState getExperimentState(@PathVariable UUID sessionId) {
-        return sessionService.getCurrentState(new SimulationSessionId(sessionId.toString()));
+    public SimulationState getExperimentState(@PathVariable String sessionId) {
+        accessService.verifyExperimentAccess(sessionId, getCurrentUserId());
+        return sessionService.getCurrentState(new SimulationSessionId(sessionId));
     }
 
     @PostMapping("/{sessionId}/operations")
     @Operation(summary = "Execute scientific operation on experiment", description = "Execute a scientific operation (MIX, HEAT, COOL, PRESSURE_CHANGE, TITRATE) on an active experiment with real-time safety evaluation.")
     public SimulationExecutionResult executeOperation(
-            @PathVariable UUID sessionId,
+            @PathVariable String sessionId,
             @Valid @RequestBody SimulationOperationRequest request) {
+        accessService.verifyExperimentAccess(sessionId, getCurrentUserId());
         IdempotencyKey key = request.idempotencyKey() != null && !request.idempotencyKey().isBlank()
                 ? new IdempotencyKey(request.idempotencyKey())
                 : new IdempotencyKey(UUID.randomUUID().toString());
         return engineService.execute(
-                new SimulationSessionId(sessionId.toString()),
+                new SimulationSessionId(sessionId),
                 request.expectedStateVersion(),
                 key,
                 request.command()
@@ -66,13 +82,14 @@ public class LaboratoryExperimentController {
     @PostMapping("/{sessionId}/events")
     @Operation(summary = "Append laboratory event", description = "Append a discrete laboratory event payload (e.g. ADD_REAGENT, CONTAINER_SEAL) to an experiment session.")
     public SimulationState appendEvent(
-            @PathVariable UUID sessionId,
+            @PathVariable String sessionId,
             @Valid @RequestBody AppendEventRequest request) {
+        accessService.verifyExperimentAccess(sessionId, getCurrentUserId());
         IdempotencyKey key = request.idempotencyKey() != null && !request.idempotencyKey().isBlank()
                 ? new IdempotencyKey(request.idempotencyKey())
                 : new IdempotencyKey(UUID.randomUUID().toString());
         return sessionService.appendEvent(
-                new SimulationSessionId(sessionId.toString()),
+                new SimulationSessionId(sessionId),
                 request.expectedVersion(),
                 key,
                 request.payload()
@@ -81,18 +98,20 @@ public class LaboratoryExperimentController {
 
     @PostMapping("/{sessionId}/replay")
     @Operation(summary = "Replay experiment simulation session", description = "Replay all events in an experiment session from initial snapshot deterministically.")
-    public SimulationState replayExperiment(@PathVariable UUID sessionId) {
-        return sessionService.replay(new SimulationSessionId(sessionId.toString()));
+    public SimulationState replayExperiment(@PathVariable String sessionId) {
+        accessService.verifyExperimentAccess(sessionId, getCurrentUserId());
+        return sessionService.replay(new SimulationSessionId(sessionId));
     }
 
     @GetMapping("/{sessionId}/audit/{eventId}")
     @Operation(summary = "Get calculation audit for event", description = "Retrieve immutable calculation audit log entry (inputs, formulas used, safety rule evaluations, outputs) for a specific event.")
     public SimulationCalculationAudit getCalculationAudit(
-            @PathVariable UUID sessionId,
-            @PathVariable UUID eventId) {
+            @PathVariable String sessionId,
+            @PathVariable String eventId) {
+        accessService.verifyExperimentAccess(sessionId, getCurrentUserId());
         return engineService.audit(
-                new SimulationSessionId(sessionId.toString()),
-                new LaboratoryEventId(eventId.toString())
+                new SimulationSessionId(sessionId),
+                new LaboratoryEventId(eventId)
         );
     }
 
