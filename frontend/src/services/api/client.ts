@@ -77,20 +77,28 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     credentials: 'include',
   });
 
-  if (res.status === 401 && accessToken) {
-    if (!refreshPromise) {
-      refreshPromise = tryRefresh();
-    }
-    const refreshed = await refreshPromise;
-    refreshPromise = null;
+  if (res.status === 401) {
+    let refreshed = false;
+    if (accessToken) {
+      if (!refreshPromise) {
+        refreshPromise = tryRefresh();
+      }
+      refreshed = await refreshPromise;
+      refreshPromise = null;
 
-    if (refreshed) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
-      res = await fetch(`${API_BASE}${endpoint}`, {
-        ...options,
-        headers,
-        credentials: 'include',
-      });
+      if (refreshed) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+        res = await fetch(`${API_BASE}${endpoint}`, {
+          ...options,
+          headers,
+          credentials: 'include',
+        });
+      }
+    }
+
+    if (res.status === 401 && typeof window !== 'undefined') {
+      accessToken = null;
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'));
     }
   }
 

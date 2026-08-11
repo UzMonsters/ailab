@@ -62,13 +62,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   fetchUser: async () => {
-    const token = getAccessToken();
-    if (!token) {
-      set({ user: null, isAuthenticated: false, isLoading: false });
-      return;
-    }
     set({ isLoading: true });
     try {
+      if (!getAccessToken()) {
+        await authApi.refresh();
+      }
       const user = await userApi.getMe();
       set({ user, isAuthenticated: true, isLoading: false });
     } catch {
@@ -78,3 +76,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   clearError: () => set({ error: null }),
 }));
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('auth:unauthorized', () => {
+    useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false, error: null });
+  });
+}
