@@ -173,7 +173,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
               <span className="lg:hidden font-bold text-lg">jas<span className="text-[#8B5CF6]">Science</span></span>
             </div>
             <div className="flex items-center gap-2">
-              <ThemeToggle />
+              {(pathname.includes('/dashboard') || pathname.includes('/workspace')) && <ThemeToggle />}
               <LanguageSwitcher />
               <button className="w-9 h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all relative" aria-label={tc('notifications')}>
                 <Bell size={16} />

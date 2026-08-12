@@ -7,7 +7,6 @@ import { useTranslations } from 'next-intl';
 import { Atom, Menu, X } from 'lucide-react';
 import ScienceBackground, { BackgroundGlow } from '@/components/common/ScienceBackground';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
-import ThemeToggle from '@/components/common/ThemeToggle';
 import PublicFooter from '@/components/layout/PublicFooter';
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -43,7 +42,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           </nav>
 
           <div className="flex items-center gap-3">
-            <ThemeToggle />
             <LanguageSwitcher />
             <Link href={`/${locale}/auth`} className="bg-gradient-to-br from-[#8B5CF6] to-[#A855F7] text-white py-2 px-5 rounded-[var(--radius-sm)] text-sm font-semibold no-underline shadow-[0_5px_15px_rgba(139,92,246,0.3)] transition-all hover:-translate-y-0.5">
               {tc('login')}

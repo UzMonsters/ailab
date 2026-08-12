@@ -98,17 +98,6 @@ export default function ProfilePage() {
   }, [user]);
 
   useEffect(() => {
-    // Basic theme switcher listener implementation
-    if (preferences?.theme) {
-      if (preferences.theme === 'LIGHT') {
-        document.documentElement.setAttribute('data-theme', 'light');
-      } else {
-        document.documentElement.removeAttribute('data-theme');
-      }
-    }
-  }, [preferences?.theme]);
-
-  useEffect(() => {
     if (!editModalOpen && !deleteOpen) return;
     const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') { setEditModalOpen(false); setDeleteOpen(false); } if (event.key === 'Tab' && modalRef.current) { const nodes = modalRef.current.querySelectorAll<HTMLElement>('button,input'); const first = nodes[0]; const last = nodes[nodes.length - 1]; if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); } else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); } } };
     document.addEventListener('keydown', onKey); return () => document.removeEventListener('keydown', onKey);
@@ -356,10 +345,8 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-3">{t('theme')}</label>
-                  <select value={preferences.theme} onChange={(e) => setPreferences({ ...preferences, theme: e.target.value as UserPreferencesResponse['theme'] })} className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl py-3 px-4 text-sm font-medium text-[var(--foreground)] outline-none focus:border-[var(--primary)] transition-colors">
+                  <select value="DARK" disabled className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl py-3 px-4 text-sm font-medium text-[var(--foreground)] opacity-80">
                     <option value="DARK">{t('dark')}</option>
-                    <option value="LIGHT">{t('light')}</option>
-                    <option value="SYSTEM">{t('system')}</option>
                   </select>
                 </div>
                 <div>
