@@ -134,6 +134,20 @@ class WorkspaceIntegrationTest {
                 .andExpect(jsonPath("$.items[0].id").value(wsId))
                 .andExpect(jsonPath("$.total").value(1));
 
+        mockMvc.perform(get("/api/v1/workspaces")
+                        .header("Authorization", token1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value(wsId))
+                .andExpect(jsonPath("$.total").value(1));
+
+        mockMvc.perform(get("/api/v1/workspaces")
+                        .header("Authorization", token1)
+                        .param("science", "   ")
+                        .param("search", "   "))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value(wsId))
+                .andExpect(jsonPath("$.total").value(1));
+
         // 7. Duplicate workspace
         mockMvc.perform(post("/api/v1/workspaces/" + wsId + "/duplicate")
                         .header("Authorization", token1))

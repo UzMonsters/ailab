@@ -97,9 +97,25 @@ public class WorkspaceService {
         }
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size), sort);
         boolean incDel = includeDeleted != null && includeDeleted;
-        Page<WorkspaceEntity> p = workspaceRepository.findAllByOwner(ownerId, science, search, incDel, pageable);
+        String scienceFilter = normalizedFilter(science);
+        String searchFilter = normalizedFilter(search);
+        Page<WorkspaceEntity> p = workspaceRepository.findAllByOwner(
+                ownerId,
+                scienceFilter != null ? scienceFilter : "",
+                searchFilter != null ? searchFilter : "",
+                scienceFilter != null,
+                searchFilter != null,
+                incDel,
+                pageable);
         List<WorkspaceDetails> items = p.getContent().stream().map(WorkspaceDetails::fromEntity).toList();
         return new WorkspacePageResponse<>(items, p.getNumber(), p.getSize(), p.getTotalElements());
+    }
+
+    private String normalizedFilter(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim().toLowerCase(Locale.ROOT);
     }
 
     @Transactional(readOnly = true)
