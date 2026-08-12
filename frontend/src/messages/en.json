@@ -327,6 +327,7 @@
     "chemicals": "Chemicals",
     "elements": "Elements",
     "equipment": "Equipment",
+    "backendEquipment": "Verified equipment",
     "totalUsers": "Total Users",
     "activeLabs": "Active Labs",
     "totalExperiments": "Total Experiments",

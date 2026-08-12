@@ -327,6 +327,7 @@
     "chemicals": "Химикаты",
     "elements": "Элементы",
     "equipment": "Оборудование",
+    "backendEquipment": "Проверенное оборудование",
     "totalUsers": "Всего пользователей",
     "activeLabs": "Активные лаборатории",
     "totalExperiments": "Всего экспериментов",
