@@ -6,8 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import ScientificCoreModel from '@/components/scientific-core'
 import { useAuthStore } from '@/stores/auth.store'
-import { useLocaleSwitch } from '@/hooks/useLocaleSwitch'
-import { LOCALES } from '@/constants'
+import LanguageSwitcher from '@/components/common/LanguageSwitcher'
 import {
   ArrowRight, Atom, Beaker, BrainCircuit, ChevronRight,
   Database, Dna, Droplets, FlaskConical, Gauge, Globe2, Hexagon, Layers3, Menu,
@@ -153,7 +152,6 @@ export default function LandingPage() {
   const t = useTranslations('landing')
   const locale = pathname.split('/')[1] || 'en'
   const { user, fetchUser } = useAuthStore()
-  const { switchLocale } = useLocaleSwitch()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [selectedSymbol, setSelectedSymbol] = useState('O')
   const [assistantInput, setAssistantInput] = useState('')
@@ -176,7 +174,7 @@ export default function LandingPage() {
   ]
 
   return <main className="site-shell" id="home">
-    <header className="site-nav"><div className="nav-inner"><Logo /><nav className={mobileOpen ? 'nav-links nav-open' : 'nav-links'} aria-label="Main navigation">{[{ label: t('navPlatform'), href: 'platform' }, { label: t('navSciences'), href: 'sciences' }, { label: t('navMolecules'), href: 'molecules' }, { label: t('navResearch'), href: 'research' }].map((item) => <a key={item.label} href={`#${item.href}`} onClick={() => setMobileOpen(false)}>{item.label}</a>)}</nav><div className="nav-actions"><div className="nav-langs" role="group" aria-label="Language">{LOCALES.map((code) => <button key={code} type="button" onClick={() => switchLocale(code)} className={`nav-lang ${locale === code ? 'active' : ''}`} aria-current={locale === code}>{code}</button>)}</div><Link className="button button-primary nav-cta" href={user ? `/${locale}/workspace/sandbox` : `/${locale}/auth`}>{user ? t('navWorkspace') : t('navSignIn')} <ArrowRight /></Link><button className="mobile-toggle icon-button" aria-label={mobileOpen ? t('navClose') : t('navOpen')} onClick={() => setMobileOpen(!mobileOpen)}>{mobileOpen ? <X /> : <Menu />}</button></div></div></header>
+    <header className="site-nav"><div className="nav-inner"><Logo /><nav className={mobileOpen ? 'nav-links nav-open' : 'nav-links'} aria-label="Main navigation">{[{ label: t('navPlatform'), href: 'platform' }, { label: t('navSciences'), href: 'sciences' }, { label: t('navMolecules'), href: 'molecules' }, { label: t('navResearch'), href: 'research' }].map((item) => <a key={item.label} href={`#${item.href}`} onClick={() => setMobileOpen(false)}>{item.label}</a>)}</nav><div className="nav-actions"><div className="nav-langs-desktop" role="group" aria-label="Language">{['en', 'ru', 'uz'].map((code) => <Link key={code} href={`/${code}`} className={`nav-lang ${locale === code ? 'active' : ''}`} aria-current={locale === code}>{code}</Link>)}</div><div className="nav-lang-mobile"><LanguageSwitcher /></div><Link className="button button-primary nav-cta" href={user ? `/${locale}/workspace/sandbox` : `/${locale}/auth`}>{user ? t('navWorkspace') : t('navSignIn')} <ArrowRight /></Link><button className="mobile-toggle icon-button" aria-label={mobileOpen ? t('navClose') : t('navOpen')} onClick={() => setMobileOpen(!mobileOpen)}>{mobileOpen ? <X /> : <Menu />}</button></div></div></header>
 
     <section className="hero section-wrap" id="platform" style={{ backgroundImage: "radial-gradient(ellipse 48% 70% at 8% 52%, rgba(124,58,237,.34), #000000a6 72%), linear-gradient(90deg, rgba(6,8,12,.96) 0%, rgba(6,8,12,.78) 45%, rgba(6,8,12,.22) 100%), url('/background_herosection.jpg') right center / cover no-repeat, #06080c" }}>
       <Reveal className="hero-copy">

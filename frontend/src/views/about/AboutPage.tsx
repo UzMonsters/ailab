@@ -34,9 +34,9 @@ export default function AboutPage() {
   ];
 
   const team = [
-    { name: 'Samiyev Aminjon', role: t('role1'), bio: t('bio1'), img: '/about/Samiyev.jpg', accent: '#8B5CF6' },
-    { name: 'Mansurov Jasur', role: t('role2'), bio: t('bio2'), img: '/about/Mansurov.jpg', accent: '#14F195' },
-    { name: 'Ashurov Sardor', role: t('role3'), bio: t('bio3'), img: '/about/Ashurov.jpg', accent: '#F59E0B' },
+    { name: 'Aminjon Samiyev', initials: 'AS', role: t('role1'), bio: t('bio1'), accent: '#8B5CF6' },
+    { name: 'Jasur Mansurov', initials: 'JM', role: t('role2'), bio: t('bio2'), accent: '#14F195' },
+    { name: 'Sardorbek Ashurov', initials: 'SA', role: t('role3'), bio: t('bio3'), accent: '#F59E0B' },
   ];
 
   return (
@@ -60,7 +60,7 @@ export default function AboutPage() {
                 <Sparkles size={11} /> {t('badge')}
               </div>
 
-              <h1 className="text-4xl md:text-[38px] font-extrabold leading-[1.15] tracking-tight mb-4" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #CBD5E1 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <h1 className="text-4xl md:text-[38px] font-extrabold leading-[1.15] tracking-tight mb-4 text-[var(--foreground)]">
                 {t('title1')}<br />{t('title2')} <span style={{ background: 'linear-gradient(135deg, #8b5cf6, #14F195)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{t('title3')}</span>
               </h1>
 
@@ -99,7 +99,7 @@ export default function AboutPage() {
                 {team.map((member) => (
                   <div key={member.name} className="group bg-white/[0.03] border border-white/[0.08] rounded-[var(--radius-md)] p-3 flex flex-col items-center text-center transition-all hover:border-[#8b5cf6]/60 hover:-translate-y-1 hover:bg-white/[0.05] hover:shadow-[0_10px_20px_rgba(0,0,0,.4)]">
                     <div className="w-[72px] h-[72px] rounded-full p-[2px] mb-2.5" style={{ background: `linear-gradient(135deg, #8b5cf6, ${member.accent})` }}>
-                      <img src={member.img} alt={member.name} className="w-full h-full rounded-full object-cover" style={{ backgroundColor: '#151622' }} />
+                      <span className="grid h-full w-full place-items-center rounded-full text-lg font-bold text-white" style={{ background: 'linear-gradient(135deg, #151622, #25213a)' }}>{member.initials}</span>
                     </div>
                     <div className="text-[13px] font-bold text-[var(--foreground)]">{member.name}</div>
                     <div className="text-[10px] font-mono text-[#8b5cf6] mb-1.5">{member.role}</div>

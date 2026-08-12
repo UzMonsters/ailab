@@ -28,7 +28,7 @@ export default function SettingsPage() {
   const t = copy[locale] || copy.en;
   const { switchLocale } = useLocaleSwitch();
   const { setTheme } = useUIStore();
-  const { user, fetchUser, logout } = useAuthStore();
+  const { user, isAuthenticated, isLoading: authLoading, fetchUser, logout } = useAuthStore();
   const [active, setActive] = useState<Section>('general');
   const [preferences, setPreferences] = useState<UserPreferencesResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,8 +40,22 @@ export default function SettingsPage() {
   const pendingPatch = useRef<UserPreferencesUpdateRequest>({});
   const modalRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { if (!user) fetchUser(); }, [user, fetchUser]);
-  useEffect(() => { userApi.getPreferences().then((data) => { setPreferences(data); setTheme(data.theme.toLowerCase() as 'dark' | 'light' | 'system'); }).catch(() => { setPreferences(defaults); setTheme('system'); setError(false); }).finally(() => setLoading(false)); }, [setTheme]);
+  useEffect(() => { if (!user) void fetchUser(); }, [user, fetchUser]);
+  useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
+    let cancelled = false;
+    void userApi.getPreferences().then((data) => {
+      if (cancelled) return;
+      setPreferences(data);
+      setTheme(data.theme.toLowerCase() as 'dark' | 'light' | 'system');
+    }).catch(() => {
+      if (cancelled) return;
+      setPreferences(defaults);
+      setTheme('system');
+      setError(false);
+    }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [authLoading, isAuthenticated, setTheme]);
 
   useEffect(() => {
     const sync = (event: StorageEvent) => { if (event.key === 'ai-lab-preferences-sync') userApi.getPreferences().then(setPreferences).catch(() => undefined); };
@@ -65,7 +79,7 @@ export default function SettingsPage() {
   };
 
   const sections = useMemo(() => Object.keys(t.sections) as Section[], [t]);
-  const onDelete = async () => { if (!user || confirmText.trim() !== user.username) return; await userApi.deleteMe(); await logout(); router.push(`/${locale}/auth`); };
+  const onDelete = async () => { if (!user || confirmText.trim() !== user.username) return; await userApi.deleteMe(); await logout(); router.replace('/'); };
 
   if (loading) return <div className="mx-auto max-w-[1180px] py-10"><div className="h-10 w-56 animate-pulse rounded bg-[var(--muted)]" /><div className="mt-8 h-72 animate-pulse rounded-2xl bg-[var(--card)]" /></div>;
   if (error || !preferences) return <div className="mx-auto max-w-[720px] py-16 text-center"><p className="text-[var(--muted-foreground)]">{t.loadError}</p><button className="mt-4 rounded-xl bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-white" onClick={() => window.location.reload()}>{t.retry}</button></div>;
@@ -83,7 +97,7 @@ export default function SettingsPage() {
         {active === 'appearance' && <section className="settings-card"><h2><Palette />{t.sections.appearance}</h2><p className="mb-4 text-sm text-[var(--muted-foreground)]">{t.themeHint}</p><div className="grid gap-3 sm:grid-cols-3">{themeCards.map(({ value, label, icon: Icon, bg }) => <button key={value} type="button" onClick={() => update({ theme: value })} className={`rounded-2xl border-2 p-2 text-left transition ${preferences.theme === value ? 'border-[var(--primary)]' : 'border-[var(--border)] hover:border-[var(--primary)]/50'}`}><div className={`h-20 rounded-xl ${bg} p-3`}><div className="h-2 w-12 rounded bg-white/20" /><div className="mt-3 h-7 rounded border border-white/10 bg-black/10" /></div><div className="flex items-center gap-2 px-1 pt-3 text-sm font-semibold"><Icon size={15} />{label}{preferences.theme === value && <Check size={15} className="ml-auto text-[var(--primary)]" />}</div></button>)}</div></section>}
         {active === 'laboratory' && <section className="settings-card"><h2><SlidersHorizontal />{t.sections.laboratory}</h2><div className="grid gap-5 sm:grid-cols-3"><label>{t.temperature}<select className={selectClass} value={preferences.defaultTemperatureUnit} onChange={(e) => update({ defaultTemperatureUnit: e.target.value as UserPreferencesUpdateRequest['defaultTemperatureUnit'] })}><option value="CELSIUS">Celsius</option><option value="KELVIN">Kelvin</option><option value="FAHRENHEIT">Fahrenheit</option></select></label><label>{t.pressure}<select className={selectClass} value={preferences.defaultPressureUnit} onChange={(e) => update({ defaultPressureUnit: e.target.value as UserPreferencesUpdateRequest['defaultPressureUnit'] })}><option value="ATMOSPHERE">Atmosphere</option><option value="BAR">Bar</option><option value="PASCAL">Pascal</option></select></label><label>{t.volume}<select className={selectClass} value={preferences.defaultVolumeUnit} onChange={(e) => update({ defaultVolumeUnit: e.target.value as UserPreferencesUpdateRequest['defaultVolumeUnit'] })}><option value="MILLILITER">mL</option><option value="LITER">L</option><option value="CUBIC_METER">m³</option></select></label></div><div className="mt-6 flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--background)] p-4"><div><p className="text-sm font-semibold">{t.autoSave}</p><p className="mt-1 text-xs text-[var(--muted-foreground)]">{t.autoSaveHint}</p></div><button type="button" role="switch" aria-checked={preferences.autoSaveEnabled} onClick={() => update({ autoSaveEnabled: !preferences.autoSaveEnabled })} className={`relative h-7 w-12 rounded-full transition ${preferences.autoSaveEnabled ? 'bg-[var(--primary)]' : 'bg-[var(--border)]'}`}><span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${preferences.autoSaveEnabled ? 'left-6' : 'left-1'}`} /></button></div><SaveState state={saveState} t={t} /></section>}
         {active === 'account' && <section className="settings-card"><h2><UserRound />{t.account}</h2><InfoRow label={t.username} value={user?.username || '—'} /><InfoRow label={t.email} value={user?.email || '—'} /><InfoRow label={t.role} value={user?.role === 'ROLE_ADMIN' ? 'Administrator' : 'Researcher'} /></section>}
-        {active === 'security' && <><section className="settings-card"><h2><Shield />{t.security}</h2><InfoRow label={t.status} value={t.active} /><button type="button" onClick={async () => { await logout(); router.push(`/${locale}/auth`); }} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border)] px-4 text-sm font-semibold hover:border-[var(--primary)]"><LogOut size={16} />{t.logout}</button></section><section className="settings-card border-[#F43F5E]/30"><h2 className="!text-[#F43F5E]"><AlertTriangle />{t.danger}</h2><p className="text-sm text-[var(--muted-foreground)]">{t.dangerHint}</p><button type="button" onClick={() => setConfirmOpen(true)} className="mt-5 rounded-xl border border-[#F43F5E]/40 bg-[#F43F5E]/10 px-4 py-2.5 text-sm font-semibold text-[#F43F5E]">{t.delete}</button></section></>}
+        {active === 'security' && <><section className="settings-card"><h2><Shield />{t.security}</h2><InfoRow label={t.status} value={t.active} /><button type="button" onClick={async () => { await logout(); router.replace('/'); }} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border)] px-4 text-sm font-semibold hover:border-[var(--primary)]"><LogOut size={16} />{t.logout}</button></section><section className="settings-card border-[#F43F5E]/30"><h2 className="!text-[#F43F5E]"><AlertTriangle />{t.danger}</h2><p className="text-sm text-[var(--muted-foreground)]">{t.dangerHint}</p><button type="button" onClick={() => setConfirmOpen(true)} className="mt-5 rounded-xl border border-[#F43F5E]/40 bg-[#F43F5E]/10 px-4 py-2.5 text-sm font-semibold text-[#F43F5E]">{t.delete}</button></section></>}
       </div>
     </div>
     {saveState !== 'idle' && active !== 'laboratory' && <div className="fixed bottom-5 right-5 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm shadow-xl">{saveState === 'saving' ? <><Loader2 size={15} className="mr-2 inline animate-spin" />{t.saving}</> : saveState === 'saved' ? <span className="text-[#14F195]">✓ {t.saved}</span> : <span className="text-[#F43F5E]">{t.saveError}</span>}</div>}
