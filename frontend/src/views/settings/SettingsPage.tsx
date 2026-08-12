@@ -3,10 +3,9 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, Check, ChevronRight, Globe2, Laptop, Loader2, LogOut, Moon, Palette, Save, Shield, SlidersHorizontal, Sun, UserRound, X } from 'lucide-react';
+import { AlertTriangle, ChevronRight, Globe2, Loader2, LogOut, Palette, Save, Shield, SlidersHorizontal, UserRound, X } from 'lucide-react';
 import { userApi } from '@/services/api/user.api';
 import { useAuthStore } from '@/stores/auth.store';
-import { useUIStore } from '@/stores/ui.store';
 import { useLocaleSwitch } from '@/hooks/useLocaleSwitch';
 import type { UserMeResponse, UserPreferencesResponse, UserPreferencesUpdateRequest } from '@/types';
 
@@ -27,7 +26,6 @@ export default function SettingsPage() {
   const locale = pathname.split('/')[1] || 'en';
   const t = copy[locale] || copy.en;
   const { switchLocale } = useLocaleSwitch();
-  const { setTheme } = useUIStore();
   const { user, isAuthenticated, isLoading: authLoading, fetchUser, logout } = useAuthStore();
   const [active, setActive] = useState<Section>('general');
   const [preferences, setPreferences] = useState<UserPreferencesResponse | null>(null);
@@ -47,15 +45,13 @@ export default function SettingsPage() {
     void userApi.getPreferences().then((data) => {
       if (cancelled) return;
       setPreferences(data);
-      setTheme(data.theme.toLowerCase() as 'dark' | 'light' | 'system');
     }).catch(() => {
       if (cancelled) return;
       setPreferences(defaults);
-      setTheme('system');
       setError(false);
     }).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [authLoading, isAuthenticated, setTheme]);
+  }, [authLoading, isAuthenticated]);
 
   useEffect(() => {
     const sync = (event: StorageEvent) => { if (event.key === 'ai-lab-preferences-sync') userApi.getPreferences().then(setPreferences).catch(() => undefined); };
@@ -71,7 +67,6 @@ export default function SettingsPage() {
     if (!preferences) return;
     const next = { ...preferences, ...patch };
     setPreferences(next);
-    if (patch.theme) setTheme(patch.theme.toLowerCase() as 'dark' | 'light' | 'system');
     setSaveState('saving');
     pendingPatch.current = { ...pendingPatch.current, ...patch };
     if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -84,7 +79,6 @@ export default function SettingsPage() {
   if (loading) return <div className="mx-auto max-w-[1180px] py-10"><div className="h-10 w-56 animate-pulse rounded bg-[var(--muted)]" /><div className="mt-8 h-72 animate-pulse rounded-2xl bg-[var(--card)]" /></div>;
   if (error || !preferences) return <div className="mx-auto max-w-[720px] py-16 text-center"><p className="text-[var(--muted-foreground)]">{t.loadError}</p><button className="mt-4 rounded-xl bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-white" onClick={() => window.location.reload()}>{t.retry}</button></div>;
 
-  const themeCards = [{ value: 'DARK' as const, label: t.dark, icon: Moon, bg: 'bg-[#111827]' }, { value: 'LIGHT' as const, label: t.light, icon: Sun, bg: 'bg-[#F1F3F7]' }, { value: 'SYSTEM' as const, label: t.system, icon: Laptop, bg: 'bg-gradient-to-br from-[#111827] 50%, #F1F3F7 50%' }];
   const selectClass = 'mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3.5 py-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--primary)]';
   return <div className="mx-auto w-full max-w-[1180px] py-5 md:py-8">
     <div className="mb-7"><h1 className="text-3xl font-bold tracking-tight">{t.title}</h1><p className="mt-1 text-sm text-[var(--muted-foreground)]">{t.subtitle}</p></div>
@@ -94,7 +88,7 @@ export default function SettingsPage() {
       </nav>
       <div className="space-y-5">
         {active === 'general' && <section className="settings-card"><h2><Globe2 />{t.sections.general}</h2><label>{t.language}<select className={selectClass} value={locale} onChange={(e) => switchLocale(e.target.value as 'en' | 'ru' | 'uz')}><option value="en">English</option><option value="ru">Русский</option><option value="uz">O‘zbekcha</option></select></label><label className="mt-5 block">{t.timezone}<input readOnly value={t.timezoneValue} className={selectClass} /></label></section>}
-        {active === 'appearance' && <section className="settings-card"><h2><Palette />{t.sections.appearance}</h2><p className="mb-4 text-sm text-[var(--muted-foreground)]">{t.themeHint}</p><div className="grid gap-3 sm:grid-cols-3">{themeCards.map(({ value, label, icon: Icon, bg }) => <button key={value} type="button" onClick={() => update({ theme: value })} className={`rounded-2xl border-2 p-2 text-left transition ${preferences.theme === value ? 'border-[var(--primary)]' : 'border-[var(--border)] hover:border-[var(--primary)]/50'}`}><div className={`h-20 rounded-xl ${bg} p-3`}><div className="h-2 w-12 rounded bg-white/20" /><div className="mt-3 h-7 rounded border border-white/10 bg-black/10" /></div><div className="flex items-center gap-2 px-1 pt-3 text-sm font-semibold"><Icon size={15} />{label}{preferences.theme === value && <Check size={15} className="ml-auto text-[var(--primary)]" />}</div></button>)}</div></section>}
+        {active === 'appearance' && <section className="settings-card"><h2><Palette />{t.sections.appearance}</h2><p className="text-sm text-[var(--muted-foreground)]">{t.themeHint}</p><div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm font-semibold">{t.dark}</div></section>}
         {active === 'laboratory' && <section className="settings-card"><h2><SlidersHorizontal />{t.sections.laboratory}</h2><div className="grid gap-5 sm:grid-cols-3"><label>{t.temperature}<select className={selectClass} value={preferences.defaultTemperatureUnit} onChange={(e) => update({ defaultTemperatureUnit: e.target.value as UserPreferencesUpdateRequest['defaultTemperatureUnit'] })}><option value="CELSIUS">Celsius</option><option value="KELVIN">Kelvin</option><option value="FAHRENHEIT">Fahrenheit</option></select></label><label>{t.pressure}<select className={selectClass} value={preferences.defaultPressureUnit} onChange={(e) => update({ defaultPressureUnit: e.target.value as UserPreferencesUpdateRequest['defaultPressureUnit'] })}><option value="ATMOSPHERE">Atmosphere</option><option value="BAR">Bar</option><option value="PASCAL">Pascal</option></select></label><label>{t.volume}<select className={selectClass} value={preferences.defaultVolumeUnit} onChange={(e) => update({ defaultVolumeUnit: e.target.value as UserPreferencesUpdateRequest['defaultVolumeUnit'] })}><option value="MILLILITER">mL</option><option value="LITER">L</option><option value="CUBIC_METER">m³</option></select></label></div><div className="mt-6 flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--background)] p-4"><div><p className="text-sm font-semibold">{t.autoSave}</p><p className="mt-1 text-xs text-[var(--muted-foreground)]">{t.autoSaveHint}</p></div><button type="button" role="switch" aria-checked={preferences.autoSaveEnabled} onClick={() => update({ autoSaveEnabled: !preferences.autoSaveEnabled })} className={`relative h-7 w-12 rounded-full transition ${preferences.autoSaveEnabled ? 'bg-[var(--primary)]' : 'bg-[var(--border)]'}`}><span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${preferences.autoSaveEnabled ? 'left-6' : 'left-1'}`} /></button></div><SaveState state={saveState} t={t} /></section>}
         {active === 'account' && <section className="settings-card"><h2><UserRound />{t.account}</h2><InfoRow label={t.username} value={user?.username || '—'} /><InfoRow label={t.email} value={user?.email || '—'} /><InfoRow label={t.role} value={user?.role === 'ROLE_ADMIN' ? 'Administrator' : 'Researcher'} /></section>}
         {active === 'security' && <><section className="settings-card"><h2><Shield />{t.security}</h2><InfoRow label={t.status} value={t.active} /><button type="button" onClick={async () => { await logout(); router.replace('/'); }} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border)] px-4 text-sm font-semibold hover:border-[var(--primary)]"><LogOut size={16} />{t.logout}</button></section><section className="settings-card border-[#F43F5E]/30"><h2 className="!text-[#F43F5E]"><AlertTriangle />{t.danger}</h2><p className="text-sm text-[var(--muted-foreground)]">{t.dangerHint}</p><button type="button" onClick={() => setConfirmOpen(true)} className="mt-5 rounded-xl border border-[#F43F5E]/40 bg-[#F43F5E]/10 px-4 py-2.5 text-sm font-semibold text-[#F43F5E]">{t.delete}</button></section></>}

@@ -61,6 +61,13 @@ async function tryRefresh(): Promise<boolean> {
   }
 }
 
+export async function refreshAccessToken(): Promise<boolean> {
+  if (!refreshPromise) refreshPromise = tryRefresh();
+  const refreshed = await refreshPromise;
+  refreshPromise = null;
+  return refreshed;
+}
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -77,23 +84,21 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     credentials: 'include',
   });
 
-  if (res.status === 401) {
+  if (res.status === 401 && !endpoint.startsWith('/api/v1/auth/')) {
     let refreshed = false;
-    if (accessToken) {
-      if (!refreshPromise) {
-        refreshPromise = tryRefresh();
-      }
-      refreshed = await refreshPromise;
-      refreshPromise = null;
+    if (!refreshPromise) {
+      refreshPromise = tryRefresh();
+    }
+    refreshed = await refreshPromise;
+    refreshPromise = null;
 
-      if (refreshed) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-        res = await fetch(`${API_BASE}${endpoint}`, {
-          ...options,
-          headers,
-          credentials: 'include',
-        });
-      }
+    if (refreshed) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+      res = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers,
+        credentials: 'include',
+      });
     }
 
     if (res.status === 401 && typeof window !== 'undefined' && !endpoint.startsWith('/api/v1/auth/')) {

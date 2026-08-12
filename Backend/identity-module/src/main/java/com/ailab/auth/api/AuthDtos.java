@@ -1,6 +1,5 @@
 package com.ailab.auth.api;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -22,7 +21,7 @@ public final class AuthDtos {
     public record RegisterResponse(String id, String username, String email) {
     }
 
-    public record TokenResponse(String accessToken, @JsonIgnore String refreshToken, long expiresIn, String tokenType) {
+    public record TokenResponse(String accessToken, String refreshToken, long expiresIn, String tokenType) {
         public TokenResponse(String accessToken, long expiresIn, String tokenType) {
             this(accessToken, null, expiresIn, tokenType);
         }

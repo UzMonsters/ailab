@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useMemo, useState, useCallback, type ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 
 interface UIState {
   sidebarOpen: boolean;
@@ -13,6 +14,8 @@ interface UIState {
 const UIContext = createContext<UIState | null>(null);
 
 export function UIProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const themeSwitchEnabled = pathname.includes('/dashboard') || pathname.includes('/workspace');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light' | 'system'>(() => {
     if (typeof window === 'undefined') return 'system';
@@ -21,6 +24,10 @@ export function UIProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
+    if (!themeSwitchEnabled) {
+      document.documentElement.removeAttribute('data-theme');
+      return;
+    }
     const media = window.matchMedia('(prefers-color-scheme: light)');
     const apply = () => {
       const light = theme === 'light' || (theme === 'system' && media.matches);
@@ -31,7 +38,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
     const onChange = () => { if (theme === 'system') apply(); };
     media.addEventListener?.('change', onChange);
     return () => media.removeEventListener?.('change', onChange);
-  }, [theme]);
+  }, [theme, themeSwitchEnabled]);
 
   const updateTheme = useCallback((next: 'dark' | 'light' | 'system') => {
     setTheme(next);

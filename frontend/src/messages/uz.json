@@ -327,6 +327,7 @@
     "chemicals": "Kimyoviy moddalar",
     "elements": "Elementlar",
     "equipment": "Uskunalar",
+    "backendEquipment": "Tasdiqlangan uskunalar",
     "totalUsers": "Jami foydalanuvchilar",
     "activeLabs": "Faol laboratoriyalar",
     "totalExperiments": "Jami tajribalar",
