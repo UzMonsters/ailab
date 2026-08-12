@@ -26,9 +26,11 @@ export const authApi = {
       return res;
     }),
 
-  logout: () =>
-    api.post<{ message: string }>('/api/v1/auth/logout').then((res) => {
+  logout: async () => {
+    try {
+      return await api.post<{ message: string }>('/api/v1/auth/logout');
+    } finally {
       setAccessToken(null);
-      return res;
-    }),
+    }
+  },
 };

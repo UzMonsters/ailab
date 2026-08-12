@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { FlaskConical, Atom, Search, MoreVertical, Star, Clock, Trash2, Copy, Pencil, Loader2, Plus, AlertCircle, X, LayoutGrid, Grid2X2, List, SlidersHorizontal } from 'lucide-react';
+import { FlaskConical, Atom, Search, MoreVertical, Star, Clock, Trash2, Copy, Pencil, Loader2, Plus, AlertCircle, X, LayoutGrid, Grid2X2, List, SlidersHorizontal, ChevronDown, Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { workspacesApi } from '@/services/api/workspaces.api';
 import type { Workspace } from '@/types';
@@ -23,23 +23,33 @@ function WorkspacePreview({ name, thumbnail }: { name: string; thumbnail?: strin
     <div className="absolute inset-0">
       <div className="absolute inset-0" style={{ background: 'radial-gradient(120% 100% at 15% 0%, rgba(139,92,246,.15), transparent 55%), radial-gradient(120% 100% at 85% 100%, rgba(20,241,149,.08), transparent 55%), var(--card)' }} />
       <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(var(--foreground) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span
-          className="text-3xl font-black tracking-tighter"
-          style={{
-            color: '#c084fc',
-            textShadow: '0 0 20px rgba(139,92,246,.9), 0 0 40px rgba(139,92,246,.6), 0 0 80px rgba(139,92,246,.3)',
-          }}
-        >
-          H<sub className="text-xl">2</sub>O
-        </span>
-      </div>
+      <img src="/water-droplet.png" alt="Water" className="absolute inset-0 h-full w-full object-cover" />
     </div>
   );
 }
 
-function TemplateGallery({ onUse }: { onUse: () => void }) {
-  return <section className="max-w-3xl rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm"><p className="text-xs font-semibold uppercase tracking-wider text-[var(--primary)]">Featured template</p><h2 className="mt-2 text-2xl font-bold">Acid-base titration lab</h2><p className="mt-2 max-w-xl text-sm text-[var(--muted-foreground)]">A guided setup with an Erlenmeyer flask, burette-style liquid transfer, pH tracking and a safe neutralization workflow.</p><div className="mt-5 grid grid-cols-3 gap-3 text-xs"><div className="rounded-xl border border-[var(--border)] p-3"><strong className="block">4</strong><span className="text-[var(--muted-foreground)]">Equipment</span></div><div className="rounded-xl border border-[var(--border)] p-3"><strong className="block">HCl + NaOH</strong><span className="text-[var(--muted-foreground)]">Reaction</span></div><div className="rounded-xl border border-[var(--border)] p-3"><strong className="block">pH</strong><span className="text-[var(--muted-foreground)]">Live monitor</span></div></div><button className="mt-6 min-h-11 rounded-xl bg-[var(--primary)] px-5 font-semibold text-white" onClick={onUse}>Use this template</button></section>;
+function SortMenu({ sort, onChange, label }: { sort: 'updated' | 'name' | 'favorite'; onChange: (value: 'updated' | 'name' | 'favorite') => void; label: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const options = [
+    { value: 'updated' as const, label: 'Newest' },
+    { value: 'name' as const, label: 'Name A-Z' },
+    { value: 'favorite' as const, label: 'Favorites' },
+  ];
+  useEffect(() => {
+    const close = (event: MouseEvent) => { if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, []);
+  const selected = options.find((option) => option.value === sort) || options[0];
+  return <div ref={ref} className="relative">
+    <button type="button" aria-label={label} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((value) => !value)} className="flex h-9 items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--input)] px-3 text-xs text-[var(--foreground)] hover:border-[var(--primary)]/50">
+      <SlidersHorizontal size={13} className="text-[var(--muted-foreground)]" /><span>{selected.label}</span><ChevronDown size={13} className={`text-[var(--muted-foreground)] transition-transform ${open ? 'rotate-180' : ''}`} />
+    </button>
+    {open && <div role="menu" className="absolute right-0 top-full z-50 mt-1 min-w-[150px] overflow-hidden rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--popover)] py-1 shadow-[0_15px_35px_rgba(0,0,0,.35)]">
+      {options.map((option) => <button key={option.value} type="button" role="menuitem" onClick={() => { onChange(option.value); setOpen(false); }} className={`flex min-h-10 w-full items-center justify-between gap-3 px-3 text-left text-xs ${option.value === sort ? 'bg-[var(--accent)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)]'}`}>{option.label}{option.value === sort && <Check size={13} className="text-[var(--primary)]" />}</button>)}
+    </div>}
+  </div>;
 }
 
 export default function DashboardPage() {
@@ -58,7 +68,6 @@ export default function DashboardPage() {
   const [search, setSearch] = useState('');
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
-  const [menuAnchor, setMenuAnchor] = useState<{ id: string; x: number; y: number } | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [renameModalOpen, setRenameModalOpen] = useState<string | null>(null);
@@ -75,9 +84,9 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setMenuOpen(null); setMenuAnchor(null); } };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(null); };
     const onDown = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) { setMenuOpen(null); setMenuAnchor(null); }
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(null);
     };
     document.addEventListener('keydown', onKey);
     document.addEventListener('mousedown', onDown);
@@ -138,7 +147,7 @@ export default function DashboardPage() {
     try {
       const copy = await workspacesApi.duplicate(id);
       setWorkspaces(prev => [copy, ...prev]);
-      setMenuOpen(null); setMenuAnchor(null);
+      setMenuOpen(null);
       showToast(t('duplicated'));
     } catch (err: unknown) {
       showToast(normalizeError(err, t('duplicateFailed')).message, 'error');
@@ -149,7 +158,7 @@ export default function DashboardPage() {
     try {
       const updated = await workspacesApi.update(ws.id, { isFavorite: !ws.isFavorite });
       setWorkspaces(prev => prev.map(w => w.id === updated.id ? updated : w));
-      setMenuOpen(null); setMenuAnchor(null);
+      setMenuOpen(null);
       showToast(updated.isFavorite ? t('addedToFavorites') : t('removedFromFavorites'));
     } catch (err: unknown) {
       showToast(normalizeError(err, t('actionFailed')).message, 'error');
@@ -160,7 +169,7 @@ export default function DashboardPage() {
     try {
       await workspacesApi.update(id, { isDeleted: true });
       setWorkspaces(prev => prev.filter(w => w.id !== id));
-      setMenuOpen(null); setMenuAnchor(null);
+      setMenuOpen(null);
       showToast(t('movedToTrash'));
     } catch (err: unknown) {
       showToast(normalizeError(err, t('actionFailed')).message, 'error');
@@ -171,18 +180,12 @@ export default function DashboardPage() {
     router.push(`/${locale}/workspace/sandbox?workspace=${encodeURIComponent(id)}`);
   };
 
-  const handleUseTemplate = async () => {
-    try { const workspace = await workspacesApi.create('Acid-base titration lab', 'chemistry'); router.push(`/${locale}/workspace/sandbox?workspace=${encodeURIComponent(workspace.id)}&template=acid-base`); } catch (err: unknown) { showToast(err instanceof Error ? err.message : 'Could not create template', 'error'); }
-  };
-
   const openMenu = (ws: Workspace, e: React.MouseEvent) => {
     e.stopPropagation();
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     if (menuOpen === ws.id) {
-      setMenuOpen(null); setMenuAnchor(null);
+      setMenuOpen(null);
     } else {
       setMenuOpen(ws.id); setMenuIndex(0);
-      setMenuAnchor({ id: ws.id, x: rect.left, y: rect.bottom + 6 });
     }
   };
 
@@ -192,7 +195,7 @@ export default function DashboardPage() {
     else if (action === 'duplicate') handleDuplicate(ws.id);
     else if (action === 'favorite') handleFavorite(ws);
     else if (action === 'trash') handleTrash(ws.id);
-    setMenuOpen(null); setMenuAnchor(null);
+    setMenuOpen(null);
   };
 
   const renderCard = (ws: Workspace) => (
@@ -222,8 +225,8 @@ export default function DashboardPage() {
       </button>
 
       {/* Dropdown anchored under the kebab icon */}
-      {menuOpen === ws.id && menuAnchor?.id === ws.id && (
-        <div ref={menuRef} role="menu" aria-label={`${ws.name} actions`} onKeyDown={(event) => { if (event.key === 'ArrowDown') { event.preventDefault(); setMenuIndex((value) => (value + 1) % menuActions.length); } if (event.key === 'ArrowUp') { event.preventDefault(); setMenuIndex((value) => (value - 1 + menuActions.length) % menuActions.length); } if (event.key === 'Enter') runMenuAction(ws, menuActions[menuIndex].key); if (event.key === 'Escape') { setMenuOpen(null); setMenuAnchor(null); } }} className="fixed z-[90] w-48 bg-[var(--popover)] border border-[var(--border)] rounded-[var(--radius-sm)] shadow-[0_20px_45px_rgba(0,0,0,.15)] py-1" style={{ left: menuAnchor.x, top: menuAnchor.y }}>
+      {menuOpen === ws.id && (
+        <div ref={menuRef} role="menu" aria-label={`${ws.name} actions`} onKeyDown={(event) => { if (event.key === 'ArrowDown') { event.preventDefault(); setMenuIndex((value) => (value + 1) % menuActions.length); } if (event.key === 'ArrowUp') { event.preventDefault(); setMenuIndex((value) => (value - 1 + menuActions.length) % menuActions.length); } if (event.key === 'Enter') runMenuAction(ws, menuActions[menuIndex].key); if (event.key === 'Escape') setMenuOpen(null); }} className="absolute right-3 top-12 z-[90] w-48 bg-[var(--popover)] border border-[var(--border)] rounded-[var(--radius-sm)] shadow-[0_20px_45px_rgba(0,0,0,.15)] py-1">
           {menuActions.map((action) => (
             <button
               key={action.key}
@@ -297,7 +300,7 @@ export default function DashboardPage() {
           {search && <button onClick={() => setSearch('')} aria-label="Clear search" className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"><X size={14} /></button>}
         </div>
         <div className="flex items-center gap-2">
-          <label className="flex h-9 items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--input)] px-3 text-xs text-[var(--muted-foreground)]"><SlidersHorizontal size={13} /><span className="sr-only">{tc('sort')}</span><select aria-label={tc('sort')} value={sort} onChange={(event) => setSort(event.target.value as typeof sort)} className="bg-transparent text-xs text-[var(--foreground)] outline-none"><option value="updated">Newest</option><option value="name">Name A-Z</option><option value="favorite">Favorites</option></select></label>
+          <SortMenu sort={sort} onChange={setSort} label={tc('sort')} />
           <div className="flex items-center gap-0.5 h-9 px-1 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--input)]">
             <button aria-label={t('gridView')} onClick={() => setLayout('grid')} className={`w-7 h-7 grid place-items-center rounded-md ${layout === 'grid' ? 'bg-[var(--primary)]/15 text-[var(--primary)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`}><Grid2X2 size={14} /></button>
             <button aria-label={t('listView')} onClick={() => setLayout('list')} className={`w-7 h-7 grid place-items-center rounded-md ${layout === 'list' ? 'bg-[var(--primary)]/15 text-[var(--primary)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`}><List size={14} /></button>
@@ -305,7 +308,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {view === 'templates' ? <TemplateGallery onUse={handleUseTemplate} /> : visibleWorkspaces.length === 0 ? (
+      {view === 'templates' ? <section className="max-w-3xl rounded-2xl border border-[var(--border)] bg-[var(--card)] p-8 text-center shadow-sm"><h2 className="text-xl font-bold">{t('templatesTitle')}</h2><p className="mt-2 text-sm text-[var(--muted-foreground)]">{t('templatesEmpty')}</p></section> : visibleWorkspaces.length === 0 ? (
         <div className="text-center py-20">
           <FlaskConical size={48} className="text-[var(--muted-foreground)]/30 mx-auto mb-4" />
           <h2 className="text-lg font-semibold mb-2">{t('emptyTitle')}</h2>

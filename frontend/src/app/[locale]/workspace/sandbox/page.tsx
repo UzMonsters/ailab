@@ -13,6 +13,7 @@ import { experimentApi } from '@/services/api/experiment.api';
 import { catalogApi } from '@/services/api/catalog.api';
 import { connectWorkspaceRealtime } from '@/services/realtime/workspace-realtime';
 import { workspacesApi } from '@/services/api/workspaces.api';
+import { useAuthStore } from '@/stores/auth.store';
 import type { EquipmentSummary, MaterialSummary, WorkspaceState } from '@/types';
 
 const ru = (locale: string) => locale === 'ru';
@@ -125,6 +126,7 @@ export default function SandboxPage() {
   const ts = useTranslations('sandbox');
   const workspaceId = query.get('workspace');
   const template = query.get('template');
+  const { isAuthenticated, isLoading: authLoading, fetchUser } = useAuthStore();
   const canvasRef = useRef<HTMLDivElement>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -150,9 +152,22 @@ export default function SandboxPage() {
   const stateVersionRef = useRef(0);
   const persistenceQueue = useRef(Promise.resolve());
   const saveTimer = useRef<number | null>(null);
+  const pourAnimationTimer = useRef<number | null>(null);
   const [, setStateVersion] = useState(0);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const selected = items.find((item) => item.id === selectedId);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setAuthChecked(true);
+      return;
+    }
+    if (authLoading) return;
+    let cancelled = false;
+    void fetchUser().finally(() => { if (!cancelled) setAuthChecked(true); });
+    return () => { cancelled = true; };
+  }, [authLoading, fetchUser, isAuthenticated]);
   const queueWorkspaceEvent = useCallback((eventType: string, payload: Record<string, unknown>) => {
     if (!workspaceId || !hydrated.current) return;
     persistenceQueue.current = persistenceQueue.current.then(async () => {
@@ -188,8 +203,8 @@ export default function SandboxPage() {
   }), [connections, items, pan.x, pan.y, sessionId, workspaceId, zoom]);
 
   useEffect(() => {
-    if (!workspaceId) {
-      hydrated.current = true;
+    if (!workspaceId || !authChecked || !isAuthenticated) {
+      if (!workspaceId) hydrated.current = true;
       return;
     }
     let cancelled = false;
@@ -218,10 +233,10 @@ export default function SandboxPage() {
       hydrated.current = true;
     });
     return () => { cancelled = true; };
-  }, [workspaceId]);
+  }, [authChecked, isAuthenticated, workspaceId]);
 
   useEffect(() => {
-    if (!workspaceId || !hydrated.current) return;
+    if (!workspaceId || !authChecked || !isAuthenticated || !hydrated.current) return;
     if (saveTimer.current !== null) window.clearTimeout(saveTimer.current);
     saveTimer.current = window.setTimeout(() => {
       const state = workspaceState();
@@ -234,10 +249,10 @@ export default function SandboxPage() {
       });
     }, 700);
     return () => { if (saveTimer.current !== null) window.clearTimeout(saveTimer.current); };
-  }, [connections, items, pan.x, pan.y, sessionId, workspaceId, workspaceState, zoom]);
+  }, [authChecked, connections, isAuthenticated, items, pan.x, pan.y, sessionId, workspaceId, workspaceState, zoom]);
 
   useEffect(() => {
-    if (!workspaceId || !hydrated.current) return;
+    if (!workspaceId || !authChecked || !isAuthenticated || !hydrated.current) return;
     const realtime = connectWorkspaceRealtime(workspaceId, sessionId, {
       onWorkspaceEvent: (raw) => {
         const event = raw as { stateDelta?: { items?: Record<string, unknown>[]; connections?: Record<string, unknown>[] }; stateVersion?: number };
@@ -260,10 +275,10 @@ export default function SandboxPage() {
       },
     });
     return () => realtime.close();
-  }, [sessionId, workspaceId]);
+  }, [authChecked, isAuthenticated, sessionId, workspaceId]);
 
   useEffect(() => {
-    if (!workspaceId) return;
+    if (!workspaceId || !authChecked || !isAuthenticated) return;
     const flush = () => {
       if (!hydrated.current) return;
       const state = workspaceState();
@@ -275,7 +290,7 @@ export default function SandboxPage() {
     };
     window.addEventListener('beforeunload', flush);
     return () => window.removeEventListener('beforeunload', flush);
-  }, [workspaceId, workspaceState]);
+  }, [authChecked, isAuthenticated, workspaceId, workspaceState]);
 
   useEffect(() => {
     const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
@@ -346,12 +361,23 @@ export default function SandboxPage() {
     if (typeof patch.volumeMl === 'number' && isVessel(next)) next.liquidLevel = Math.min(1, Math.max(0, next.volumeMl / (next.capacityMl || 100)));
     return next;
   }));
+  useEffect(() => () => {
+    if (pourAnimationTimer.current !== null) window.clearTimeout(pourAnimationTimer.current);
+  }, []);
+  const triggerPourAnimation = (itemId: string) => {
+    if (pourAnimationTimer.current !== null) window.clearTimeout(pourAnimationTimer.current);
+    setPourAnimation(itemId);
+    pourAnimationTimer.current = window.setTimeout(() => {
+      setPourAnimation((current) => current === itemId ? null : current);
+      pourAnimationTimer.current = null;
+    }, 900);
+  };
   const addMaterial = (material: Material) => {
     if (!selected || !isVessel(selected)) { setNotice('Select a vessel first'); return; }
     if (material.state === 'gas') { setNotice('Oxygen is a gas: an open flask cannot retain it. Use a sealed Gas connector.'); return; }
     updateItem(selected.id, { material, volumeMl: material.state === 'liquid' ? Math.max(25, selected.volumeMl) : selected.volumeMl, liquidLevel: material.state === 'liquid' ? Math.max(.35, selected.liquidLevel) : selected.liquidLevel });
     queueWorkspaceEvent('MATERIAL_ADDED', { itemId: selected.id, materialId: backendMaterialId(material.id), amountMl: material.state === 'liquid' ? 25 : 1, phase: material.state });
-    setPourAnimation(selected.id); window.setTimeout(() => setPourAnimation(null), 900); setNotice(`${material.name} added · ${material.state === 'liquid' ? '25 mL' : 'solid sample'}`);
+    triggerPourAnimation(selected.id); setNotice(`${material.name} added · ${material.state === 'liquid' ? '25 mL' : 'solid sample'}`);
   };
   const applyOperation = (item: Item, operation: EquipmentOperation) => {
     const defaultTarget = item.targetTemperature || (operation === 'heating' ? 80 : operation === 'cooling' ? 5 : item.temperature);
@@ -373,6 +399,7 @@ export default function SandboxPage() {
   };
   useEffect(() => {
     const timer = window.setInterval(() => {
+      let overheating: Item | null = null;
       setItems((current) => current.map((item) => {
         if (!isVessel(item) || item.broken || item.operation === 'idle' || item.operation === 'stirring') return item;
         const delta = item.operation === 'heating' ? 2 : item.operation === 'cooling' ? -2 : 0;
@@ -380,12 +407,14 @@ export default function SandboxPage() {
         const target = item.targetTemperature || 80;
         if (item.operation === 'heating' && nextTemperature >= 180) {
           setNotice(ru(locale) ? `${item.name}: сосуд разрушен из-за перегрева.` : uz(locale) ? `${item.name}: idish qizib yorildi.` : `${item.name}: vessel broke from overheating.`);
+          overheating = item;
           return { ...item, temperature: nextTemperature, operation: 'idle', broken: true };
         }
         if (item.operation === 'heating' && nextTemperature >= target) return { ...item, temperature: target, operation: 'idle' };
         if (item.operation === 'cooling' && nextTemperature <= target) return { ...item, temperature: target, operation: 'idle' };
         return { ...item, temperature: nextTemperature };
       }));
+      if (overheating) setNotice(`${overheating.name}: vessel broke from overheating.`);
     }, 500);
     return () => window.clearInterval(timer);
   }, [locale]);
@@ -407,17 +436,21 @@ export default function SandboxPage() {
     if (tool === 'connect') { if (!connectSource) setConnectSource(id); else if (connectSource !== id) { setConnectionDraft({ from: connectSource, to: id }); setConnectSource(null); setTool('select'); } return; }
     if (tool !== 'select') return;
     const item = items.find((value) => value.id === id); const bounds = canvasRef.current?.getBoundingClientRect(); if (!item || !bounds) return;
-    event.currentTarget.setPointerCapture(event.pointerId); dragRef.current = { id, dx: (event.clientX - bounds.left) / zoom - item.x, dy: (event.clientY - bounds.top) / zoom - item.y };
+    event.currentTarget.setPointerCapture(event.pointerId); dragRef.current = { id, dx: (event.clientX - bounds.left - pan.x) / zoom - item.x, dy: (event.clientY - bounds.top - pan.y) / zoom - item.y };
   };
-  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => { pointerRef.current = { x: event.clientX, y: event.clientY }; const bounds = canvasRef.current?.getBoundingClientRect(); if (tool === 'pan' && panRef.current) { setPan({ x: panRef.current.x + event.clientX - panRef.current.startX, y: panRef.current.y + event.clientY - panRef.current.startY }); return; } const drag = dragRef.current; if (!drag || !bounds) return; setItems((current) => { const nextX = Math.max(0, (event.clientX - bounds.left) / zoom - drag.dx); const nextY = Math.max(70, (event.clientY - bounds.top) / zoom - drag.dy); const moved = current.map((item) => item.id === drag.id ? { ...item, x: nextX, y: nextY } : item); const vessel = moved.find((item) => item.id === drag.id); return vessel && isVessel(vessel) ? moved.map((item) => item.type === 'burner' && item.attachedTo === vessel.id ? { ...item, x: vessel.x + vessel.w / 2 - item.w / 2, y: vessel.y + vessel.h - item.h * .1 } : item) : moved; }); };
-  const pour = (targetId: string) => { const source = items.find((item) => item.id === pourSource); const target = items.find((item) => item.id === targetId); if (!source?.material || source.material.state !== 'liquid' || !target || !isVessel(target)) { setNotice('Only liquids can be poured between open vessels.'); return; } const amount = Math.min(pourAmount, source.volumeMl); updateItem(source.id, { volumeMl: source.volumeMl - amount, liquidLevel: Math.max(0, source.liquidLevel - amount / 100) }); updateItem(target.id, { material: source.material, volumeMl: target.volumeMl + amount, liquidLevel: Math.min(1, target.liquidLevel + amount / 100) }); queueWorkspaceEvent('POUR', { sourceId: source.id, targetId: target.id, amountMl: amount, materialId: backendMaterialId(source.material.id) }); setPourAnimation(target.id); window.setTimeout(() => setPourAnimation(null), 900); setPourSource(null); setNotice(`Poured ${amount} mL into ${target.name}`); };
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => { pointerRef.current = { x: event.clientX, y: event.clientY }; const bounds = canvasRef.current?.getBoundingClientRect(); if (tool === 'pan' && panRef.current) { setPan({ x: panRef.current.x + event.clientX - panRef.current.startX, y: panRef.current.y + event.clientY - panRef.current.startY }); return; } const drag = dragRef.current; if (!drag || !bounds) return; setItems((current) => { const nextX = Math.max(0, (event.clientX - bounds.left - pan.x) / zoom - drag.dx); const nextY = Math.max(70, (event.clientY - bounds.top - pan.y) / zoom - drag.dy); const moved = current.map((item) => item.id === drag.id ? { ...item, x: nextX, y: nextY } : item); const vessel = moved.find((item) => item.id === drag.id); return vessel && isVessel(vessel) ? moved.map((item) => item.type === 'burner' && item.attachedTo === vessel.id ? { ...item, x: vessel.x + vessel.w / 2 - item.w / 2, y: vessel.y + vessel.h - item.h * .1 } : item) : moved; }); };
+  const pour = (targetId: string) => { const source = items.find((item) => item.id === pourSource); const target = items.find((item) => item.id === targetId); if (!source?.material || source.material.state !== 'liquid' || !target || !isVessel(target)) { setNotice('Only liquids can be poured between open vessels.'); return; } const remainingCapacity = Math.max(0, capacityFor(target) - target.volumeMl); const amount = Math.min(pourAmount, source.volumeMl, remainingCapacity); if (amount <= 0) { setNotice(remainingCapacity <= 0 ? 'The target vessel is full.' : 'The source vessel is empty.'); return; } updateItem(source.id, { volumeMl: source.volumeMl - amount }); updateItem(target.id, { material: source.material, volumeMl: target.volumeMl + amount }); queueWorkspaceEvent('POUR', { sourceId: source.id, targetId: target.id, amountMl: amount, materialId: backendMaterialId(source.material.id) }); triggerPourAnimation(target.id); setPourSource(null); setNotice(`Poured ${amount} mL into ${target.name}`); };
   const remove = () => { if (!selectedId) return; setItems((current) => current.filter((item) => item.id !== selectedId)); setConnections((current) => current.filter((link) => link.from !== selectedId && link.to !== selectedId)); queueWorkspaceEvent('ITEM_DELETED', { itemId: selectedId }); setSelectedId(null); };
   const duplicate = () => { if (!selected) return; const copy = { ...selected, id: `${selected.type}-${crypto.randomUUID()}`, x: selected.x + 24, y: selected.y + 24 }; setItems((current) => [...current, copy]); setSelectedId(copy.id); };
   const sendChat = () => { if (!chatInput.trim()) return; const question = chatInput.trim(); setChat((current) => [...current, { role: 'user', text: question }, { role: 'assistant', text: locale === 'ru' ? 'Для нагрева приблизьте горелку к колбе до появления Attached, затем нажмите Heat. Газ помещайте только через герметичный Gas-порт.' : 'Move the burner close to the flask until Attached appears, then press Heat. Add gases only through a sealed Gas port.' }]); setChatInput(''); };
-  useEffect(() => { const key = (event: KeyboardEvent) => { if (event.key === 'Delete') remove(); if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'd') { event.preventDefault(); duplicate(); } }; window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key); });
+  useEffect(() => { const key = (event: KeyboardEvent) => { const target = event.target as HTMLElement | null; if (target?.isContentEditable || ['INPUT', 'SELECT', 'TEXTAREA'].includes(target?.tagName || '')) return; if (event.key === 'Delete') remove(); if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'd') { event.preventDefault(); duplicate(); } }; window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key); });
   useEffect(() => { const canvas = canvasRef.current; if (!canvas || tool !== 'pan') return; const down = (event: PointerEvent) => { panRef.current = { x: pan.x, y: pan.y, startX: event.clientX, startY: event.clientY }; canvas.setPointerCapture(event.pointerId); }; const up = () => { panRef.current = null; }; canvas.addEventListener('pointerdown', down); canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up); return () => { canvas.removeEventListener('pointerdown', down); canvas.removeEventListener('pointerup', up); canvas.removeEventListener('pointercancel', up); }; }, [pan.x, pan.y, tool]);
   useEffect(() => { if (canvasRef.current) canvasRef.current.style.cursor = tool === 'connect' ? 'crosshair' : tool === 'pan' ? 'grab' : 'default'; }, [tool]);
   useEffect(() => { const canvas = canvasRef.current; if (!canvas) return; const nodes = Array.from(canvas.querySelectorAll<HTMLElement>(':scope > div[role="button"]')); nodes.forEach((node, index) => { const item = items[index]; if (!item) return; node.style.left = `${item.x * zoom + pan.x}px`; node.style.top = `${item.y * zoom + pan.y}px`; node.style.width = `${item.w * item.scale * zoom}px`; node.style.height = `${item.h * item.scale * zoom}px`; }); }, [items, pan, zoom]);
+  useEffect(() => {
+    const svg = canvasRef.current?.querySelector('svg');
+    if (svg) svg.style.transform = `translate(${pan.x}px, ${pan.y}px)`;
+  }, [pan.x, pan.y]);
 
   return <div className="flex h-[100dvh] min-h-0 overflow-hidden bg-[var(--background)] text-[var(--foreground)]"><aside className="hidden w-[300px] shrink-0 flex-col border-r border-[var(--border)] bg-[var(--card)] xl:flex"><header className="flex items-center justify-between border-b border-[var(--border)] p-4"><Link href={`/${locale}/dashboard`} aria-label="Back to dashboard"><ArrowLeft /></Link><span className="truncate text-sm font-semibold">{workspaceId ? 'Workspace experiment' : 'Untitled Experiment'}</span><div className="flex gap-1"><ThemeToggle /><LanguageSwitcher /></div></header><Library tab={libraryTab} setTab={setLibraryTab} addItem={addItem} addMaterial={addMaterial} selected={selected} /></aside><main className="relative flex min-w-0 flex-1 flex-col"><header className="flex min-h-14 items-center justify-between border-b border-[var(--border)] bg-[var(--card)]/95 px-3 xl:hidden"><Link href={`/${locale}/dashboard`} aria-label="Back to dashboard"><ArrowLeft /></Link><span className="truncate text-sm font-semibold">{workspaceId ? 'Workspace experiment' : 'Untitled Experiment'}</span><div className="flex gap-1"><ThemeToggle /><LanguageSwitcher /></div></header><div className="absolute left-1/2 top-16 z-30 flex -translate-x-1/2 gap-1 rounded-xl border border-[var(--border)] bg-[var(--card)]/95 p-1 shadow-lg sm:top-4"><ToolButton label="Select" active={tool === 'select'} onClick={() => setTool('select')}>↖</ToolButton><ToolButton label="Pan" active={tool === 'pan'} onClick={() => setTool('pan')}><Move size={17} /></ToolButton><ToolButton label="Connect" active={tool === 'connect'} onClick={() => { setTool('connect'); setConnectSource(null); }}>⌁</ToolButton><span className="mx-1 h-6 w-px bg-[var(--border)]" /><ToolButton label="Zoom in" onClick={() => setZoom((value) => Math.min(2, value + .1))}><ZoomIn size={17} /></ToolButton><ToolButton label="Zoom out" onClick={() => setZoom((value) => Math.max(.5, value - .1))}><ZoomOut size={17} /></ToolButton></div><div ref={canvasRef} onPointerDown={() => { setSelectedId(null); setConnectSource(null); }} onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerLeave={endDrag} className="relative flex-1 overflow-hidden" style={{ backgroundImage: 'radial-gradient(var(--border) 1px, transparent 1px)', backgroundSize: `${20 * zoom}px ${20 * zoom}px` }}><svg className="pointer-events-none absolute inset-0 h-full w-full">{connections.map((link) => { const from = centers.get(link.from); const to = centers.get(link.to); return from && to ? <line key={link.id} x1={from.x * zoom} y1={from.y * zoom} x2={to.x * zoom} y2={to.y * zoom} stroke="var(--primary)" strokeWidth="3" strokeDasharray="8 6" /> : null; })}</svg>{items.map((item) => <div key={item.id} role="button" tabIndex={0} aria-label={`${item.name}${item.material ? ` containing ${item.material.name}` : ''}`} onPointerDown={(event) => onPointerDown(event, item.id)} style={{ left: item.x, top: item.y, width: item.w * item.scale, height: item.h * item.scale, transform: `rotate(${item.rotation}deg)`, touchAction: 'none' }} className={`absolute rounded-xl p-1 outline-none focus:ring-2 focus:ring-[var(--primary)] ${selectedId === item.id ? 'z-20 ring-2 ring-[var(--primary)]' : 'z-10 hover:ring-1 hover:ring-[var(--primary)]/60'}`}><EquipmentIcon type={item.type} size={item.w * item.scale} liquidLevel={item.liquidLevel} liquidColor={item.material?.color} operation={item.operation} />{isVessel(item) && (selectedId === item.id || item.operation !== 'idle') && <span className="absolute bottom-1 left-1/2 -translate-x-1/2 rounded bg-[var(--card)]/90 px-1 text-[10px] font-semibold">{item.temperature.toFixed(1)}°C</span>}{item.attachedTo && <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-orange-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-orange-600">Attached · Heat link</span>}{pourAnimation === item.id && <span className="sandbox-pour-stream absolute left-1/2 top-0 h-16 w-1 -translate-x-1/2 rounded-full bg-cyan-400" />}{selectedId === item.id && <SelectionToolbar duplicate={duplicate} remove={remove} connect={() => { setTool('connect'); setConnectSource(item.id); }} />}{(selectedId === item.id || tool === 'connect') && <div className="absolute -right-4 top-1/2 grid gap-1"><Port name="Glass" color="bg-slate-400" onClick={() => { setTool('connect'); setConnectSource(item.id); }} /><Port name="Liquid" color="bg-cyan-400" onClick={() => { setTool('connect'); setConnectSource(item.id); }} /><Port name="Gas" color="bg-violet-400" onClick={() => { setTool('connect'); setConnectSource(item.id); }} /></div>}</div>)}</div><ActivityLog items={items} selected={selected} /><div className="flex min-h-12 items-center justify-between border-t border-[var(--border)] bg-[var(--card)] px-3 text-xs"><span>Temperature {selected?.temperature.toFixed(1) || '24.5'} °C · Volume {selected?.volumeMl || 0} mL</span><button className="touch-target rounded-lg px-3 text-[var(--primary)]" onClick={() => setChatOpen((value) => !value)}><MessageCircle size={16} className="mr-1 inline" />AI assistant</button></div></main><aside className="hidden w-[310px] shrink-0 flex-col border-l border-[var(--border)] bg-[var(--card)] xl:flex"><div className="border-b border-[var(--border)] p-4"><p className="text-xs uppercase tracking-wider text-[var(--muted-foreground)]">Inspector</p><h2 className="mt-1 font-semibold">Equipment details</h2></div>{selected ? <Properties item={selected} update={updateItem} onOperation={applyOperation} setPourSource={setPourSource} pourSource={pourSource} /> : <p className="p-5 text-sm text-[var(--muted-foreground)]">Select equipment to see size, temperature, ports and operations.</p>}<div className="mt-auto border-t border-[var(--border)] p-4 text-xs text-[var(--muted-foreground)]"><p className="font-semibold text-[var(--foreground)]">Ports & connectors</p><div className="mt-2 grid grid-cols-2 gap-2"><span>● Glass</span><span className="text-cyan-500">● Liquid</span><span className="text-violet-500">● Gas</span><span className="text-orange-500">● Thermal</span><span className="text-emerald-500">● Electrical</span></div></div></aside>{connectionDraft && <ConnectionDialog onSave={(port, direction) => { setConnections((current) => [...current, { id: crypto.randomUUID(), from: connectionDraft.from, to: connectionDraft.to, port, direction }]); setConnectionDraft(null); setNotice(`Connected ${port}`); }} onClose={() => setConnectionDraft(null)} />}{pourSource && <PourDialog source={items.find((item) => item.id === pourSource)} targets={items.filter((item) => item.id !== pourSource && isVessel(item))} amount={pourAmount} setAmount={setPourAmount} onPour={pour} onClose={() => setPourSource(null)} />}{chatOpen && <AssistantPanel chat={chat} input={chatInput} setInput={setChatInput} onSend={sendChat} onClose={() => setChatOpen(false)} />}<button aria-label="Open AI assistant" onClick={() => setChatOpen((value) => !value)} className="fixed bottom-5 right-5 z-[70] grid h-14 w-14 place-items-center rounded-full bg-[var(--primary)] text-white shadow-xl"><MessageCircle /></button><OnboardingHint storageKey="sandbox-onboarding-v2" locale={locale} kind="sandbox" /></div>;
 }

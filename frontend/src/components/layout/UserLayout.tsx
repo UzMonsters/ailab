@@ -13,7 +13,6 @@ import ScienceBackground, { BackgroundGlow } from '@/components/common/ScienceBa
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import ThemeToggle from '@/components/common/ThemeToggle';
 import { useAuthStore } from '@/stores/auth.store';
-import { useUIStore } from '@/stores/ui.store';
 
 interface SidebarItem {
   key: string;
@@ -35,12 +34,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   const locale = pathname.split('/')[1] || 'en';
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { user, logout } = useAuthStore();
-  const { theme, setTheme } = useUIStore();
-  const themeEnabled = pathname.endsWith('/dashboard') || pathname.endsWith('/dashboards');
-
-  useEffect(() => {
-    if (!themeEnabled && theme !== 'dark') setTheme('dark');
-  }, [theme, themeEnabled, setTheme]);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -55,7 +48,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
 
   const handleLogout = async () => {
     await logout();
-    router.push(`/${locale}/auth`);
+    router.replace('/');
   };
 
   const sections: { title: string; items: SidebarItem[] }[] = [
@@ -180,7 +173,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
               <span className="lg:hidden font-bold text-lg">jas<span className="text-[#8B5CF6]">Science</span></span>
             </div>
             <div className="flex items-center gap-2">
-              {themeEnabled && <ThemeToggle />}
+              <ThemeToggle />
               <LanguageSwitcher />
               <button className="w-9 h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all relative" aria-label={tc('notifications')}>
                 <Bell size={16} />

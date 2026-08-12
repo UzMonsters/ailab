@@ -80,5 +80,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 if (typeof window !== 'undefined') {
   window.addEventListener('auth:unauthorized', () => {
     useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false, error: null });
+    if (!window.location.pathname.endsWith('/auth')) {
+      window.location.replace('/');
+    }
   });
 }

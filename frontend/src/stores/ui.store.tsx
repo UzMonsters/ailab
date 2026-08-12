@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, useCallback, type ReactNode } from 'react';
 
 interface UIState {
   sidebarOpen: boolean;
@@ -33,19 +33,22 @@ export function UIProvider({ children }: { children: ReactNode }) {
     return () => media.removeEventListener?.('change', onChange);
   }, [theme]);
 
-  const updateTheme = (next: 'dark' | 'light' | 'system') => {
+  const updateTheme = useCallback((next: 'dark' | 'light' | 'system') => {
     setTheme(next);
     window.localStorage.setItem('ai-lab-theme', next);
-  };
+  }, []);
+
+  const toggleSidebar = useCallback(() => setSidebarOpen((p) => !p), []);
+  const contextValue = useMemo(() => ({
+    sidebarOpen,
+    theme,
+    toggleSidebar,
+    setSidebarOpen,
+    setTheme: updateTheme,
+  }), [sidebarOpen, theme, toggleSidebar, updateTheme]);
 
   return (
-    <UIContext.Provider value={{
-      sidebarOpen,
-      theme,
-      toggleSidebar: () => setSidebarOpen((p) => !p),
-      setSidebarOpen,
-      setTheme: updateTheme,
-    }}>
+    <UIContext.Provider value={contextValue}>
       {children}
     </UIContext.Provider>
   );

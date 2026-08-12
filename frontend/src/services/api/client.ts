@@ -96,7 +96,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       }
     }
 
-    if (res.status === 401 && typeof window !== 'undefined') {
+    if (res.status === 401 && typeof window !== 'undefined' && !endpoint.startsWith('/api/v1/auth/')) {
       accessToken = null;
       window.dispatchEvent(new CustomEvent('auth:unauthorized'));
     }
