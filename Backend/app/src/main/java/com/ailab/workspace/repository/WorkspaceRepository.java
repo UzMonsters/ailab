@@ -19,12 +19,14 @@ public interface WorkspaceRepository extends JpaRepository<WorkspaceEntity, Stri
 
     @Query("SELECT w FROM WorkspaceEntity w WHERE w.ownerId = :ownerId " +
            "AND (:includeDeleted = true OR w.isDeleted = false) " +
-           "AND (:science IS NULL OR LTRIM(RTRIM(:science)) = '' OR LOWER(w.science) = LOWER(:science)) " +
-           "AND (:search IS NULL OR LTRIM(RTRIM(:search)) = '' OR LOWER(w.name) LIKE LOWER(CONCAT('%', :search, '%')))")
+           "AND (:hasScience = false OR LOWER(w.science) = :science) " +
+           "AND (:hasSearch = false OR LOWER(w.name) LIKE CONCAT('%', :search, '%'))")
     Page<WorkspaceEntity> findAllByOwner(
             @Param("ownerId") String ownerId,
             @Param("science") String science,
             @Param("search") String search,
+            @Param("hasScience") boolean hasScience,
+            @Param("hasSearch") boolean hasSearch,
             @Param("includeDeleted") boolean includeDeleted,
             Pageable pageable
     );
