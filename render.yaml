@@ -45,6 +45,8 @@ services:
         generateValue: true
       - key: REFRESH_COOKIE_SECURE
         value: "true"
+      - key: REFRESH_COOKIE_SAME_SITE
+        value: None
 
   - type: web
     name: aichemistry-frontend

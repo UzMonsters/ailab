@@ -1,5 +1,6 @@
 package com.ailab.common.api;
 
+import com.ailab.auth.token.InvalidRefreshTokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -32,6 +33,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({InsufficientAuthenticationException.class, AuthenticationCredentialsNotFoundException.class})
     ResponseEntity<ApiError> missingAuthentication(Exception ex, HttpServletRequest req) {
+        return error(HttpStatus.UNAUTHORIZED, ex.getMessage(), req, List.of());
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    ResponseEntity<ApiError> invalidRefreshToken(InvalidRefreshTokenException ex, HttpServletRequest req) {
         return error(HttpStatus.UNAUTHORIZED, ex.getMessage(), req, List.of());
     }
 

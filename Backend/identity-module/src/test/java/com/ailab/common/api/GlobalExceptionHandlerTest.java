@@ -1,5 +1,6 @@
 package com.ailab.common.api;
 
+import com.ailab.auth.token.InvalidRefreshTokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -22,5 +23,12 @@ class GlobalExceptionHandlerTest {
     void keepsGenericIllegalArgumentAsBadRequest() {
         var response = handler.badRequest(new IllegalArgumentException("Invalid or expired refresh token"), request);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void mapsInvalidRefreshTokenToUnauthorized() {
+        var response = handler.invalidRefreshToken(new InvalidRefreshTokenException("Invalid or expired refresh token"), request);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody().message()).isEqualTo("Invalid or expired refresh token");
     }
 }

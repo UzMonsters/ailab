@@ -2,6 +2,7 @@ package com.ailab.auth.controller;
 
 import com.ailab.auth.api.AuthDtos;
 import com.ailab.auth.service.AuthService;
+import com.ailab.auth.token.InvalidRefreshTokenException;
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +21,8 @@ public class AuthController {
     private String refreshCookieName;
     @Value("${app.security.refresh-cookie-secure:false}")
     private boolean refreshCookieSecure;
+    @Value("${app.security.refresh-cookie-same-site:Strict}")
+    private String refreshCookieSameSite;
     @Value("${app.security.refresh-token-ttl}")
     private Duration refreshTokenTtl;
 
@@ -45,7 +48,7 @@ public class AuthController {
             HttpServletResponse response) {
         String cookieToken = refreshCookie(httpRequest);
         String token = cookieToken != null ? cookieToken : request == null ? null : request.refreshToken();
-        if (token == null || token.isBlank()) throw new IllegalArgumentException("Refresh token is required");
+        if (token == null || token.isBlank()) throw new InvalidRefreshTokenException("Refresh token is required");
         return writeTokenResponse(service.refresh(token), response);
     }
 
@@ -68,12 +71,12 @@ public class AuthController {
 
     private ResponseCookie refreshCookie(String token) {
         return ResponseCookie.from(refreshCookieName, token).httpOnly(true).secure(refreshCookieSecure)
-                .sameSite("Strict").path("/api/v1/auth").maxAge(refreshTokenTtl).build();
+                .sameSite(refreshCookieSameSite).path("/api/v1/auth").maxAge(refreshTokenTtl).build();
     }
 
     private void clearRefreshCookie(HttpServletResponse response) {
         response.addHeader("Set-Cookie", ResponseCookie.from(refreshCookieName, "").httpOnly(true)
-                .secure(refreshCookieSecure).sameSite("Strict").path("/api/v1/auth").maxAge(Duration.ZERO).build().toString());
+                .secure(refreshCookieSecure).sameSite(refreshCookieSameSite).path("/api/v1/auth").maxAge(Duration.ZERO).build().toString());
     }
 
     private String refreshCookie(HttpServletRequest request) {
