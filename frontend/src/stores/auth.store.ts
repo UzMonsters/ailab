@@ -4,8 +4,10 @@ import { create } from 'zustand';
 import type { UserMeResponse } from '@/types';
 import { authApi } from '@/services/api/auth.api';
 import { userApi } from '@/services/api/user.api';
-import { getAccessToken } from '@/services/api/client';
+import { getAccessToken, refreshAccessToken } from '@/services/api/client';
 import { normalizeError } from '@/lib/errors';
+
+let fetchUserPromise: Promise<void> | null = null;
 
 interface AuthState {
   user: UserMeResponse | null;
@@ -61,17 +63,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user: null, isAuthenticated: false, isLoading: false, error: null });
   },
 
-  fetchUser: async () => {
-    set({ isLoading: true });
-    try {
-      if (!getAccessToken()) {
-        await authApi.refresh();
+  fetchUser: () => {
+    // Several layouts can mount during a navigation. Share one bootstrap
+    // request so refresh-token rotation is never triggered concurrently.
+    if (fetchUserPromise) return fetchUserPromise;
+
+    const promise = (async () => {
+      set({ isLoading: true });
+      try {
+        if (!getAccessToken() && !(await refreshAccessToken())) {
+          throw new Error('Authentication refresh failed');
+        }
+        const user = await userApi.getMe();
+        set({ user, isAuthenticated: true, isLoading: false });
+      } catch {
+        set({ user: null, isAuthenticated: false, isLoading: false });
       }
-      const user = await userApi.getMe();
-      set({ user, isAuthenticated: true, isLoading: false });
-    } catch {
-      set({ user: null, isAuthenticated: false, isLoading: false });
-    }
+    })();
+
+    fetchUserPromise = promise;
+    void promise.finally(() => {
+      if (fetchUserPromise === promise) fetchUserPromise = null;
+    });
+    return promise;
   },
 
   clearError: () => set({ error: null }),
