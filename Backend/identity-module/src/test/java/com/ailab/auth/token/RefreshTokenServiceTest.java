@@ -67,7 +67,7 @@ class RefreshTokenServiceTest {
         when(repository.findByTokenHash(anyString())).thenReturn(Optional.of(expired));
 
         assertThatThrownBy(() -> service.rotate("expired-token"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(InvalidRefreshTokenException.class)
                 .hasMessageContaining("Invalid or expired");
     }
 }
