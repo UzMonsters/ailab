@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import ScienceBackground, { BackgroundGlow } from '@/components/common/ScienceBackground';
 import { useAuthStore } from '@/stores/auth.store';
-import { authApi } from '@/services/api/auth.api';
 import { useTranslations } from 'next-intl';
 import { Loader2 } from 'lucide-react';
 
@@ -25,11 +24,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     let active = true;
     const checkAccess = async () => {
-      try {
-        await authApi.refresh();
-      } catch {
-        // An existing in-memory access token can still be valid.
-      }
       await fetchUser();
       if (!active) return;
       const currentUser = useAuthStore.getState().user;
