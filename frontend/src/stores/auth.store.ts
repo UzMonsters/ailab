@@ -2,12 +2,6 @@
 
 import { create } from 'zustand';
 import type { UserMeResponse } from '@/types';
-import { authApi } from '@/services/api/auth.api';
-import { userApi } from '@/services/api/user.api';
-import { getAccessToken, refreshAccessToken } from '@/services/api/client';
-import { normalizeError } from '@/lib/errors';
-
-let fetchUserPromise: Promise<void> | null = null;
 
 interface AuthState {
   user: UserMeResponse | null;
@@ -22,65 +16,58 @@ interface AuthState {
   clearError: () => void;
 }
 
+import { authApi } from '@/entities/auth/api/auth.api';
+import { userApi } from '@/entities/user/api/user.api';
+import { errorMessage } from '@/shared/utils/errorMessage';
+let fetchUserPromise: Promise<void> | null = null;
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
-  isLoading: false,
+  isLoading: true,
   error: null,
 
-  login: async (email: string, password: string) => {
+  login: async (email, password) => {
     set({ isLoading: true, error: null });
     try {
       await authApi.login(email, password);
-      const user = await userApi.getMe();
-      set({ user, isAuthenticated: true, isLoading: false });
-    } catch (err: unknown) {
-      set({ error: normalizeError(err, 'Login failed').message, isLoading: false, isAuthenticated: false });
-      throw err;
+      await get().fetchUser();
+    } catch (e: unknown) {
+      set({ error: errorMessage(e, 'Login failed'), isLoading: false });
     }
   },
 
-  register: async (username: string, email: string, password: string) => {
+  register: async (username, email, password) => {
     set({ isLoading: true, error: null });
     try {
       await authApi.register(username, email, password);
-      await authApi.login(email, password);
-      const user = await userApi.getMe();
-      set({ user, isAuthenticated: true, isLoading: false });
-    } catch (err: unknown) {
-      set({ error: normalizeError(err, 'Registration failed').message, isLoading: false });
-      throw err;
+      await get().login(email, password);
+    } catch (e: unknown) {
+      set({ error: errorMessage(e, 'Registration failed'), isLoading: false });
     }
   },
 
   logout: async () => {
-    set({ isLoading: true });
     try {
       await authApi.logout();
-    } catch {
-      // Even if logout fails, clear local state
+    } finally {
+      set({ user: null, isAuthenticated: false, isLoading: false, error: null });
     }
-    set({ user: null, isAuthenticated: false, isLoading: false, error: null });
   },
 
   fetchUser: () => {
-    // Several layouts can mount during a navigation. Share one bootstrap
-    // request so refresh-token rotation is never triggered concurrently.
     if (fetchUserPromise) return fetchUserPromise;
-
+    
     const promise = (async () => {
-      set({ isLoading: true });
+      set({ isLoading: true, error: null });
       try {
-        if (!getAccessToken() && !(await refreshAccessToken())) {
-          throw new Error('Authentication refresh failed');
-        }
         const user = await userApi.getMe();
         set({ user, isAuthenticated: true, isLoading: false });
-      } catch {
-        set({ user: null, isAuthenticated: false, isLoading: false });
+      } catch (e: unknown) {
+        set({ user: null, isAuthenticated: false, isLoading: false, error: errorMessage(e, 'Failed to fetch user') });
       }
     })();
-
+    
     fetchUserPromise = promise;
     void promise.finally(() => {
       if (fetchUserPromise === promise) fetchUserPromise = null;
@@ -94,7 +81,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 if (typeof window !== 'undefined') {
   window.addEventListener('auth:unauthorized', () => {
     useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false, error: null });
-    if (!window.location.pathname.endsWith('/auth')) {
+    const path = window.location.pathname;
+    const isPublic = /^\/(en|ru|uz)?(\/auth|\/)?$/.test(path);
+    if (!isPublic) {
       window.location.replace('/');
     }
   });

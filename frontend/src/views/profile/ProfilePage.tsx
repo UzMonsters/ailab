@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Image from 'next/image';
+import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import {
@@ -9,7 +10,7 @@ import {
   Settings, MapPin, Loader2, X, Save, Lock,
   FlaskConical,
 } from 'lucide-react';
-import { userApi } from '@/services/api/user.api';
+import { userApi } from '@/entities/user/api/user.api';
 import { useAuthStore } from '@/stores/auth.store';
 import type { UserStatisticsResponse, UserPreferencesResponse } from '@/types';
 
@@ -36,6 +37,7 @@ const colorMap = {
 
 export default function ProfilePage() {
   const pathname = usePathname();
+  const router = useRouter();
   const t = useTranslations('profile');
   const tc = useTranslations('common');
   const tn = useTranslations('nav');
@@ -91,7 +93,8 @@ export default function ProfilePage() {
   useEffect(() => {
     const timer = window.setTimeout(() => { if (!user) void fetchUser(); void loadStats(); void loadPreferences(); }, 0);
     return () => window.clearTimeout(timer);
-  }, [user, fetchUser, loadStats, loadPreferences]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchUser, loadStats, loadPreferences]);
 
   useEffect(() => {
     if (user) { const timer = window.setTimeout(() => setEditUsername(user.username), 0); return () => window.clearTimeout(timer); }
@@ -146,11 +149,11 @@ export default function ProfilePage() {
     try { const dataUrl = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Invalid image')); reader.onerror = () => reject(reader.error || new Error('Could not read image')); reader.readAsDataURL(file); }); await userApi.uploadAvatar(dataUrl); await fetchUser(); } catch (err: unknown) { showToast(err instanceof Error ? err.message : 'Avatar upload failed', 'error'); } finally { setAvatarBusy(false); }
   };
   const copyId = async () => { await navigator.clipboard.writeText(user?.id || ''); setCopied(true); window.setTimeout(() => setCopied(false), 1600); };
-  const handleDelete = async () => { setDeleteError(null); try { await userApi.deleteMe(); await logout(); window.location.href = `/${locale}/auth`; } catch (err: unknown) { setDeleteError(err instanceof Error ? err.message : 'Could not delete account'); } };
+  const handleDelete = async () => { setDeleteError(null); try { await userApi.deleteMe(); await logout(); router.push(`/${locale}/auth`); } catch (err: unknown) { setDeleteError(err instanceof Error ? err.message : 'Could not delete account'); } };
 
   const handleLogout = async () => {
     await logout();
-    window.location.href = `/${locale}/auth`;
+    router.push(`/${locale}/auth`);
   };
 
   const formatDate = (dateStr?: string) => {
@@ -185,7 +188,7 @@ export default function ProfilePage() {
           <div className="flex min-w-0 items-end gap-4 sm:gap-6">
             <div className="relative">
               <div className="relative w-[120px] h-[120px] rounded-[24px] border-4 border-[var(--card)] bg-[var(--background)] flex items-center justify-center text-[48px] text-[var(--primary)] shadow-lg overflow-hidden">
-                {user.avatarUrl ? <img src={user.avatarUrl} alt={`${user.username} avatar`} className="h-full w-full object-cover" /> : user.username[0].toUpperCase()}
+                {user.avatarUrl ? <Image src={user.avatarUrl} alt={`${user.username} avatar`} width={120} height={120} unoptimized className="h-full w-full object-cover" /> : user.username[0].toUpperCase()}
                 <button type="button" aria-label="Upload avatar" onClick={() => avatarInput.current?.click()} className="absolute inset-x-2 bottom-2 min-h-9 rounded-lg bg-black/60 text-xs text-white">{avatarBusy ? 'Uploading…' : 'Change'}</button><input ref={avatarInput} type="file" accept="image/*" className="hidden" onChange={(event) => handleAvatar(event.target.files?.[0])} />
               </div>
               <div className="absolute bottom-1 right-1 w-[20px] h-[20px] bg-[#34D399] border-[4px] border-[var(--card)] rounded-full" />
@@ -213,7 +216,7 @@ export default function ProfilePage() {
           const Icon = stat.icon;
           const value = stats?.[stat.key] ?? 0;
           return (
-            <div key={stat.key} className={`bg-[var(--card)] border border-[var(--border)] ${cls.hover} rounded-[var(--radius-lg)] p-6 flex items-center gap-5 transition-all shadow-sm`}>
+            <div key={stat.key as string} className={`bg-[var(--card)] border border-[var(--border)] ${cls.hover} rounded-[var(--radius-lg)] p-6 flex items-center gap-5 transition-all shadow-sm`}>
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${cls.bg} ${cls.text}`}>
                 <Icon size={24} />
               </div>
@@ -323,7 +326,7 @@ export default function ProfilePage() {
             {statCards.map((stat) => {
               const val = stats?.[stat.key] ?? 0;
               return (
-                <div key={stat.key} className="flex items-center justify-between pb-4 border-b border-[var(--border)] last:border-0">
+                <div key={stat.key as string} className="flex items-center justify-between pb-4 border-b border-[var(--border)] last:border-0">
                   <span className="text-sm font-medium text-[var(--muted-foreground)]">{t(stat.label)}</span>
                   <span className="text-lg font-bold text-[var(--foreground)]">{val}</span>
                 </div>

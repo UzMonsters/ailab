@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns:svg="http://www.w3.org/2000/svg"
+     xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 450 500"
+  version="1.1"
+  font-family="New Century Schoolbook, serif"
+  font-size="14px"
+  font-weight="bold"
+  xml:lang="ru">
+  <title>Опытъ Системы Элементовъ</title>
+  
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+             xmlns:dc="http://purl.org/dc/elements/1.1/"
+             xmlns:cc="http://creativecommons.org/ns#">
+      <cc:Work rdf:about="">
+        <dc:title>Опытъ Системы Элементовъ</dc:title>
+        <dc:creator>Дмитрий Иванович Менделеев</dc:creator>
+        <dc:date>1869</dc:date>
+        <cc:attributionURL rdf:resource="https://commons.wikimedia.org/wiki/File:Mendeleev%27s_1869_periodic_table.svg"/>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  
+  <defs>
+    <style type="text/css">
+      <![CDATA[
+    .title {
+        font-weight: bold;
+        text-anchor: middle;
+        text-transform: uppercase;
+    }
+    .note  {
+        font-size: 10px;
+        font-weight: normal;
+    }
+    .chem {
+        text-anchor: end;
+    }
+    ]]>
+    </style>
+  </defs>
+
+  <g>
+    <text x="225" y="30" class="title" style="font-size:18px">ОПЫТЪ СИСТЕМЫ ЭЛЕМЕНТОВЪ,</text>
+    <text x="225" y="50" class="title" style="font-size:10px">ОСНОВАННОЙ НА ИХЪ АТОМНОМЪ ВѢСѢ И ХИМИЧЕСКОМЪ СХОДСТВѢ.</text>
+  </g>
+  
+  <g text-anchor="start" transform="translate(-20,0)">
+    <!-- Width is 450; 6 cols times 60 is 360 leaving 90; 45 + 0.5 60 = 75 -->
+    <g transform="translate(80, 0)">
+      <text y="200" class="chem">H=</text><text y="200">1</text>
+      <text y="340" class="chem">Li=</text><text y="340">7</text>
+    </g>
+    <g transform="translate(140, 0)">
+      <text y="220" class="chem">Be=</text><text y="220">&#x2007;9<tspan class="note">,4</tspan></text>
+      <text y="240" class="chem">B=</text><text y="240">11</text>
+      <text y="260" class="chem">C=</text><text y="260">12</text>
+      <text y="280" class="chem">N=</text><text y="280">14</text>
+      <text y="300" class="chem">O=</text><text y="300">16</text>
+      <text y="320" class="chem">F=</text><text y="320">19</text>
+      <text y="340" class="chem">Na=</text><text y="340">23</text>
+    </g>
+    <g transform="translate(200, 0)">
+      <text y="220" class="chem">Mg=</text><text y="220">24</text>
+      <text y="240" class="chem">Al=</text><text y="240">27<tspan class="note">,3</tspan></text>
+      <text y="260" class="chem">Si=</text><text y="260">28</text>
+      <text y="280" class="chem">P=</text><text y="280">31</text>
+      <text y="300" class="chem">S=</text><text y="300">32</text>
+      <text y="320" class="chem">Cl=</text><text y="320">35<tspan class="note">,5</tspan></text>
+      <text y="340" class="chem">K=</text><text y="340">39</text>
+      <text y="360" class="chem">Ca=</text><text y="360">40</text>
+      <text y="380" class="chem">?=</text><text y="380">45</text>
+      <text y="400" class="chem">?Er=</text><text y="400">56</text>
+      <text y="420" class="chem">?Yt=</text><text y="420">60</text>
+      <text y="440" class="chem">?In=</text><text y="440">75<tspan class="note">,6</tspan></text>
+    </g>
+    <g transform="translate(260, 0)">
+      <text y="80" class="chem">Ti=</text><text y="80">50</text>
+      <text y="100" class="chem">V=</text><text y="100">51</text>
+      <text y="120" class="chem">Cr=</text><text y="120">52</text>
+      <text y="140" class="chem">Mn=</text><text y="140">55</text>
+      <text y="160" class="chem">Fe=</text><text y="160">56</text>
+      <text y="180" class="chem">Ni=Co=</text><text y="180">59</text>      
+      <text y="200" class="chem">Cu=</text><text y="200">63<tspan class="note">,4</tspan></text>
+      <text y="220" class="chem">Zn=</text><text y="220">65<tspan class="note">,2</tspan></text>
+      <text y="240" class="chem">?=</text><text y="240">68</text>
+      <text y="260" class="chem">?=</text><text y="260">70</text>
+      <text y="280" class="chem">As=</text><text y="280">75</text>
+      <text y="300" class="chem">Se=</text><text y="300">79<tspan class="note">,4</tspan></text>
+      <text y="320" class="chem">Br=</text><text y="320">80</text>
+      <text y="340" class="chem">Rb=</text><text y="340">85<tspan class="note">,4</tspan></text>
+      <text y="360" class="chem">Sr=</text><text y="360">87<tspan class="note">,6</tspan></text>
+      <text y="380" class="chem">Ce=</text><text y="380">92</text>
+      <text y="400" class="chem">La=</text><text y="400">94</text>
+      <text y="420" class="chem">Di=</text><text y="420">95</text>
+      <text y="440" class="chem">Th=</text><text y="440">118?</text>
+    </g>
+    <g transform="translate(330, 0)">
+      <text y="80" class="chem">Zr=</text><text y="80">&#x2007;90</text>
+      <text y="100" class="chem">Nb=</text><text y="100">&#x2007;94</text>
+      <text y="120" class="chem">Mo=</text><text y="120">&#x2007;96</text>
+      <text y="140" class="chem">Rh=</text><text y="140">104<tspan class="note">,4</tspan></text>
+      <text y="160" class="chem">Ru=</text><text y="160">104<tspan class="note">,4</tspan></text>
+      <text y="180" class="chem">Pd=</text><text y="180">106<tspan class="note">,6</tspan></text>
+      <text y="200" class="chem">Ag=</text><text y="200">108</text>
+      <text y="220" class="chem">Cd=</text><text y="220">112</text>
+      <text y="240" class="chem">Ur=</text><text y="240">116</text>
+      <text y="260" class="chem">Sn=</text><text y="260">118</text>
+      <text y="280" class="chem">Sb=</text><text y="280">122</text>
+      <text y="300" class="chem">Te=</text><text y="300">128?</text>
+      <text y="320" class="chem">I=</text><text y="320">127</text>
+      <text y="340" class="chem">Cs=</text><text y="340">133</text>
+      <text y="360" class="chem">Ba=</text><text y="360">137</text>
+    </g>
+    <g transform="translate(400, 0)">
+      <text y="80" class="chem">?=</text><text y="80">180.</text>
+      <text y="100" class="chem">Ta=</text><text y="100">182.</text>
+      <text y="120" class="chem">W=</text><text y="120">186.</text>
+      <text y="140" class="chem">Pt=</text><text y="140">197<tspan class="note">,1</tspan>.</text>
+      <text y="160" class="chem">Ir=</text><text y="160">198.</text>
+      <text y="180" class="chem">Os=</text><text y="180">199.</text>
+      <text y="200" class="chem">Hg=</text><text y="200">200.</text>
+      <text y="240" class="chem">Au=</text><text y="240">197?</text>
+      <text y="280" class="chem">Bi=</text><text y="280">210?</text>
+      <text y="340" class="chem">Tl=</text><text y="340">204.</text>
+      <text y="360" class="chem">Pb=</text><text y="360">207.</text>
+    </g>
+    
+  </g>
+  <text x="280" y="495" style="font-size:14px;font-weight:bold">Д. Менделѣевъ</text>
+</svg>

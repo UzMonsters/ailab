@@ -484,7 +484,12 @@
     "status": "Core Active"
   },
   "sandbox": {
+    "add": "Add",
     "untitled": "Untitled Experiment",
+    "headerTitle": "Laboratory",
+    "freeMode": "Free experiment",
+    "scenarioProgress": "Scenario in progress",
+    "share": "Share",
     "equipment": "Equipment",
     "materials": "Materials",
     "properties": "Properties",
@@ -506,6 +511,7 @@
     "connectionModeTarget": "Select a compatible target port",
     "selectProperties": "Select an item to view properties",
     "searchMaterials": "Search materials...",
+    "search": "Search...",
     "addedToCanvas": "{name} added to canvas",
     "addedToContainer": "{name} added to container",
     "connectionModeToast": "Connection mode: pick a source port, then a target port",
@@ -543,7 +549,26 @@
     "type": "Type",
     "capacity": "Capacity",
     "contents": "Contents",
-    "actions": "Actions",
+    "actions": {
+      "rotate": "Rotate",
+      "pour": "Pour",
+      "heat": "Heat",
+      "cool": "Cool",
+      "stir": "Stir",
+      "delete": "Delete",
+      "duplicate": "Duplicate",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "empty": "Empty",
+      "ignite": "Ignite",
+      "extinguish": "Extinguish",
+      "tare": "Tare",
+      "zero": "Zero",
+      "calibrate": "Calibrate",
+      "attachProbe": "Attach probe",
+      "detachProbe": "Detach",
+      "fitView": "Fit view"
+    },
     "heat": "Heat",
     "cool": "Cool",
     "stir": "Stir",
@@ -601,6 +626,966 @@
     "cat_gases": "Gases",
     "cat_metals": "Metals",
     "cat_compounds": "Compounds",
-    "eq_tubing": "Tube"
+    "eq_tubing": "Tube",
+    "backendEquipment": "Verified equipment",
+    "tabs": {
+      "equipment": "Equipment",
+      "materials": "Materials",
+      "elements": "Elements",
+      "ai": "AI Assistant"
+    },
+    "inspector": {
+      "general": "General",
+      "contents": "Contents",
+      "physics": "Physics",
+      "connections": "Connections",
+      "history": "History"
+    },
+    "warnings": {
+      "vesselFull": "Vessel is full",
+      "invalidConnection": "Incompatible port types",
+      "noVesselSelected": "No vessel selected",
+      "cannotPourGas": "Cannot pour gas",
+      "cannotPourSolid": "Cannot pour solid",
+      "heaterNotAttached": "Heater not attached",
+      "unknownEquipment": "Unknown equipment type",
+      "overflowOccurred": "Overflow occurred"
+    },
+    "panels": {
+      "events": "Events",
+      "measurements": "Measurements",
+      "charts": "Charts",
+      "warnings": "Warnings",
+      "simulation": "Simulation"
+    },
+    "engine": "Engine",
+    "frameRate": "Frame rate",
+    "objectsLabel": "Objects",
+    "thermodynamics": "Thermodynamics",
+    "enabled": "Enabled",
+    "fps": "60.0 FPS",
+    "simulationDescription": "The simulation system runs locally in the browser in real time. Physical properties (Newtonian cooling, evaporation, thermal conductivity, condensation, and gas pressure) are calculated by a deterministic physics engine. Charts and vector state are delivered to the UI through React Context for immediate feedback.",
+    "simulationDescriptionShort": "The local simulation runs in the browser in real time.",
+    "simulation": {
+      "idle": "Idle",
+      "running": "Running",
+      "paused": "Paused",
+      "localProvider": "Local simulation"
+    },
+    "scenarios": {
+      "tabTitle": "Scenarios",
+      "heating": {
+        "name": "Heating Water",
+        "desc": "Study the temperature change of a liquid."
+      },
+      "launch": "Launch",
+      "water_intro": {
+        "name": "Water in a vessel",
+        "desc": "Add water to a beaker and check its volume.",
+        "descKey": "Add water to a vessel and read the volume scale.",
+        "step1": {
+          "title": "Place a vessel",
+          "hint": "Open Equipment and choose a flask or beaker."
+        },
+        "step2": {
+          "title": "Add water",
+          "hint": "Open Materials, choose water, and click the vessel."
+        }
+      },
+      "measure_water": {
+        "name": "Measure temperature",
+        "desc": "Connect a thermometer and take a reading.",
+        "descKey": "Measure water temperature after connecting the sensor.",
+        "step1": {
+          "title": "Place a vessel",
+          "hint": "Open Equipment and place a beaker on the workspace."
+        },
+        "step2": {
+          "title": "Add water",
+          "hint": "Open Materials, choose water, then click the beaker."
+        },
+        "step3": {
+          "title": "Connect thermometer",
+          "hint": "Connect the thermometer to a vessel port."
+        }
+      },
+      "heat_water": {
+        "name": "Heat water",
+        "desc": "Connect a heater and heat the water safely.",
+        "descKey": "Heat water while monitoring the setup safely.",
+        "step1": {
+          "title": "Place a vessel",
+          "hint": "Open Equipment and place a beaker on the workspace."
+        },
+        "step2": {
+          "title": "Add water",
+          "hint": "Open Materials, choose water, then click the beaker."
+        },
+        "step3": {
+          "title": "Connect heater",
+          "hint": "Connect a hotplate or burner to the vessel."
+        },
+        "step4": {
+          "title": "Heat the water",
+          "hint": "Turn the heater on and wait."
+        },
+        "step5": {
+          "title": "Observe boiling",
+          "hint": "Keep the simulation running until vapor appears."
+        }
+      },
+      "transfer_water": {
+        "name": "Transfer water",
+        "desc": "Connect two vessels and move the liquid.",
+        "descKey": "Transfer water between compatible vessels.",
+        "step1": {
+          "title": "Place the first vessel",
+          "hint": "Open Equipment and place a beaker on the workspace."
+        },
+        "step2": {
+          "title": "Add water",
+          "hint": "Open Materials, choose water, then click the first beaker."
+        },
+        "step3": {
+          "title": "Place the second vessel",
+          "hint": "Return to Equipment and place another beaker nearby."
+        },
+        "step4": {
+          "title": "Transfer water",
+          "hint": "Connect the liquid ports."
+        }
+      },
+      "cuso4": {
+        "name": "CuSO₄ solution",
+        "desc": "Dissolve copper sulfate in water.",
+        "descKey": "Create a blue copper sulfate solution.",
+        "step1": {
+          "title": "Place a vessel",
+          "hint": "Open Equipment and place a beaker on the workspace."
+        },
+        "step2": {
+          "title": "Add copper sulfate",
+          "hint": "Open Materials and add CuSO₄ to the beaker."
+        },
+        "step3": {
+          "title": "Add water",
+          "hint": "Add water to the same or connected vessel."
+        },
+        "step4": {
+          "title": "Mix",
+          "hint": "Connect the vessels or mix their contents."
+        }
+      },
+      "kmno4": {
+        "name": "Dilute KMnO₄",
+        "desc": "Dilute potassium permanganate with water.",
+        "descKey": "Observe how the colored solution concentration changes.",
+        "step1": {
+          "title": "Add permanganate",
+          "hint": "Choose KMnO₄."
+        },
+        "step2": {
+          "title": "Add water",
+          "hint": "Add water to the vessel."
+        },
+        "step3": {
+          "title": "Mix",
+          "hint": "Transfer or mix the components."
+        }
+      },
+      "hcl_naoh": {
+        "name": "HCl + NaOH neutralization",
+        "desc": "Mix acid and base to form salt and water.",
+        "descKey": "Perform a safe neutralization reaction.",
+        "step1": {
+          "title": "Add acid",
+          "hint": "Add HCl to a flask."
+        },
+        "step2": {
+          "title": "Add base",
+          "hint": "Add NaOH to the second vessel."
+        },
+        "step3": {
+          "title": "Mix",
+          "hint": "Connect the vessels and observe the result."
+        }
+      },
+      "zn_hcl": {
+        "name": "Zn + HCl reaction",
+        "desc": "React zinc with acid and observe hydrogen gas.",
+        "descKey": "Observe gas evolution when zinc reacts with acid.",
+        "step1": {
+          "title": "Add zinc",
+          "hint": "Place Zn in a vessel."
+        },
+        "step2": {
+          "title": "Add acid",
+          "hint": "Add HCl."
+        },
+        "step3": {
+          "title": "Observe reaction",
+          "hint": "Connect the components and run the experiment."
+        }
+      },
+      "sulfur_heat": {
+        "name": "Melt sulfur",
+        "desc": "Heat sulfur above 115 °C and observe its phase change.",
+        "descKey": "Study sulfur's phase transition during heating.",
+        "step1": {
+          "title": "Add sulfur",
+          "hint": "Place sulfur in a heat-safe vessel."
+        },
+        "step2": {
+          "title": "Connect heater",
+          "hint": "Connect the heater to the vessel."
+        },
+        "step3": {
+          "title": "Observe melting",
+          "hint": "Raise the temperature above 115 °C."
+        }
+      },
+      "distillation": {
+        "name": "Simple distillation",
+        "desc": "Build a setup with vessels, a heater and a condenser.",
+        "descKey": "Build a stable setup for separating a liquid.",
+        "step1": {
+          "title": "Build the setup",
+          "hint": "Place a flask with water."
+        },
+        "step2": {
+          "title": "Add equipment",
+          "hint": "Add a heater, thermometer and condenser."
+        },
+        "step3": {
+          "title": "Connect the chain",
+          "hint": "Create all required connections."
+        },
+        "step4": {
+          "title": "Collect condensate",
+          "hint": "Start the simulation and observe liquid entering the receiver."
+        }
+      }
+    },
+    "menu": {
+      "file": "File",
+      "edit": "Edit",
+      "view": "View",
+      "arrange": "Arrange",
+      "extra": "Extra",
+      "new_exp": "New Experiment",
+      "save_exp": "Save Experiment",
+      "save_copy": "Save Copy",
+      "import_snap": "Import Snapshot...",
+      "export_snap": "Export Snapshot...",
+      "share": "Share...",
+      "clear_workspace": "Clear Workspace",
+      "undo": "Undo",
+      "redo": "Redo",
+      "no_undo": "Nothing to undo",
+      "no_redo": "Nothing to redo",
+      "copy": "Copy",
+      "delete_selected": "Delete selected",
+      "select_all": "Select all",
+      "snap_grid": "Snap to grid",
+      "toggle_library": "Show or hide library",
+      "toggle_inspector": "Show or hide inspector",
+      "hide_navbar": "Hide top bar",
+      "show_navbar": "Show top bar",
+      "align_left": "Align left",
+      "align_center_h": "Align center horizontally",
+      "align_right": "Align right",
+      "align_top": "Align top",
+      "align_bottom": "Align bottom",
+      "distribute_h": "Distribute horizontally",
+      "distribute_v": "Distribute vertically",
+      "show_grid": "Grid",
+      "theme": "Switch theme",
+      "zoom_in": "Zoom in",
+      "zoom_out": "Zoom out",
+      "center_scene": "Center scene",
+      "toggle_fullscreen": "Fullscreen",
+      "deselect": "Deselect"
+    },
+    "dock": {
+      "engine": "Engine",
+      "frameRate": "Frame rate",
+      "objectsLabel": "Objects",
+      "thermodynamics": "Thermodynamics",
+      "enabled": "Enabled",
+      "fps": "60.0 FPS",
+      "simulationDescription": "The simulation system runs locally in the browser in real time. Physical properties (Newtonian cooling, evaporation, thermal conductivity, condensation, and gas pressure) are calculated by a deterministic physics engine. Charts and vector state are delivered to the UI through React Context for immediate feedback.",
+      "simulationDescriptionShort": "The local simulation runs in the browser in real time.",
+      "events": "Reaction Log",
+      "measurements": "Measurements",
+      "charts": "Charts",
+      "simulation": "Simulation",
+      "closePanel": "Close Panel",
+      "selectApparatus": "Select an apparatus on the workspace to view its properties and connections.",
+      "selectHint": "Tip: click an equipment item on the canvas.",
+      "equipmentDetails": "Equipment Details",
+      "description": "Description",
+      "generalInfo": "General Info",
+      "volume": "Volume",
+      "emptyVessel": "Vessel is empty. Add substance from library.",
+      "availablePorts": "Available ports",
+      "glass": "Glass",
+      "liquid": "Liquid",
+      "gas": "Gas",
+      "thermal": "Heating",
+      "sensor": "Sensor",
+      "emptyLog": "Log is empty",
+      "objects": "objects",
+      "sync": {
+        "idle": "Ready",
+        "loading": "Loading…",
+        "hydrating": "Restoring…",
+        "ready": "Ready",
+        "reconciling": "Syncing…",
+        "offline": "Offline queue",
+        "conflict": "Conflict",
+        "saving": "Saving…",
+        "saved": "Saved",
+        "error": "Save error"
+      },
+      "event": {
+        "item_added": "Object added",
+        "item_moved": "Object moved",
+        "item_resized": "Size changed",
+        "item_rotated": "Object rotated",
+        "material_added": "Material added",
+        "connection_added": "Connection created",
+        "connection_removed": "Connection removed",
+        "result_obtained": "Result obtained",
+        "simulation_started": "Simulation started",
+        "simulation_paused": "Simulation paused",
+        "simulation_stopped": "Simulation stopped",
+        "remove_item": "Equipment removed",
+        "material_removed": "Material removed",
+        "connect": "Connection created",
+        "disconnect": "Connection removed",
+        "pour": "Liquid transferred",
+        "heat_start": "Heating started",
+        "heat_stop": "Heating stopped",
+        "cool": "Cooling started",
+        "stir_start": "Mixing started",
+        "device_action": "Action completed",
+        "remote_event": "Remote update"
+      },
+      "readMore": "Read more...",
+      "readOnWiki": "Read more on website",
+      "encyclopedia": "Encyclopedia"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "pour": "Pour",
+      "pourTo": "Choose a destination",
+      "pourTooltip": "Pour liquid",
+      "noPour": "No liquid to pour",
+      "mix": "Mix",
+      "mixing": "Mixing…",
+      "stop": "Stop",
+      "mixTooltip": "Mix contents",
+      "noMix": "Cannot mix this vessel",
+      "copy": "Copy",
+      "copyTooltip": "Duplicate equipment",
+      "delete": "Delete",
+      "deleteTooltip": "Delete equipment",
+      "noConnected": "No connected devices.",
+      "cancel": "Cancel"
+    },
+    "library": {
+      "liquids": "Liquids",
+      "salts": "Salts",
+      "metals": "Metals",
+      "others": "Others"
+    },
+    "equip": {
+      "beaker": {
+        "name": "Beaker 250ml",
+        "desc": "For mixing and heating liquids"
+      },
+      "erlenmeyer": {
+        "name": "Erlenmeyer Flask",
+        "desc": "For mixing and running reactions"
+      },
+      "roundflask": {
+        "name": "Round-Bottom Flask",
+        "desc": "Laboratory equipment for reactions"
+      },
+      "testtube": {
+        "name": "Test Tube",
+        "desc": "For small volumes"
+      },
+      "graduated_cylinder": {
+        "name": "Graduated Cylinder",
+        "desc": "Precise volume measurement"
+      },
+      "separatory_funnel": {
+        "name": "Separatory Funnel",
+        "desc": "Laboratory equipment"
+      },
+      "volumetric_flask": {
+        "name": "Volumetric Flask",
+        "desc": "Laboratory equipment"
+      },
+      "burette": {
+        "name": "Burette",
+        "desc": "Laboratory equipment"
+      },
+      "pipette": {
+        "name": "Pipette",
+        "desc": "Laboratory equipment"
+      },
+      "petri_dish": {
+        "name": "Petri Dish",
+        "desc": "Laboratory equipment"
+      },
+      "watch_glass": {
+        "name": "Watch Glass",
+        "desc": "Laboratory equipment"
+      },
+      "funnel": {
+        "name": "Funnel",
+        "desc": "For pouring liquids"
+      },
+      "thermometer": {
+        "name": "Thermometer",
+        "desc": "Measures temperature"
+      },
+      "phmeter": {
+        "name": "pH Meter",
+        "desc": "Measures pH"
+      },
+      "hotplate": {
+        "name": "Hotplate Stirrer",
+        "desc": "Heats and stirs"
+      },
+      "burner": {
+        "name": "Bunsen Burner",
+        "desc": "Open flame heating"
+      },
+      "condenser": {
+        "name": "Condenser",
+        "desc": "Cools gases"
+      },
+      "glass_tube": {
+        "name": "Glass Tube",
+        "desc": "For connecting vessels"
+      },
+      "stand": {
+        "name": "Ring Stand",
+        "desc": "Support for laboratory glassware"
+      }
+    },
+    "toolbar": {
+      "select": "Select",
+      "pan": "Pan",
+      "connect": "Connect"
+    },
+    "reward": {
+      "eyebrow": "Level complete",
+      "title": "Excellent work!",
+      "description": "The experiment is complete. Your result has been saved to academy progress.",
+      "xp": "+{xp} XP",
+      "badge": "Researcher badge",
+      "nextTitle": "The next level is ready",
+      "nextDescription": "Continue learning and unlock a new experiment.",
+      "nextButton": "Go to level {level}",
+      "academyButton": "Open academy",
+      "closeButton": "Stay in the lab"
+    },
+    "guide": {
+      "clickHere": "Click here",
+      "connectPort": "Connect this port"
+    },
+    "result": {
+      "waterIntro": { "title": "Water added", "description": "The vessel is filled with water; you can check the volume scale." },
+      "measureWater": { "title": "Temperature measured", "description": "The thermometer is connected correctly and displays the vessel temperature." },
+      "heatWater": { "title": "Heating complete", "description": "The water was heated with the connected heater." },
+      "transferWater": { "title": "Transfer complete", "description": "Water was transferred between vessels through a liquid connection." },
+      "cuso4": { "title": "Solution prepared", "description": "You successfully prepared a copper sulfate solution." },
+      "hclNaoh": { "title": "Neutralization complete", "description": "The acid and base reacted, producing heat and salt." },
+      "kmno4": { "title": "Dilution complete", "description": "You successfully diluted the potassium permanganate solution." },
+      "zinc": { "title": "Reaction complete", "description": "Zinc reacted with hydrochloric acid, forming zinc chloride and hydrogen." },
+      "sulfur": { "title": "Sulfur melted", "description": "Sulfur entered the liquid phase after heating above its melting point." },
+      "distillation": { "title": "Setup assembled", "description": "The distillation setup is connected and ready to run." },
+      "generic": { "title": "Result obtained", "description": "The scenario was completed successfully." }
+    }
+  },
+  "academy": {
+    "title": "jasScience — The Scientific OS",
+    "subtitle": "Interactive Chemistry Academy. Complete levels to become a true researcher!",
+    "eyebrow": "Researcher's field guide",
+    "entryCount": "Guide entries: {count}",
+    "readHint": "Read the entry, then take it to the sandbox",
+    "fieldNote": "Entry #{id}",
+    "current": "CURRENT",
+    "researchEntry": "Research entry",
+    "levelLabel": "Level {id}",
+    "objectLabel": "Research subject",
+    "equipmentLabel": "You'll need",
+    "skillLabel": "Skill",
+    "catalog": "Entry catalog",
+    "chapters": "Researcher's path",
+    "readingTipTitle": "How to use the guide",
+    "readingTip": "Each entry is a small laboratory story: learn the idea, build the setup, then test it in the sandbox.",
+    "platformLink": "Open the full laboratory",
+    "continue": "Continue",
+    "start": "Start entry",
+    "levels": {
+      "l1": {
+        "title": "Laboratory Basics",
+        "desc": "Introduction to chemical glassware, proper object movement on the workbench, and basic safety principles.",
+        "object": "Glassware and the workbench",
+        "equipment": "Beaker, Erlenmeyer flask",
+        "skill": "Build a clean, organized workspace",
+        "reward": "+100 XP · First Step badge"
+      },
+      "l2": {
+        "title": "Measurement and Heating",
+        "desc": "Using a Bunsen burner and hotplate, connecting a thermometer, and precisely measuring liquid temperature.",
+        "object": "Water temperature and heat flow",
+        "equipment": "Thermometer, heater, vessel",
+        "skill": "Heat gradually and read measurements",
+        "reward": "+160 XP · Thermal Control badge"
+      },
+      "l3": {
+        "title": "Reactions and Liquid Properties",
+        "desc": "Pouring liquids, mixing solutions, and visualizing chemical reactions such as acid-base neutralization.",
+        "object": "Water, CuSO₄ solution, and color change",
+        "equipment": "Two vessels, tube or pipette",
+        "skill": "Transfer material without losing its composition",
+        "reward": "+220 XP · Mixing badge"
+      },
+      "l4": {
+        "title": "Thermodynamics and Gases",
+        "desc": "Working with pressure, containing gases in closed flasks, phase transitions, and condensation.",
+        "object": "Pressure, phases, and system stability",
+        "equipment": "Flask, heater, connection",
+        "skill": "Check safety before running an experiment",
+        "reward": "+300 XP · Thermodynamics badge"
+      }
+    },
+    "menuLabel": "Academy"
+  },
+  "adventure": {
+    "title": "The Chemist's Adventure",
+    "subtitle": "A field guide to experimental chemistry",
+    "open": "Start adventure",
+    "tagline": "A living laboratory of knowledge",
+    "online": "Adventure online",
+    "chapter": "CHAPTER",
+    "previous": "Previous",
+    "next": "Next",
+    "chapter01": "Chapter 01 · Illustrated atlas",
+    "equipment": "Equipment",
+    "studied": "studied",
+    "equipmentIntro": "Apparatus indexed by function, material and connection type.",
+    "openFieldNotes": "Tap an illustration to open its field notes",
+    "index": "The Chemist's Adventure · Index",
+    "guideTitle": "Field guide to experimental chemistry",
+    "guideText": "A living reference for apparatus, substances and the rules behind every experiment.",
+    "contents": "Table of contents",
+    "equipmentCount": "43 instruments & apparatus",
+    "substances": "Substances",
+    "substancesDesc": "Elements, compounds & mixtures",
+    "ports": "Connection Atlas",
+    "portsDesc": "Fluid, vapor, heat and interfaces",
+    "experiments": "Experiments",
+    "experimentsDesc": "Interactive laboratory studies",
+    "physics": "Physics",
+    "physicsDesc": "The rules behind the laboratory",
+    "safety": "Safety",
+    "safetyDesc": "Hazards and equipment limits",
+    "completion": "Adventure completion · 34 / 43 apparatus",
+    "category": {
+      "Vessels": "Vessels",
+      "Heating": "Heating",
+      "Measurement": "Measurement",
+      "Cooling": "Cooling"
+    }
+  },
+  "textbook": {
+    "title": "Chemistry Encyclopedia",
+    "subtitle": "A clear guide to equipment, materials, and connections",
+    "back": "Back to sandbox",
+    "contents": "Contents",
+    "chapterEquipment": "Equipment",
+    "chapterPorts": "Ports and connections",
+    "chapterMaterials": "Materials",
+    "chapterSafety": "Safety",
+    "read": "Reading chapter",
+    "equipmentTitle": "Laboratory glassware is a system",
+    "equipmentText": "Every instrument has a purpose, dimensions, capacity, and a set of ports. In the Sandbox you can move, connect, and observe its changing state.",
+    "portTitle": "Ports: where instruments connect",
+    "portText": "A port is a connection point. Connections only work between compatible types: liquid to liquid, thermal to heater, and measurement to sensor.",
+    "materialTitle": "A material is more than a color",
+    "materialText": "Each material tracks phase, density, melting temperature, safety, and reactivity. Water, acid, and copper sulfate therefore behave differently.",
+    "safetyTitle": "A safe experiment",
+    "safetyText": "Before running, check capacity, containment, allowed temperature, and equipment compatibility. Errors appear directly on the workbench.",
+    "ports": "Port types",
+    "glass": "Glass · vessel connection",
+    "liquid": "Liquid · transfer",
+    "gas": "Gas · closed system",
+    "thermal": "Thermal · heating link",
+    "electrical": "Electrical · power",
+    "tipTitle": "Researcher's tip",
+    "tipText": "Choose an instrument from the library, place it on the grid, then click a port and choose a compatible port on another instrument.",
+    "openSandbox": "Open sandbox"
+  },
+  "codex": {
+    "openScenario": "Open this scenario in Lab",
+    "openApparatus": "Open this apparatus in Lab",
+    "technicalNotes": "Technical field notes",
+    "specification": "Specification",
+    "purpose": "Purpose",
+    "capacity": "Nominal capacity",
+    "material": "Material",
+    "connections": "Connections"
+  },
+  "book": {
+    "cover": {
+      "archive": "jasScience · FIELD JOURNAL",
+      "volume": "Volume I · 2026",
+      "openBtn": "OPEN",
+      "langLabel": "LANGUAGE",
+      "themeLabel": "THEME",
+      "subtitle1": "THE CHEMIST'S ADVENTURE",
+      "subtitle2": "An Interactive Guide to Experimental Chemistry"
+    },
+    "language": {
+      "hint": "Choose how this journal speaks.",
+      "header": "LANGUAGE",
+      "title": "Language"
+    },
+    "title": {
+      "journal": "jasScience Research Journal",
+      "guide": "Field Guide to Experimental Chemistry",
+      "lab": "jasScience Research Laboratory"
+    },
+    "contents": {
+      "authorTitle": "Author's Note",
+      "p1": "This journal is not just a collection of facts. It is a researcher's working tool. Recorded here are observations, mistakes, and experiments we conducted at jasScience.",
+      "p2": "Every instrument, reaction, and formula you'll find on these pages is intrinsically linked to the Sandbox. The book and the simulation are one. Study theory here, then test hypotheses in practice.",
+      "p3": "Remember: an experiment begins not with a reaction, but with observation.",
+      "header": "CONTENTS",
+      "ch1": "Introduction",
+      "ch2": "Antoine Lavoisier",
+      "ch3": "Dmitri Mendeleev",
+      "ch4": "Marie Curie",
+      "ch5": "Robert Boyle",
+      "ch6": "Sandbox",
+      "ch7": "Equipment",
+      "ch8": "Flask Anatomy",
+      "ch9": "Substances",
+      "ch10": "Scenarios",
+      "ch11": "Physics",
+      "ch12": "Safety",
+      "ch13": "Conclusion",
+      "ch1_page": "007",
+      "ch2_page": "015",
+      "ch3_page": "017",
+      "ch4_page": "019",
+      "ch5_page": "021",
+      "ch6_page": "023",
+      "ch7_page": "027",
+      "ch8_page": "031",
+      "ch9_page": "055",
+      "ch10_page": "065",
+      "ch11_page": "067",
+      "ch12_page": "075",
+      "ch13_page": "077",
+      "chapterI": "CHAPTER I. CHEMISTRY",
+      "chapterII": "CHAPTER II. HISTORY & SCIENTISTS",
+      "chapterIII": "CHAPTER III. VIRTUAL LABORATORY",
+      "chapterIV": "CHAPTER IV. EXPERIMENT",
+      "ch_history": "History of Chemistry",
+      "ch_scientists": "Great Scientists"
+    },
+    "intro": {
+      "title": "Introduction",
+      "dearDiary": "Dear diary",
+      "noBook": "no. journal.",
+      "p1": "Chemistry is not magic, though it often looks like it. It is a rigorous science of transformations, requiring precision, patience, and respect for nature's laws.",
+      "p2": "In this guide, we have gathered the basic principles of working in a modern virtual laboratory. There are no superfluous words—only what will help you conduct a successful experiment. We will start with basic concepts and gradually move to complex setups.",
+      "p3": "Every researcher must know their equipment. It is important to understand why an Erlenmeyer flask has its specific shape and how to properly connect a Liebig condenser.",
+      "fig1": "Fig. 01 — An experiment begins not with a reaction, but with observation.",
+      "date": "August 27",
+      "expId": "experiment #001",
+      "expTemp": "t = 23°C",
+      "expNote": "???",
+      "strike1": "Chemistry is magic",
+      "correction1": "too loud",
+      "annotation1": "check later",
+      "annotation2": "check this in the sandbox →",
+      "p4": "Starting from this page, I will try to record everything that happens in the laboratory. Not for beauty — for accuracy. A good experiment begins before the burner is lit.",
+      "p5": "One of the first lessons of the laboratory: the difference between what you expected to see and what actually happened — that is the starting point of science."
+    },
+    "lavoisier": {
+      "header": "HISTORY & BASICS",
+      "name": "Antoine Lavoisier",
+      "fig": "Fig. 07 — Antoine Lavoisier. Engraved illustration.",
+      "p1": "The father of modern chemistry. He transformed alchemical speculations into an exact science based on strict measurements.",
+      "p2": "Before Lavoisier, scientists believed in 'phlogiston'—a mythical substance released during combustion. Lavoisier proved that combustion is a process of combining with oxygen.",
+      "quote": "\"Nothing is created, either in the operations of art or in those of nature, and it may be considered as a general principle that in every operation there exists an equal quantity of matter before and after the operation.\"",
+      "p3": "In our Sandbox, the mass of a closed system always remains constant, regardless of the reactions occurring inside the flask."
+    },
+    "mendeleev": {
+      "header": "PERIODIC LAW",
+      "name": "Dmitri Mendeleev",
+      "fig": "Fig. 08 — Dmitri Mendeleev. Engraved illustration.",
+      "p1": "The scientist who saw order in chaos. He arranged elements by atomic mass and discovered a fundamental law of nature, predicting properties of undiscovered elements.",
+      "p2": "The periodic table is not just a catalog; it's a map of the chemical universe. In our laboratory, the properties of every substance stem from the very laws he structured.",
+      "quote": "\"Science begins when you begin to measure. Exact science is inconceivable without measure.\"",
+      "p3": "The simulator features a built-in element atlas, allowing you to predict how unknown reagents will behave."
+    },
+    "curie": {
+      "header": "RADIOACTIVITY",
+      "name": "Marie Curie",
+      "fig": "Fig. 09 — Marie Curie. Engraved illustration.",
+      "p1": "A pioneer in radioactivity research, the only woman to be awarded a Nobel Prize twice.",
+      "p2": "Her work showed that the atom is not indivisible—it contains immense internal energy. The discovery of radium and polonium revolutionized our understanding of matter.",
+      "quote": "\"Nothing in life is to be feared, it is only to be understood. Now is the time to understand more, so that we may fear less.\"",
+      "p3": "In the laboratory, we carefully simulate energy balances and safety protocols when working with high-energy reactions."
+    },
+    "boyle": {
+      "header": "GAS LAWS",
+      "name": "Robert Boyle",
+      "fig": "Fig. 10 — Robert Boyle. Engraved illustration.",
+      "p1": "One of the founders of modern chemistry, who first applied the strict experimental method. He proved that gas volume is inversely proportional to pressure.",
+      "p2": "Boyle's law is the first step in understanding gas behavior. It forms the basis of steam condensers and closed systems.",
+      "quote": "\"He that investigates nature should first of all accustom himself to doubt.\"",
+      "p3": "You will witness this law in action when you heat liquid in a closed flask, watching the vapor pressure rise."
+    },
+    "sandbox": {
+      "header": "SANDBOX",
+      "subtitle": "Where theory becomes action",
+      "p1": "The virtual laboratory provides complete freedom. It is not a set of scripted animations, but a physically accurate simulation of temperature, pressure, phase transitions, and reactions.",
+      "p2": "You can assemble any setup: from simply heating water in a beaker to a complex distillation system with a reflux condenser.",
+      "fig": "Fig. 12 — Three main cursor modes.",
+      "ui1": "Library — apparatus catalog",
+      "ui2": "Canvas — workspace",
+      "ui3": "Toolbar — instruments",
+      "ui4": "Inspector — parameters",
+      "ui5": "Simulation — control",
+      "section1": "2.1 Workspace",
+      "section2": "2.2 Cursor Modes",
+      "section3": "2.3 Connections",
+      "section4": "2.4 Inspector",
+      "mode_select": "SELECT — select and move objects",
+      "mode_connect": "CONNECT — connecting object ports",
+      "mode_inspect": "INSPECT — reading properties and states",
+      "annotation_sandbox": "start here →",
+      "caption_diagram": "Fig. 3.1 — Three working modes of the Sandbox.",
+      "p3": "Every object on the workspace has ports — connection points. Liquid ports transfer substances, thermal ports transfer energy, gas ports work with vapor and pressure. Correct port connection is the foundation of a working setup.",
+      "p4": "Inspector — the right panel showing the properties of the selected object. Here you can see the current temperature, liquid level, pressure and state. Inspector allows fine-tuning of parameters before running the simulation."
+    },
+    "equipment": {
+      "header": "EQUIPMENT",
+      "title": "APPARATUS CATALOG",
+      "p1": "Instruments are an extension of the chemist's hands. It is important to know the purpose of each vessel and its physical limits.",
+      "vessels": "VESSELS",
+      "heating": "HEATING",
+      "flask": "Erlenmeyer Flask",
+      "beaker": "Beaker",
+      "tube": "Test Tube",
+      "bunsen": "Bunsen Burner",
+      "hotplate": "Hot Plate",
+      "openLab": "Open Lab"
+    },
+    "detail": {
+      "header": "ERLENMEYER FLASK",
+      "title": "TECHNICAL DATA",
+      "fig": "Fig. 14 — Borosilicate glass, withstands up to 500°C.",
+      "neck": "NARROW NECK",
+      "bottom": "WIDE BASE",
+      "purposeTitle": "Purpose & Shape",
+      "purpose": "The conical shape prevents splashing when mixing liquids and allows for easy corking. Ideal for titration.",
+      "portsTitle": "Connections (Ports)",
+      "portIn": "Top opening accepts liquids (e.g., from a burette).",
+      "portVapor": "Open for gas evaporation unless sealed with a stopper.",
+      "portHeat": "Flat base is optimal for placement on a hot plate."
+    },
+    "substance": {
+      "header": "SUBSTANCES",
+      "title": "PREVIEW",
+      "water": "Distilled Water",
+      "salt": "Sodium Chloride",
+      "ethanol": "Ethanol (96%)",
+      "copper": "Copper(II) Sulfate",
+      "sulfuricAcid": "Sulfuric Acid",
+      "hydrochloricAcid": "Hydrochloric Acid",
+      "hydrogenPeroxide": "Hydrogen Peroxide",
+      "copperSolution": "Copper Sulfate Solution",
+      "potassiumPermanganate": "Potassium Permanganate",
+      "permanganateSolution": "Potassium Permanganate Solution",
+      "sodiumHydroxide": "Sodium Hydroxide",
+      "sodiumCarbonate": "Sodium Carbonate",
+      "zinc": "Zinc",
+      "copperMetal": "Copper",
+      "gold": "Gold",
+      "sulfur": "Sulfur",
+      "phIndicator": "pH Indicator",
+      "state": "State",
+      "stateLiquid": "Liquid",
+      "molar": "Molar Mass",
+      "boiling": "Boiling Point",
+      "density": "Density",
+      "stateSolid": "Solid"
+    },
+    "scenario": {
+      "header": "SCENARIOS",
+      "title": "INDEX",
+      "p1": "This section contains step-by-step instructions for conducting basic and advanced experiments.",
+      "p2": "Each scenario is prepared so that you can load it directly into the Sandbox. The setup will assemble automatically; you just monitor the temperature, add reagents, and draw conclusions.",
+      "sc1": "Heating Water",
+      "sc2": "Measuring Temperature",
+      "sc3": "Working with a Burette",
+      "sc4": "Vapor Condensation",
+      "sc5": "Simple Distillation",
+      "loadProtocol": "Load Protocol"
+    },
+    "physics": {
+      "header": "PHYSICS",
+      "title": "HEAT TRANSFER",
+      "name": "Engine Physics",
+      "p1": "The laboratory operates on a thermodynamic model. Every flask, hot plate, and drop of liquid continuously exchanges energy.",
+      "p2": "Understand that the plate doesn't heat water instantly. Heat transfers from the coil to the glass, and from glass to liquid. This gradient can lead to thermal shock.",
+      "fig": "Fig. 22 — Thermal gradient diagram."
+    },
+    "safety": {
+      "header": "SAFETY",
+      "title": "RULES",
+      "p1": "In the simulator, a flask can explode. Glass shatters from thermal stress, and closed systems burst from excessive pressure.",
+      "p2": "Follow these rules to ensure your experiments complete without triggering the emergency shutdown system.",
+      "rule1": "Do not place a cold flask on a scorching hot plate. Heat gradually.",
+      "rule2": "When heating gases, ensure an open port (Vapor) or attach an expansion vessel.",
+      "rule3": "Keep the Bunsen burner away from highly flammable substances like ethanol."
+    },
+    "conclusion": {
+      "header": "CONCLUSION",
+      "p1": "We have come a long way from the basic laws of mass conservation to assembling complex systems.",
+      "p2": "But chemistry is not just a set of completed experiments. It is an ongoing process of questioning nature. Your Sandbox now awaits your own hypotheses.",
+      "quote": "The book ends. The experiment does not.",
+      "lab": "JASSCIENCE RESEARCH"
+    },
+    "owner": {
+      "header": "FIELD JOURNAL",
+      "title": "This journal belongs to",
+      "owner": "The Researcher",
+      "lab": "jasScience Laboratory",
+      "year": "2026",
+      "classification": "RESEARCH NOTES · VOLUME I",
+      "warning": "Handle with care. Contains unfinished experiments.",
+      "note": "Started: August 2026"
+    },
+    "chemistry": {
+      "chapterTitle": "Chemistry",
+      "section1": "1.1 What Does Chemistry Study",
+      "section2": "1.2 Substances and Phenomena",
+      "section3": "1.3 Chemical Reaction",
+      "p1": "Chemistry is the science of substances and their transformations. It studies the composition, structure and properties of matter, as well as the conditions under which some substances transform into others. Every object around us is the result of chemical processes that have been ongoing for billions of years.",
+      "p2": "Unlike physics, which describes the physical properties of matter without changing its composition, chemistry studies transformations: how atoms rearrange themselves, forming new molecules with completely different properties. Rust on iron, burning wood, cooking food — these are all chemical reactions.",
+      "p3": "The subject of chemistry spans the entire range: from the simplest elements in the periodic table to the most complex DNA molecules. That is why chemistry is connected to biology, physics, geology, medicine and technology.",
+      "box1_title": "KEY CONCEPTS",
+      "box1_1": "Chemistry — study of composition and transformations of matter",
+      "box1_2": "Substance — what all bodies consist of",
+      "box1_3": "Phenomenon — any change occurring with a substance",
+      "box1_4": "Chemical reaction — process of transforming some substances into others",
+      "box2_title": "REMEMBER",
+      "box2_content": "Chemistry studies only those changes in which new substances are formed. Physical changes (melting ice, water evaporation) are not considered chemical.",
+      "caption1": "Fig. 1.1 — Law of conservation of mass: the mass of reactants equals the mass of products.",
+      "caption2": "Fig. 1.2 — States of matter: solid, liquid, gas."
+    },
+    "history": {
+      "chapterTitle": "History of Chemistry",
+      "intro": "For thousands of years, humanity observed chemical phenomena without understanding their nature. The path from alchemy to modern science took more than two thousand years and required revolutionary discoveries that shattered previous notions of matter.",
+      "period1_year": "до н.э.",
+      "period1_title": "Pre-Alchemical Period",
+      "period1_text": "Egyptians, Greeks and Chinese discovered metallurgy, glassmaking and dyeing. The first 'chemists' were craftsmen who worked with fire and metals.",
+      "period2_year": "VIII–XVI в.",
+      "period2_title": "Alchemy",
+      "period2_text": "Arab and European alchemists sought the philosopher's stone and the elixir of immortality. Despite their mysticism, they developed important laboratory methods: distillation, crystallization, sublimation.",
+      "period3_year": "XVII в.",
+      "period3_title": "Scientific Chemistry",
+      "period3_text": "Boyle rejected alchemical elements and introduced the concept of 'chemical element'. Lavoisier discovered the law of conservation of mass and systematized nomenclature.",
+      "period4_year": "XIX в.",
+      "period4_title": "Classical Chemistry",
+      "period4_text": "Dalton proposed atomic theory. Mendeleev created the periodic table. Curie discovered radioactivity. This was an era of great systematizations.",
+      "period5_year": "XX–XXI в.",
+      "period5_title": "Modern Chemistry",
+      "period5_text": "Quantum mechanics explained chemical bonding. Polymers, pharmaceuticals, nanochemistry and computational chemistry changed the world. Today, chemistry is inseparable from biology and physics."
+    },
+    "jabir": {
+      "header": "ISLAMIC CHEMISTRY",
+      "name1": "Jabir ibn Hayyan",
+      "dates1": "c. 721–815 CE",
+      "p1": "The Arab scholar Jabir ibn Hayyan, known in Europe as Geber, is considered the father of chemistry. He was the first to systematically describe laboratory processes: distillation, calcination, evaporation and crystallization. His works were translated into Latin and formed the basis of European alchemy.",
+      "name2": "Muhammad al-Razi",
+      "dates2": "854–925 CE",
+      "p2": "The Persian scholar al-Razi classified chemical substances into animal, plant and mineral categories — the first systematic classification. He also described sulfuric acid and developed methods for its production. His 'Book of Secrets' contains detailed instructions on chemical operations.",
+      "annotation": "Try these experiments in the Sandbox →"
+    },
+    "practice": {
+      "header": "PRACTICE",
+      "p01_number": "PRACTICE 01",
+      "p01_title": "Heating System",
+      "p01_question": "Which instrument must be connected to the hot plate to monitor the liquid temperature?",
+      "p01_goal": "Goal: assemble a heating system with temperature control.",
+      "p01_equipment": "Use: Hot Plate · Beaker · Thermometer",
+      "p01_a1": "Thermometer",
+      "p01_a2": "Burette",
+      "p01_a3": "Erlenmeyer Flask",
+      "p01_a4": "Liebig Condenser",
+      "p01_correct": 0,
+      "p01_feedback_correct": "Correct. The thermometer has a thermal port that allows reading the liquid temperature in real time.",
+      "p01_feedback_wrong": "Not quite. This instrument does not have a port for measuring liquid temperature.",
+      "p02_number": "PRACTICE 02",
+      "p02_title": "Identify Equipment",
+      "p02_question": "Which equipment is used for precise measurement and drop-by-drop liquid delivery?",
+      "p02_a1": "Beaker",
+      "p02_a2": "Pipette",
+      "p02_a3": "Burette",
+      "p02_a4": "Funnel",
+      "p02_correct": 2,
+      "p02_feedback_correct": "Correct. The burette is a precision titration instrument with a graduated scale and stopcock for delivery control.",
+      "p02_feedback_wrong": "Not quite. Try again — think about precision dosing.",
+      "p03_number": "PRACTICE 03",
+      "p03_title": "Substance Formula",
+      "p03_question": "Which substance has the formula H₂O and is the main solvent in most chemical reactions?",
+      "p03_a1": "Ethanol",
+      "p03_a2": "Water",
+      "p03_a3": "Hydrogen Peroxide",
+      "p03_a4": "Sulfuric Acid",
+      "p03_correct": 1,
+      "p03_feedback_correct": "Correct. H₂O is water. A polar solvent, universal for most reactions in living and non-living nature.",
+      "p03_feedback_wrong": "Incorrect. Recall the composition of the water molecule: two hydrogen atoms and one oxygen atom.",
+      "p04_number": "PRACTICE 04",
+      "p04_title": "Correct Order",
+      "p04_question": "In what order should you assemble the setup for heating a liquid with temperature measurement?",
+      "p04_step1": "Place the hot plate",
+      "p04_step2": "Place the beaker on the plate",
+      "p04_step3": "Add thermometer to the beaker",
+      "p04_step4": "Connect the heating ports",
+      "p04_step5": "Start the simulation",
+      "p04_feedback": "Correct sequence! This is the recommended order for assembling any laboratory setup: first the base, then the vessels, then sensors and connections."
+    },
+    "torn": {
+      "header": "UNFINISHED EXPERIMENT",
+      "page085": "In the next experiment, I need to check how",
+      "page086": "If the temperature exceeds the critical mark, then the reaction should...",
+      "handwriting1": "result is strange",
+      "handwriting2": "repeat",
+      "handwriting3": "check the connection",
+      "handwriting4": "???",
+      "handwriting5": "If my hypothesis is correct, then with the next...",
+      "continue": "To be continued in the laboratory..."
+    },
+    "buttons": {
+      "openLab": "Open in Laboratory",
+      "back": "← back",
+      "toContents": "Contents",
+      "loadScenario": "Load Scenario"
+    }
   }
 }

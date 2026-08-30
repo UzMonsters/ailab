@@ -5,6 +5,7 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const nextConfig = {
   output: 'standalone',
 
+  allowedDevOrigins: ['127.0.0.1', 'localhost'],
   images: {
     unoptimized: true,
   },

@@ -5,8 +5,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Atom, FlaskConical, Brain, Users, Mail, Lock, User, Eye, EyeOff, ArrowRight, Loader2, AlertCircle, XCircle } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
-import ScienceBackground, { BackgroundGlow } from '@/components/common/ScienceBackground';
-import { normalizeError } from '@/lib/errors';
+import ScienceBackground, { BackgroundGlow } from '@/shared/ui/ScienceBackground';
+import { normalizeError } from '@/shared/lib/errors';
 
 interface FieldErrors {
   username?: string;

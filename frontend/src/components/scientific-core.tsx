@@ -45,7 +45,7 @@ function electronShells(count: number): number[] {
   return shells
 }
 
-export default function ScientificCore({ size = 620, accentColor = '#7c3aed', electrons }: { size?: number; accentColor?: string; electrons?: number }) {
+export default function ScientificCore({ size = 620, accentColor = '#7c3aed', electrons, coreOnly }: { size?: number; accentColor?: string; electrons?: number; coreOnly?: boolean }) {
   const svgRef = React.useRef<SVGSVGElement>(null)
   const nucleusRef = React.useRef<SVGGElement>(null)
   const [waves, setWaves] = React.useState<number[]>([])
@@ -141,13 +141,23 @@ export default function ScientificCore({ size = 620, accentColor = '#7c3aed', el
         <radialGradient id={`${id}-nucleus-core`}><stop stopColor="#fff" /><stop offset=".35" stopColor={accentColor} stopOpacity=".95" /><stop offset="1" stopColor={accentColor} stopOpacity=".18" /></radialGradient>
         <filter id={`${id}-blur`}><feGaussianBlur stdDeviation={size * .008} /></filter>
       </defs>
-      {shells.length > 0 ? <g className="scientific-shells">{shells.map(renderShell)}</g> : <><g className="scientific-particles">{particles.map((particle, index) => <circle key={index} cx={particle.x} cy={particle.y} r={particle.r} fill={particle.color}><animate attributeName="opacity" values="0;.75;0" dur={`${particle.duration}s`} begin={`${particle.delay}s`} repeatCount="indefinite" /></circle>)}</g>
-      <g className="scientific-rings scientific-rings-back">{rings.filter((ring) => !ring.front).map(renderRing)}</g>
-      <g className="scientific-network">{links.map((link, index) => { const from = atoms[link.from]; const to = atoms[link.to]; return <line key={index} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={index % 4 === 0 ? '#fff' : accentColor}><animate attributeName="stroke-opacity" values=".12;.38;.12" dur={`${3.5 + link.phase * .6}s`} begin={`${link.phase * .4}s`} repeatCount="indefinite" /></line> })}</g>
-      <g className="scientific-pulses">{links.slice(0, 26).map((link, index) => { const from = atoms[link.from]; const to = atoms[link.to]; return <circle key={index} r={size * .0038} fill={accentColor}><animateMotion dur={`${2.6 + index % 5 * .6}s`} begin={`${index * .18}s`} repeatCount="indefinite" path={`M ${from.x} ${from.y} L ${to.x} ${to.y}`} /><animate attributeName="opacity" values="0;1;0" dur={`${2.6 + index % 5 * .6}s`} repeatCount="indefinite" /></circle> })}</g>
-      <g className="scientific-atoms">{atoms.map((atom, index) => <g key={index}><circle cx={atom.x} cy={atom.y} r={atom.r} fill={atom.color} /><circle cx={atom.x} cy={atom.y} r={atom.r * .9} fill={atom.color} opacity=".3"><animate attributeName="r" values={`${atom.r * .8};${atom.r * 2.4};${atom.r * .8}`} dur={`${3 + index % 6 * .5}s`} repeatCount="indefinite" /></circle></g>)}</g></>}
+      {shells.length > 0 ? <g className="scientific-shells">{shells.map(renderShell)}</g> : (
+        !coreOnly && (
+          <>
+            <g className="scientific-particles">{particles.map((particle, index) => <circle key={index} cx={particle.x} cy={particle.y} r={particle.r} fill={particle.color}><animate attributeName="opacity" values="0;.75;0" dur={`${particle.duration}s`} begin={`${particle.delay}s`} repeatCount="indefinite" /></circle>)}</g>
+            <g className="scientific-rings scientific-rings-back">{rings.filter((ring) => !ring.front).map(renderRing)}</g>
+            <g className="scientific-network">{links.map((link, index) => { const from = atoms[link.from]; const to = atoms[link.to]; return <line key={index} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={index % 4 === 0 ? '#fff' : accentColor}><animate attributeName="stroke-opacity" values=".12;.38;.12" dur={`${3.5 + link.phase * .6}s`} begin={`${link.phase * .4}s`} repeatCount="indefinite" /></line> })}</g>
+            <g className="scientific-pulses">{links.slice(0, 26).map((link, index) => { const from = atoms[link.from]; const to = atoms[link.to]; return <circle key={index} r={size * .0038} fill={accentColor}><animateMotion dur={`${2.6 + index % 5 * .6}s`} begin={`${index * .18}s`} repeatCount="indefinite" path={`M ${from.x} ${from.y} L ${to.x} ${to.y}`} /><animate attributeName="opacity" values="0;1;0" dur={`${2.6 + index % 5 * .6}s`} repeatCount="indefinite" /></circle> })}</g>
+            <g className="scientific-atoms">{atoms.map((atom, index) => <g key={index}><circle cx={atom.x} cy={atom.y} r={atom.r} fill={atom.color} /><circle cx={atom.x} cy={atom.y} r={atom.r * .9} fill={atom.color} opacity=".3"><animate attributeName="r" values={`${atom.r * .8};${atom.r * 2.4};${atom.r * .8}`} dur={`${3 + index % 6 * .5}s`} repeatCount="indefinite" /></circle></g>)}</g>
+          </>
+        )
+      )}
       {nucleus}
-      {shells.length > 0 ? null : <g className="scientific-rings scientific-rings-front">{rings.filter((ring) => ring.front).map(renderRing)}</g>}
+      {shells.length > 0 ? null : (
+        !coreOnly && (
+          <g className="scientific-rings scientific-rings-front">{rings.filter((ring) => ring.front).map(renderRing)}</g>
+        )
+      )}
     </svg>
   </div>
 }

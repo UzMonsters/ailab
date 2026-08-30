@@ -1,7 +1,3 @@
-export * from './common';
-export * from './auth';
-export * from './user';
-export * from './workspace';
-export * from './sandbox';
-export * from './experiment';
-export * from './chemistry';
+
+export * from '../shared/types/common';
+export * from '../shared/api/contracts/definitions';
