@@ -22,6 +22,9 @@ export default function AuthPage() {
   const router = useRouter();
   const locale = pathname.split('/')[1] || 'en';
   const { login, register, isLoading, error, clearError } = useAuthStore();
+  // Authentication is not connected in the current deployment. Keep the UI
+  // usable immediately and enable the real API explicitly when it is ready.
+  const authEnabled = process.env.NEXT_PUBLIC_AUTH_ENABLED === 'true';
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [showPassword, setShowPassword] = useState(false);
@@ -52,6 +55,10 @@ export default function AuthPage() {
     clearError();
     if (mode === 'login') {
       if (!validateLogin()) return;
+      if (!authEnabled) {
+        router.push(`/${locale}/dashboard`);
+        return;
+      }
       try {
         await login(form.email, form.password);
         const user = useAuthStore.getState().user;
@@ -65,6 +72,10 @@ export default function AuthPage() {
       }
     } else {
       if (!validateRegister()) return;
+      if (!authEnabled) {
+        router.push(`/${locale}/dashboard`);
+        return;
+      }
       try {
         await register(form.username, form.email, form.password);
         router.push(`/${locale}/dashboard`);
