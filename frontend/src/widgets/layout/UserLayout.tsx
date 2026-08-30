@@ -63,7 +63,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     {
       title: tn('sciences'),
       items: [
-        { key: 'chemistry', icon: FlaskConical, label: td('chemistry'), href: `/${locale}/dashboard?science=chemistry`, exact: true },
+        { key: 'chemistry', icon: FlaskConical, label: td('chemistry'), href: `/${locale}/lchemistry-level` },
         { key: 'physics', icon: Atom, label: td('physics'), href: `/${locale}/dashboard`, badge: tc('soon'), disabled: true },
         { key: 'biology', icon: Atom, label: td('biology'), href: `/${locale}/dashboard`, badge: tc('soon'), disabled: true },
       ],
