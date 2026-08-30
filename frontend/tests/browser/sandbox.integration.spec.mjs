@@ -17,7 +17,7 @@ async function mockBackend(page, options = {}) {
   });
   await page.route('**/api/v1/workspaces/browser-test/autosave**', (route) => route.fulfill({ status: options.conflict ? 409 : 200, contentType: 'application/json', body: JSON.stringify(options.conflict ? { message: 'Version conflict' } : { stateVersion: 2, savedAt: new Date().toISOString() }) }));
 }
-
+// as
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     class MockWebSocket {

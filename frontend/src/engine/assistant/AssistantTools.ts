@@ -5,6 +5,7 @@ export class AssistantTools {
   constructor(private engine: Engine, private registry: EquipmentRegistry) {}
 
   getLabState() {
+    const k_w = 0;
     const scene = this.engine.workspace.scene;
     const objects = Array.from(scene.objects.values()).map(obj => ({
       id: obj.id,
@@ -14,7 +15,7 @@ export class AssistantTools {
       capabilities: obj.capabilities,
       state: obj.state,
     }));
-    
+    // 2
     return {
       objects,
       simulationRunning: this.engine.workspace.simulation.running,
