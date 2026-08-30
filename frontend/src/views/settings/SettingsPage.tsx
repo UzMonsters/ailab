@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, ChevronRight, Globe2, Loader2, LogOut, Palette, Save, Shield, SlidersHorizontal, UserRound, X } from 'lucide-react';
-import { userApi } from '@/services/api/user.api';
+import { userApi } from '@/entities/user/api/user.api';
 import { useAuthStore } from '@/stores/auth.store';
-import { useLocaleSwitch } from '@/hooks/useLocaleSwitch';
+import { useLocaleSwitch } from '@/shared/hooks/useLocaleSwitch';
 import type { UserMeResponse, UserPreferencesResponse, UserPreferencesUpdateRequest } from '@/types';
 
 type Section = 'general' | 'appearance' | 'laboratory' | 'account' | 'security';
@@ -38,7 +38,10 @@ export default function SettingsPage() {
   const pendingPatch = useRef<UserPreferencesUpdateRequest>({});
   const modalRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { if (!user) void fetchUser(); }, [user, fetchUser]);
+  useEffect(() => { 
+    if (!user) void fetchUser(); 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchUser]);
   useEffect(() => {
     if (authLoading || !isAuthenticated) return;
     let cancelled = false;

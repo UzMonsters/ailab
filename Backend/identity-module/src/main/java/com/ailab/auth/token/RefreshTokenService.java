@@ -30,12 +30,12 @@ public class RefreshTokenService implements RefreshTokenOperations {
     @Transactional(noRollbackFor = RefreshTokenReuseException.class)
     public IssuedToken rotate(String rawToken) {
         RefreshToken current = repository.findByTokenHash(hash(rawToken))
-                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired refresh token"));
+                .orElseThrow(() -> new InvalidRefreshTokenException("Invalid or expired refresh token"));
         if (current.isRevoked()) {
             repository.revokeAllByFamilyId(current.getFamilyId());
             throw new RefreshTokenReuseException("Refresh token reuse detected");
         }
-        if (current.isExpired(Instant.now())) throw new IllegalArgumentException("Invalid or expired refresh token");
+        if (current.isExpired(Instant.now())) throw new InvalidRefreshTokenException("Invalid or expired refresh token");
         IssuedToken replacement = create(current.getUserId(), current.getFamilyId());
         current.revoke(hash(replacement.rawToken()));
         repository.save(current);

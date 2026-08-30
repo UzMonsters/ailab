@@ -1,5 +1,5 @@
-import I18nProvider from '@/components/common/I18nProvider';
-import { ToastProvider } from '@/components/common/ToastContainer';
+import I18nProvider from '@/shared/ui/I18nProvider';
+import { ToastProvider } from '@/shared/ui/ToastContainer';
 
 export default async function LocaleLayout({
   children,
@@ -11,6 +11,7 @@ export default async function LocaleLayout({
   const { locale } = await params;
   let messages;
   try {
+    console.log("Loading messages for locale", locale); // Cache buster
     messages = (await import(`../../messages/${locale}.json`)).default;
   } catch {
     messages = (await import('../../messages/en.json')).default;

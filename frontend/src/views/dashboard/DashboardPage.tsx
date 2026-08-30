@@ -1,14 +1,15 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { FlaskConical, Atom, Search, MoreVertical, Star, Clock, Trash2, Copy, Pencil, Loader2, Plus, AlertCircle, X, LayoutGrid, Grid2X2, List, SlidersHorizontal, ChevronDown, Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { workspacesApi } from '@/services/api/workspaces.api';
 import type { Workspace } from '@/types';
-import OnboardingHint from '@/components/common/OnboardingHint';
-import { normalizeError } from '@/lib/errors';
+import OnboardingHint from '@/shared/ui/OnboardingHint';
+import { errorMessage } from '@/shared/utils/errorMessage';
 
+import { workspacesApi } from '@/entities/workspace/api/workspace.api';
 const menuActions = [
   { key: 'open', label: 'open', icon: FlaskConical, danger: false },
   { key: 'rename', label: 'rename', icon: Pencil, danger: false },
@@ -18,12 +19,52 @@ const menuActions = [
 ] as const;
 
 function WorkspacePreview({ name, thumbnail }: { name: string; thumbnail?: string }) {
-  if (thumbnail) return <img src={thumbnail} alt={`${name} workspace preview`} className="absolute inset-0 h-full w-full object-cover" />;
+  if (thumbnail) return <Image src={thumbnail} alt={`${name} workspace preview`} fill unoptimized sizes="320px" className="object-cover" />;
+
+  // Give the offline chemistry workspace a real visual preview instead of the
+  // initials placeholder. Other workspaces keep the lightweight generated
+  // fallback until they receive their own thumbnail.
+  if (name.toLowerCase().includes('sandbox')) {
+    return (
+      <>
+        <Image
+          src="/workspace-previews/cartoon-chemistry-lab-light.png"
+          alt={`${name} workspace preview`}
+          fill
+          unoptimized
+          sizes="320px"
+          className="object-cover dark:hidden"
+        />
+        <Image
+          src="/workspace-previews/cartoon-chemistry-lab.png"
+          alt=""
+          fill
+          unoptimized
+          sizes="320px"
+          className="hidden object-cover dark:block"
+          aria-hidden="true"
+        />
+      </>
+    );
+  }
+  
+  const initials = name.substring(0, 2).toUpperCase();
+  const hue = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
+
   return (
-    <div className="absolute inset-0">
-      <div className="absolute inset-0" style={{ background: 'radial-gradient(120% 100% at 15% 0%, rgba(139,92,246,.15), transparent 55%), radial-gradient(120% 100% at 85% 100%, rgba(20,241,149,.08), transparent 55%), var(--card)' }} />
-      <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(var(--foreground) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
-      <img src="/water-droplet.png" alt="Water" className="absolute inset-0 h-full w-full object-cover" />
+    <div className="absolute inset-0 overflow-hidden flex items-center justify-center bg-[var(--card)]">
+      <div className="absolute inset-0 opacity-30 dark:opacity-40" style={{ background: `radial-gradient(120% 100% at 15% 0%, hsl(${hue}, 70%, 60%), transparent 55%), radial-gradient(120% 100% at 85% 100%, hsl(${(hue + 120) % 360}, 70%, 50%), transparent 55%)` }} />
+      <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(var(--foreground) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
+      
+      <div className="relative z-10 flex flex-col items-center justify-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/40 dark:bg-black/20 shadow-[0_8px_32px_rgba(0,0,0,0.05)] backdrop-blur-md border border-black/5 dark:border-white/10">
+          <span className="text-2xl font-bold tracking-widest text-[var(--foreground)] opacity-80">{initials}</span>
+        </div>
+      </div>
+      
+      <FlaskConical className="absolute top-4 left-4 text-[var(--foreground)] opacity-[0.07]" size={24} />
+      <LayoutGrid className="absolute bottom-6 right-6 text-[var(--foreground)] opacity-[0.07]" size={32} />
+      <Atom className="absolute top-8 right-8 text-[var(--foreground)] opacity-[0.04]" size={48} />
     </div>
   );
 }
@@ -94,18 +135,17 @@ export default function DashboardPage() {
   }, []);
 
   const loadWorkspaces = useCallback(async () => {
-    setLoading(true);
-    setError(null);
     try {
+      setLoading(true);
+      setError(null);
       const data = await workspacesApi.list();
-      setWorkspaces(data.filter(w => !w.isDeleted));
-    } catch (err: unknown) {
-      setError(normalizeError(err, t('loadFailed')).message);
+      setWorkspaces(data);
+    } catch (e: unknown) {
+      setError(errorMessage(e, 'Failed to load workspaces'));
     } finally {
       setLoading(false);
     }
-  }, [t]);
-
+  }, []);
   useEffect(() => {
     const timer = window.setTimeout(() => { void loadWorkspaces(); }, 0);
     return () => window.clearTimeout(timer);
@@ -120,60 +160,40 @@ export default function DashboardPage() {
   const handleCreate = async () => {
     if (!newName.trim()) return;
     try {
-      const ws = await workspacesApi.create(newName.trim(), 'chemistry');
-      setWorkspaces(prev => [ws, ...prev]);
-      setCreateModalOpen(false);
-      setNewName('');
-      showToast(t('created'));
-    } catch (err: unknown) {
-      showToast(normalizeError(err, t('creationFailed')).message, 'error');
-    }
+      const ws = await workspacesApi.create(newName.trim());
+      setWorkspaces(prev => [ws, ...prev]); setCreateModalOpen(false); setNewName(''); showToast(t('created'));
+    } catch (e: unknown) { showToast(errorMessage(e, 'Error'), 'error'); }
   };
 
   const handleRename = async () => {
     if (!renameModalOpen || !renameValue.trim()) return;
     try {
-      const updated = await workspacesApi.update(renameModalOpen, { name: renameValue.trim() });
-      setWorkspaces(prev => prev.map(w => w.id === updated.id ? updated : w));
-      setRenameModalOpen(null);
-      setRenameValue('');
-      showToast(t('renamed'));
-    } catch (err: unknown) {
-      showToast(normalizeError(err, t('renameFailed')).message, 'error');
-    }
+      const ws = await workspacesApi.update(renameModalOpen, { name: renameValue.trim() });
+      setWorkspaces(prev => prev.map(w => w.id === renameModalOpen ? ws : w));
+      setRenameModalOpen(null); setRenameValue(''); showToast(t('renamed'));
+    } catch (e: unknown) { showToast(errorMessage(e, 'Error'), 'error'); }
   };
 
   const handleDuplicate = async (id: string) => {
+    const source = workspaces.find(w => w.id === id); if (!source) return;
     try {
-      const copy = await workspacesApi.duplicate(id);
-      setWorkspaces(prev => [copy, ...prev]);
-      setMenuOpen(null);
-      showToast(t('duplicated'));
-    } catch (err: unknown) {
-      showToast(normalizeError(err, t('duplicateFailed')).message, 'error');
-    }
+      const ws = await workspacesApi.duplicate(id, `${source.name} Copy`);
+      setWorkspaces(prev => [ws, ...prev]); setMenuOpen(null); showToast(t('duplicated'));
+    } catch (e: unknown) { showToast(errorMessage(e, 'Error'), 'error'); }
   };
 
   const handleFavorite = async (ws: Workspace) => {
     try {
       const updated = await workspacesApi.update(ws.id, { isFavorite: !ws.isFavorite });
-      setWorkspaces(prev => prev.map(w => w.id === updated.id ? updated : w));
-      setMenuOpen(null);
-      showToast(updated.isFavorite ? t('addedToFavorites') : t('removedFromFavorites'));
-    } catch (err: unknown) {
-      showToast(normalizeError(err, t('actionFailed')).message, 'error');
-    }
+      setWorkspaces(prev => prev.map(w => w.id === updated.id ? updated : w)); setMenuOpen(null); showToast(updated.isFavorite ? t('addedToFavorites') : t('removedFromFavorites'));
+    } catch (e: unknown) { showToast(errorMessage(e, 'Error'), 'error'); }
   };
 
   const handleTrash = async (id: string) => {
     try {
-      await workspacesApi.update(id, { isDeleted: true });
-      setWorkspaces(prev => prev.filter(w => w.id !== id));
-      setMenuOpen(null);
-      showToast(t('movedToTrash'));
-    } catch (err: unknown) {
-      showToast(normalizeError(err, t('actionFailed')).message, 'error');
-    }
+      await workspacesApi.delete(id);
+      setWorkspaces(prev => prev.filter(w => w.id !== id)); setMenuOpen(null); showToast(t('movedToTrash'));
+    } catch (e: unknown) { showToast(errorMessage(e, 'Error'), 'error'); }
   };
 
   const handleOpen = (id: string) => {
@@ -283,11 +303,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-w-0">
+    <div className="dashboard-page min-w-0">
       {/* Header row 1: title + action */}
       <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
         <h1 className="text-2xl font-bold tracking-tight">{t('myWorkspaces')}</h1>
-        <button onClick={() => { setCreateModalOpen(true); setNewName(''); }} className="flex items-center gap-2 bg-gradient-to-br from-[#8b5cf6] to-[#A855F7] text-white py-2.5 px-4 rounded-[var(--radius-md)] text-sm font-semibold shadow-[0_8px_20px_rgba(139,92,246,.35)] hover:-translate-y-0.5 transition-all">
+        <button onClick={() => { setCreateModalOpen(true); setNewName(''); }} className="dashboard-primary-action flex items-center gap-2 bg-gradient-to-br from-[#8b5cf6] to-[#A855F7] text-white py-2.5 px-4 rounded-[var(--radius-md)] text-sm font-semibold shadow-[0_8px_20px_rgba(139,92,246,.35)] hover:-translate-y-0.5 transition-all">
           <Plus size={16} /> {t('newWorkspace')}
         </button>
       </div>
@@ -313,7 +333,7 @@ export default function DashboardPage() {
           <FlaskConical size={48} className="text-[var(--muted-foreground)]/30 mx-auto mb-4" />
           <h2 className="text-lg font-semibold mb-2">{t('emptyTitle')}</h2>
           <p className="text-sm text-[var(--muted-foreground)] mb-4">{t('emptyDesc')}</p>
-          <button onClick={() => { setCreateModalOpen(true); setNewName(''); }} className="inline-flex items-center gap-2 bg-gradient-to-br from-[#8b5cf6] to-[#A855F7] text-white py-2.5 px-5 rounded-[var(--radius-md)] text-sm font-semibold shadow-[0_8px_20px_rgba(139,92,246,.35)] hover:-translate-y-0.5 transition-all">
+          <button onClick={() => { setCreateModalOpen(true); setNewName(''); }} className="dashboard-primary-action inline-flex items-center gap-2 bg-gradient-to-br from-[#8b5cf6] to-[#A855F7] text-white py-2.5 px-5 rounded-[var(--radius-md)] text-sm font-semibold shadow-[0_8px_20px_rgba(139,92,246,.35)] hover:-translate-y-0.5 transition-all">
             <Plus size={16} /> {t('createWorkspaceButton')}
           </button>
         </div>
@@ -349,7 +369,7 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center justify-end gap-3 mt-8">
               <button onClick={() => setCreateModalOpen(false)} className="px-5 py-2.5 border border-[var(--border)] bg-[var(--input)] text-[var(--foreground)] rounded-[var(--radius-md)] text-sm hover:bg-[var(--accent)] transition-all">{tc('cancel')}</button>
-              <button onClick={handleCreate} disabled={!newName.trim()} className="px-5 py-2.5 bg-gradient-to-br from-[#8b5cf6] to-[#A855F7] text-white rounded-[var(--radius-md)] text-sm font-semibold shadow-[0_4px_15px_rgba(139,92,246,.25)] disabled:opacity-50 disabled:cursor-not-allowed transition-all">{t('createWorkspaceButton')}</button>
+              <button onClick={handleCreate} disabled={!newName.trim()} className="dashboard-primary-action px-5 py-2.5 bg-gradient-to-br from-[#8b5cf6] to-[#A855F7] text-white rounded-[var(--radius-md)] text-sm font-semibold shadow-[0_4px_15px_rgba(139,92,246,.25)] disabled:opacity-50 disabled:cursor-not-allowed transition-all">{t('createWorkspaceButton')}</button>
             </div>
           </div>
         </div>
@@ -363,7 +383,7 @@ export default function DashboardPage() {
             <input type="text" className="w-full bg-[var(--input)] border border-[var(--border)] rounded-[var(--radius-md)] px-4 py-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--ring)] focus:ring-1 focus:ring-[var(--ring)] transition-all" value={renameValue} onChange={(e) => setRenameValue(e.target.value)} autoFocus onKeyDown={(e) => e.key === 'Enter' && handleRename()} />
             <div className="flex items-center justify-end gap-3 mt-4">
               <button onClick={() => setRenameModalOpen(null)} className="px-4 py-2 border border-[var(--border)] bg-[var(--input)] text-[var(--foreground)] rounded-[var(--radius-sm)] text-sm hover:bg-[var(--accent)]">{tc('cancel')}</button>
-              <button onClick={handleRename} className="px-4 py-2 bg-gradient-to-br from-[#8b5cf6] to-[#A855F7] text-white rounded-[var(--radius-sm)] text-sm font-semibold disabled:opacity-50">{tc('rename')}</button>
+              <button onClick={handleRename} className="dashboard-primary-action px-4 py-2 bg-gradient-to-br from-[#8b5cf6] to-[#A855F7] text-white rounded-[var(--radius-sm)] text-sm font-semibold disabled:opacity-50">{tc('rename')}</button>
             </div>
           </div>
         </div>
