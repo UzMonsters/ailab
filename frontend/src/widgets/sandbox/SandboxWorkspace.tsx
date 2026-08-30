@@ -1509,9 +1509,9 @@ export function SandboxWorkspace() {
       locale={locale}
     />
     <GuideCursor active={guideDemoOpen} locale={locale} onFinish={() => setGuideDemoOpen(false)} />
-    {showNavbar && <header className="absolute left-0 right-0 top-0 z-50 flex h-14 items-center gap-5 border-b border-border bg-card/95 px-4 shadow-[0_4px_18px_rgba(0,0,0,.28)] backdrop-blur-xl">
+    {showNavbar && <header className="absolute left-0 right-0 top-0 z-[80] flex h-14 items-center gap-5 border-b border-border bg-card/95 px-4 shadow-[0_4px_18px_rgba(0,0,0,.28)] backdrop-blur-xl">
         <div className="flex shrink-0 items-center gap-3">
-          <Link href="/dashboard" className="grid h-8 w-8 place-items-center rounded-lg bg-white/5 transition-colors hover:bg-foreground/10">
+          <Link href={`/${locale}/dashboard`} className="grid h-8 w-8 place-items-center rounded-lg bg-white/5 transition-colors hover:bg-foreground/10">
             <ArrowLeft size={16} className="text-[var(--muted-foreground)]" />
           </Link>
           <div className="flex flex-col">
