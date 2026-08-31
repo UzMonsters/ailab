@@ -83,6 +83,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 if (typeof window !== 'undefined') {
   window.addEventListener('auth:unauthorized', () => {
     useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false, error: null });
+    // The public demo flow intentionally works without a backend token. A
+    // 401 from optional persistence must not send the user back to landing.
+    if (process.env.NEXT_PUBLIC_AUTH_ENABLED !== 'true') return;
     const path = window.location.pathname;
     const isPublic = /^\/(en|ru|uz)?(\/auth|\/)?$/.test(path);
     if (!isPublic) {
