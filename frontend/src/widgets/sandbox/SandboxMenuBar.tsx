@@ -128,7 +128,7 @@ function DropdownMenu({
           ref={menuRef}
           role="menu"
           aria-label={menu.label}
-          className="absolute left-0 top-full z-[200] mt-1 min-w-[200px] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--popover)] py-1 text-[var(--popover-foreground)] shadow-[0_16px_48px_rgba(0,0,0,0.24)] backdrop-blur-xl animate-fade-in-up"
+          className="absolute left-0 top-full z-[9999] mt-1 min-w-[200px] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--popover)] py-1 text-[var(--popover-foreground)] shadow-[0_16px_48px_rgba(0,0,0,0.24)] backdrop-blur-xl animate-fade-in-up"
           style={{ animationDuration: "100ms" }}
         >
           {menu.items.map((item, index) => {
