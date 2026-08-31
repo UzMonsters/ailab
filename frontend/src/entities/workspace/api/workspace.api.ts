@@ -26,21 +26,34 @@ function queryString(query: WorkspaceListQuery = {}): string {
   return result ? `?${result}` : '';
 }
 
+function offlineWorkspace(id = 'mock-ws-1', name = 'Offline Sandbox'): Workspace {
+  const now = new Date().toISOString();
+  return { id, name, science: 'chemistry', isFavorite: false, isDeleted: false, createdAt: now, updatedAt: now, thumbnail: undefined, accessLevel: 'owner', ownerId: '1' } as Workspace;
+}
+
+// Keep the dashboard independent from the backend until the auth/session flow
+// is ready. Set NEXT_PUBLIC_BACKEND_ENABLED=true to restore API workspace sync.
+const backendEnabled = process.env.NEXT_PUBLIC_BACKEND_ENABLED === 'true';
+
 export const workspacesApi = {
   list: async (query: WorkspaceListQuery = {}): Promise<Workspace[]> => {
+    if (!backendEnabled) return [offlineWorkspace()];
     try {
       const response = await api.get<WorkspacePageResponse<Workspace>>(`/api/v1/workspaces${queryString(query)}`);
-      return response.items;
+      // A running backend may legitimately return an empty account. Keep the
+      // local/demo dashboard usable in that case, just like the offline flow.
+      return response.items.length > 0 ? response.items : [offlineWorkspace()];
     } catch {
-      return [{ id: 'mock-ws-1', name: 'Offline Sandbox', science: 'chemistry', isFavorite: false, isDeleted: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), thumbnail: undefined, accessLevel: 'owner', ownerId: '1' } as Workspace];
+      return [offlineWorkspace()];
     }
   },
 
   get: async (id: string) => {
+    if (!backendEnabled) return offlineWorkspace(id);
     try {
       return await api.get<Workspace>(`/api/v1/workspaces/${id}`);
     } catch {
-      return { id, name: 'Offline Sandbox', science: 'chemistry', isFavorite: false, isDeleted: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), accessLevel: 'owner', ownerId: '1' } as Workspace;
+      return offlineWorkspace(id);
     }
   },
 
