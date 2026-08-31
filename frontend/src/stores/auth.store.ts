@@ -24,7 +24,9 @@ let fetchUserPromise: Promise<void> | null = null;
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
-  isLoading: true,
+  // Auth is currently optional in the frontend demo flow. Do not block the
+  // auth screen while the backend is unavailable.
+  isLoading: false,
   error: null,
 
   login: async (email, password) => {
