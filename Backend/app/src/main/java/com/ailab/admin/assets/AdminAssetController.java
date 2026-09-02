@@ -1,11 +1,9 @@
 package com.ailab.admin.assets;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -29,5 +27,19 @@ public class AdminAssetController {
                 ? (List<Map<String, Object>>) request.get("files")
                 : List.of();
         return assetService.generateUploadUrls(files);
+    }
+
+    @PostMapping("/{assetId}/complete")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Map<String, Object> completeAsset(
+            @PathVariable String assetId,
+            @RequestBody(required = false) Map<String, Object> request
+    ) {
+        return assetService.completeAsset(assetId, request != null ? request : Map.of());
+    }
+
+    @GetMapping("/{assetId}")
+    public Map<String, Object> getAsset(@PathVariable String assetId) {
+        return assetService.getAsset(assetId);
     }
 }
