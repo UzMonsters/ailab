@@ -40,9 +40,10 @@ CREATE TABLE IF NOT EXISTS chemistry.laboratory_process_requirements (
     process_version INTEGER NOT NULL,
     step_id TEXT NOT NULL,
     requirement_id TEXT NOT NULL,
-    requirement_type VARCHAR(32) NOT NULL CHECK (requirement_type IN ('MATERIAL','EQUIPMENT','CONTAINER','ENVIRONMENT')),
+    requirement_type VARCHAR(32) NOT NULL,
     requirement_payload JSONB NOT NULL,
     PRIMARY KEY (process_code, process_version, step_id, requirement_id),
+    CONSTRAINT laboratory_process_requirements_requirement_type_check CHECK (requirement_type IN ('MATERIAL','EQUIPMENT','CONTAINER','ENVIRONMENT')),
     FOREIGN KEY (process_code, process_version, step_id)
         REFERENCES chemistry.laboratory_process_steps(process_code, process_version, step_id)
         ON DELETE CASCADE

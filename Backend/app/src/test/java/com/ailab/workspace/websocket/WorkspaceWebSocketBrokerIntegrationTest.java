@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles({"test", "local"})
+@ActiveProfiles("test")
 class WorkspaceWebSocketBrokerIntegrationTest {
 
     @LocalServerPort

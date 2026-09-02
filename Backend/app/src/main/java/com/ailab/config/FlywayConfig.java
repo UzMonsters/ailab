@@ -18,6 +18,9 @@ public class FlywayConfig {
     @Value("${app.flyway.enabled:true}")
     private boolean flywayEnabled;
 
+    @Value("${app.flyway.chemistry.enabled:true}")
+    private boolean chemistryFlywayEnabled;
+
     @Bean
     public Flyway identityFlyway(DataSource dataSource) {
         resetHistoryIfOwnerTableMissing(dataSource, "users", "flyway_schema_history");
@@ -30,6 +33,7 @@ public class FlywayConfig {
                 .cleanDisabled(false)
                 .load();
         if (flywayEnabled) {
+            flyway.repair();
             flyway.migrate();
         }
         return flyway;
@@ -47,7 +51,8 @@ public class FlywayConfig {
                 .baselineOnMigrate(true)
                 .cleanDisabled(false)
                 .load();
-        if (flywayEnabled) {
+        if (flywayEnabled && chemistryFlywayEnabled) {
+            flyway.repair();
             flyway.migrate();
         }
         return flyway;
@@ -66,6 +71,7 @@ public class FlywayConfig {
                 .cleanDisabled(false)
                 .load();
         if (flywayEnabled) {
+            flyway.repair();
             flyway.migrate();
         }
         return flyway;

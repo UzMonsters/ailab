@@ -21,7 +21,7 @@ CREATE TABLE chemistry.elements (
     block VARCHAR(5) NOT NULL CHECK (block IN ('S', 'P', 'D', 'F')),
     electron_configuration VARCHAR(100) NOT NULL,
     standard_state VARCHAR(20) NOT NULL CHECK (standard_state IN ('SOLID', 'LIQUID', 'GAS', 'UNKNOWN')),
-    radioactivity_status VARCHAR(50) NOT NULL CHECK (radioactivity_status IN ('STABLE_OR_HAS_STABLE_ISOTOPES', 'RADIOACTIVE', 'UNKNOWN')),
+    radioactivity_status VARCHAR(50) NOT NULL,
     category VARCHAR(50) NOT NULL CHECK (category IN ('ALKALI_METAL', 'ALKALINE_EARTH_METAL', 'TRANSITION_METAL', 'POST_TRANSITION_METAL', 'METALLOID', 'REACTIVE_NONMETAL', 'HALOGEN', 'NOBLE_GAS', 'LANTHANIDE', 'ACTINIDE', 'UNKNOWN')),
     series VARCHAR(50) NOT NULL CHECK (series IN ('MAIN_GROUP', 'TRANSITION', 'LANTHANIDE', 'ACTINIDE', 'UNKNOWN')),
     catalog_version_id VARCHAR(50) NOT NULL,
@@ -29,6 +29,7 @@ CREATE TABLE chemistry.elements (
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (catalog_version_id) REFERENCES chemistry.periodic_table_catalog_versions(id),
+    CONSTRAINT elements_radioactivity_status_check CHECK (radioactivity_status IN ('STABLE_OR_HAS_STABLE_ISOTOPES', 'RADIOACTIVE', 'UNKNOWN')),
     CONSTRAINT chk_mass_bounds CHECK (
         (atomic_mass_lower_bound IS NULL AND atomic_mass_upper_bound IS NULL) OR 
         (atomic_mass_lower_bound IS NOT NULL AND atomic_mass_upper_bound IS NOT NULL AND atomic_mass_lower_bound <= atomic_mass_upper_bound)

@@ -21,6 +21,10 @@ public class User {
     private String id;
     @Column(nullable = false, unique = true, length = 50)
     private String username;
+    @Column(name = "display_name", length = 100)
+    private String displayName;
+    @Column(name = "bio", length = 500)
+    private String bio;
     @Column(nullable = false, unique = true, length = 320)
     private String email;
     @Column(name = "password_hash", nullable = false)
@@ -38,6 +42,21 @@ public class User {
     private String language = "en";
     @Column(nullable = false, length = 20)
     private String theme = "light";
+    @Column(nullable = false, length = 20)
+    private String status = "ACTIVE";
+    @Column(name = "status_reason", length = 500)
+    private String statusReason;
+    @Column(name = "blocked_until")
+    private Instant blockedUntil;
+    @Column(name = "last_seen_at")
+    private Instant lastSeenAt;
+    @Column(name = "deletion_id", length = 64)
+    private String deletionId;
+    @Column(name = "deletion_scheduled_for")
+    private Instant deletionScheduledFor;
+    @Version
+    @Column(nullable = false)
+    private Long version = 0L;
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "application_settings", nullable = false, columnDefinition = "jsonb")
     private Map<String, Object> applicationSettings = new HashMap<>();
@@ -60,6 +79,8 @@ public class User {
 
     public String getId() { return id; }
     public String getUsername() { return username; }
+    public String getDisplayName() { return displayName; }
+    public String getBio() { return bio; }
     public String getEmail() { return email; }
     public String getPasswordHash() { return passwordHash; }
     public Role getRole() { return role; }
@@ -68,6 +89,13 @@ public class User {
     public long getXp() { return xp; }
     public String getLanguage() { return language; }
     public String getTheme() { return theme; }
+    public String getStatus() { return status; }
+    public String getStatusReason() { return statusReason; }
+    public Instant getBlockedUntil() { return blockedUntil; }
+    public Instant getLastSeenAt() { return lastSeenAt; }
+    public String getDeletionId() { return deletionId; }
+    public Instant getDeletionScheduledFor() { return deletionScheduledFor; }
+    public Long getVersion() { return version; }
     public Map<String, Object> getApplicationSettings() { return Collections.unmodifiableMap(new HashMap<>(applicationSettings)); }
     public Map<String, Long> getStatistics() { return Collections.unmodifiableMap(new HashMap<>(statistics)); }
     public Set<String> getAchievements() { return Collections.unmodifiableSet(new HashSet<>(achievements)); }
@@ -85,11 +113,23 @@ public class User {
         this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
+        this.status = "ACTIVE";
+        this.version = 0L;
     }
 
     public void updateProfile(String username, String avatarUrl) {
         if (username != null && !username.isBlank()) this.username = username;
         if (avatarUrl != null) this.avatarUrl = avatarUrl;
+    }
+
+    public void patchProfile(String username, String displayName, String bio) {
+        if (username != null && !username.isBlank()) this.username = username;
+        if (displayName != null) this.displayName = displayName;
+        if (bio != null) this.bio = bio;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 
     public void removeAvatar() {
@@ -102,6 +142,29 @@ public class User {
         if (settings != null) this.applicationSettings = new HashMap<>(settings);
     }
 
+    public void updatePassword(String newPasswordHash) {
+        this.passwordHash = newPasswordHash;
+        incrementTokenVersion();
+    }
+
+    public void updateEmail(String newEmail) {
+        this.email = newEmail;
+    }
+
+    public void scheduleDeletion(String deletionId, Instant scheduledFor) {
+        this.deletionId = deletionId;
+        this.deletionScheduledFor = scheduledFor;
+        this.status = "DELETION_SCHEDULED";
+        this.statusReason = "Scheduled by user";
+    }
+
+    public void cancelDeletion() {
+        this.deletionId = null;
+        this.deletionScheduledFor = null;
+        this.status = "ACTIVE";
+        this.statusReason = null;
+    }
+
     public void updateAdminProfile(String username, String email, Role role) {
         if (username != null && !username.isBlank()) this.username = username;
         if (email != null && !email.isBlank()) this.email = email;
@@ -109,6 +172,46 @@ public class User {
             this.role = role;
             incrementTokenVersion();
         }
+    }
+
+    public void updateAdminUser(String username, Role role, String status, String reason) {
+        if (username != null && !username.isBlank()) {
+            this.username = username;
+        }
+        if (role != null && role != this.role) {
+            this.role = role;
+            incrementTokenVersion();
+        }
+        if (status != null && !status.isBlank()) {
+            this.status = status;
+            this.statusReason = reason;
+            if ("BLOCKED".equalsIgnoreCase(status) || "DEACTIVATED".equalsIgnoreCase(status) || "DELETION_SCHEDULED".equalsIgnoreCase(status)) {
+                incrementTokenVersion();
+            }
+        }
+    }
+
+    public void block(String reason, Instant until) {
+        this.status = "BLOCKED";
+        this.statusReason = reason;
+        this.blockedUntil = until;
+        incrementTokenVersion();
+    }
+
+    public void unblock(String reason) {
+        this.status = "ACTIVE";
+        this.statusReason = reason;
+        this.blockedUntil = null;
+    }
+
+    public void deactivate(String reason) {
+        this.status = "DEACTIVATED";
+        this.statusReason = reason;
+        incrementTokenVersion();
+    }
+
+    public void setLastSeenAt(Instant lastSeenAt) {
+        this.lastSeenAt = lastSeenAt;
     }
 
     public void incrementTokenVersion() {

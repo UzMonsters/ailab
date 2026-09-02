@@ -44,12 +44,17 @@ class WorkspaceStateIntegrationTest {
     @Autowired
     private org.flywaydb.core.Flyway workspaceFlyway;
 
+    @Autowired(required = false)
+    @org.springframework.beans.factory.annotation.Qualifier("chemistryFlyway")
+    private org.flywaydb.core.Flyway chemistryFlyway;
+
     private User user;
     private String token;
     private String wsId;
 
     @BeforeEach
     void setUp() throws Exception {
+        com.ailab.chemistry.TestPostgresUtils.assumePostgresAvailable();
         try (java.sql.Connection conn = workspaceFlyway.getConfiguration().getDataSource().getConnection()) {
             boolean usersExist = conn.getMetaData().getTables(null, "public", "users", null).next();
             boolean wsExist = conn.getMetaData().getTables(null, "public", "workspaces", null).next();
@@ -64,6 +69,9 @@ class WorkspaceStateIntegrationTest {
             try { workspaceFlyway.clean(); } catch (Exception ignored) {}
             identityFlyway.migrate();
             workspaceFlyway.migrate();
+        }
+        if (chemistryFlyway != null) {
+            try { chemistryFlyway.migrate(); } catch (Exception ignored) {}
         }
 
         userRepository.deleteAll();

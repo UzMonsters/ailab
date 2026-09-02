@@ -68,6 +68,11 @@ class Phase12LaboratoryApparatusIntegrationTest {
     @org.springframework.beans.factory.annotation.Qualifier("chemistryFlyway")
     private Flyway chemistryFlyway;
 
+    @org.junit.jupiter.api.BeforeEach
+    void checkPostgres() {
+        TestPostgresUtils.assumePostgresAvailable();
+    }
+
     @Test
     void servicesInjectAndLatestMigrationSeedsPhaseTwelveReferenceData() throws Exception {
         assertThat(equipmentService).isNotNull();

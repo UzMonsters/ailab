@@ -12,11 +12,12 @@ CREATE TABLE IF NOT EXISTS workspace_members (
 
 CREATE INDEX IF NOT EXISTS idx_workspace_members_user ON workspace_members(user_id);
 
--- Migrate existing workspace owners into workspace_members
 INSERT INTO workspace_members (workspace_id, user_id, role, joined_at, created_at, updated_at)
-SELECT id, owner_id, 'OWNER', created_at, created_at, updated_at
-FROM workspaces
-ON CONFLICT (workspace_id, user_id) DO NOTHING;
+SELECT w.id, w.owner_id, 'OWNER', w.created_at, w.created_at, w.updated_at
+FROM workspaces w
+WHERE NOT EXISTS (
+    SELECT 1 FROM workspace_members wm WHERE wm.workspace_id = w.id AND wm.user_id = w.owner_id
+);
 
 CREATE TABLE IF NOT EXISTS workspace_invitations (
     id VARCHAR(64) PRIMARY KEY,
@@ -127,7 +128,7 @@ CREATE TABLE IF NOT EXISTS experiment_measurements (
     sensor_item_id VARCHAR(64),
     target_item_id VARCHAR(64),
     kind VARCHAR(32) NOT NULL,
-    value NUMERIC(20, 8) NOT NULL,
+    "value" NUMERIC(20, 8) NOT NULL,
     unit VARCHAR(32) NOT NULL,
     recorded_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

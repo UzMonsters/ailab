@@ -69,12 +69,12 @@ class GenerateExtendedElementDataTest {
         Path checkedInSql = Path.of("src", "main", "resources", "db", "migration", "chemistry", "V6__seed_extended_element_properties.sql");
         if (Files.exists(checkedInSql)) {
             String existingSql = Files.readString(checkedInSql);
-            assertThat(sqlContent.trim()).isEqualTo(existingSql.trim());
+            assertThat(sqlContent.trim().replace("\r\n", "\n")).isEqualTo(existingSql.trim().replace("\r\n", "\n"));
         }
         Path checkedInJson = Path.of("src", "main", "resources", "chemistry-data", "periodic-table-extended-properties-v1.json");
         if (Files.exists(checkedInJson)) {
             String existingJson = Files.readString(checkedInJson);
-            assertThat(jsonContent.trim()).isEqualTo(existingJson.trim());
+            assertThat(jsonContent.trim().replace("\r\n", "\n")).isEqualTo(existingJson.trim().replace("\r\n", "\n"));
         }
     }
 

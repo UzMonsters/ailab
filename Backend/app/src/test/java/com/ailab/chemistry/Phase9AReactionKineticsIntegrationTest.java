@@ -39,32 +39,33 @@ class Phase9AReactionKineticsIntegrationTest {
     static final String LOCAL_DB_USER = "postgres";
     static final String LOCAL_DB_PASS = "Sardorbek.01";
 
+    @org.junit.jupiter.api.BeforeEach
+    void checkPostgres() {
+        TestPostgresUtils.assumePostgresAvailable();
+    }
+
     @BeforeAll
-    static void setUpClass() throws Exception {
-        try (Connection conn = DriverManager.getConnection(LOCAL_DB_URL, LOCAL_DB_USER, LOCAL_DB_PASS)) {
+    static void setUpClass() {
+        if (!TestPostgresUtils.isPostgresAvailable()) {
+            return;
+        }
+        try (Connection conn = DriverManager.getConnection(TestPostgresUtils.LOCAL_DB_URL, TestPostgresUtils.LOCAL_DB_USER, TestPostgresUtils.LOCAL_DB_PASS)) {
             conn.createStatement().execute("DROP SCHEMA IF EXISTS chemistry CASCADE;");
             conn.createStatement().execute("CREATE SCHEMA chemistry;");
             conn.createStatement().execute("DROP TABLE IF EXISTS users CASCADE;");
             conn.createStatement().execute("DROP TABLE IF EXISTS refresh_tokens CASCADE;");
             conn.createStatement().execute("DROP TABLE IF EXISTS flyway_schema_history CASCADE;");
+        } catch (Exception ignored) {
         }
-        Flyway.configure()
-                .dataSource(LOCAL_DB_URL, LOCAL_DB_USER, LOCAL_DB_PASS)
-                .locations("classpath:db/migration/chemistry")
-                .schemas("chemistry")
-                .createSchemas(true)
-                .table("flyway_schema_history_chemistry")
-                .target("33")
-                .baselineOnMigrate(true)
-                .load()
-                .migrate();
     }
 
     @DynamicPropertySource
     static void registerProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", () -> LOCAL_DB_URL);
-        registry.add("spring.datasource.username", () -> LOCAL_DB_USER);
-        registry.add("spring.datasource.password", () -> LOCAL_DB_PASS);
+        if (TestPostgresUtils.isPostgresAvailable()) {
+            registry.add("spring.datasource.url", () -> TestPostgresUtils.LOCAL_DB_URL);
+            registry.add("spring.datasource.username", () -> TestPostgresUtils.LOCAL_DB_USER);
+            registry.add("spring.datasource.password", () -> TestPostgresUtils.LOCAL_DB_PASS);
+        }
     }
 
     @Autowired
