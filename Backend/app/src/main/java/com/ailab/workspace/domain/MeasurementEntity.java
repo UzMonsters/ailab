@@ -24,9 +24,9 @@ public class MeasurementEntity {
     private String targetItemId;
 
     @Column(name = "kind", nullable = false)
-    private String kind; // TEMPERATURE, PH, MASS, PRESSURE, VOLUME, VOLTAGE
+    private String kind;
 
-    @Column(name = "value", nullable = false, precision = 20, scale = 8)
+    @Column(name = "\"value\"", nullable = false, precision = 20, scale = 8)
     private BigDecimal value;
 
     @Column(name = "unit", nullable = false)

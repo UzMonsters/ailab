@@ -64,13 +64,14 @@ class WorkspaceMigrationUpgradeIntegrationTest {
         workspaceRepository.flush();
         stateRepository.flush();
 
-        // 3. Execute migration backfill SQL statement (simulating V2 migration step)
         jdbcTemplate.update("""
             INSERT INTO workspace_members (workspace_id, user_id, role, joined_at, created_at, updated_at)
-            SELECT id, owner_id, 'OWNER', created_at, created_at, updated_at
-            FROM workspaces
-            WHERE id = ?
-            ON CONFLICT (workspace_id, user_id) DO NOTHING
+            SELECT w.id, w.owner_id, 'OWNER', w.created_at, w.created_at, w.updated_at
+            FROM workspaces w
+            WHERE w.id = ?
+              AND NOT EXISTS (
+                SELECT 1 FROM workspace_members wm WHERE wm.workspace_id = w.id AND wm.user_id = w.owner_id
+              )
         """, testWsId);
 
         // 4. Verify membership record is correctly created
@@ -86,12 +87,13 @@ class WorkspaceMigrationUpgradeIntegrationTest {
         assertThat(retrievedState.get().getStateVersion()).isEqualTo(1L);
         assertThat(retrievedState.get().getItemsJson()).contains("beaker-250ml");
 
-        // 6. Verify duplicate owner insertions are safely ignored (ON CONFLICT DO NOTHING)
         jdbcTemplate.update("""
             INSERT INTO workspace_members (workspace_id, user_id, role, joined_at, created_at, updated_at)
-            VALUES (?, ?, 'OWNER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-            ON CONFLICT (workspace_id, user_id) DO NOTHING
-        """, testWsId, testOwnerId);
+            SELECT ?, ?, 'OWNER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+            WHERE NOT EXISTS (
+                SELECT 1 FROM workspace_members WHERE workspace_id = ? AND user_id = ?
+            )
+        """, testWsId, testOwnerId, testWsId, testOwnerId);
 
         assertThat(memberRepository.findByWorkspaceIdAndUserId(testWsId, testOwnerId)).isPresent();
     }

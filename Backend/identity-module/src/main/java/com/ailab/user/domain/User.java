@@ -38,6 +38,17 @@ public class User {
     private String language = "en";
     @Column(nullable = false, length = 20)
     private String theme = "light";
+    @Column(nullable = false, length = 20)
+    private String status = "ACTIVE";
+    @Column(name = "status_reason", length = 500)
+    private String statusReason;
+    @Column(name = "blocked_until")
+    private Instant blockedUntil;
+    @Column(name = "last_seen_at")
+    private Instant lastSeenAt;
+    @Version
+    @Column(nullable = false)
+    private Long version = 0L;
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "application_settings", nullable = false, columnDefinition = "jsonb")
     private Map<String, Object> applicationSettings = new HashMap<>();
@@ -68,6 +79,11 @@ public class User {
     public long getXp() { return xp; }
     public String getLanguage() { return language; }
     public String getTheme() { return theme; }
+    public String getStatus() { return status; }
+    public String getStatusReason() { return statusReason; }
+    public Instant getBlockedUntil() { return blockedUntil; }
+    public Instant getLastSeenAt() { return lastSeenAt; }
+    public Long getVersion() { return version; }
     public Map<String, Object> getApplicationSettings() { return Collections.unmodifiableMap(new HashMap<>(applicationSettings)); }
     public Map<String, Long> getStatistics() { return Collections.unmodifiableMap(new HashMap<>(statistics)); }
     public Set<String> getAchievements() { return Collections.unmodifiableSet(new HashSet<>(achievements)); }
@@ -85,6 +101,8 @@ public class User {
         this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
+        this.status = "ACTIVE";
+        this.version = 0L;
     }
 
     public void updateProfile(String username, String avatarUrl) {
@@ -109,6 +127,46 @@ public class User {
             this.role = role;
             incrementTokenVersion();
         }
+    }
+
+    public void updateAdminUser(String username, Role role, String status, String reason) {
+        if (username != null && !username.isBlank()) {
+            this.username = username;
+        }
+        if (role != null && role != this.role) {
+            this.role = role;
+            incrementTokenVersion();
+        }
+        if (status != null && !status.isBlank()) {
+            this.status = status;
+            this.statusReason = reason;
+            if ("BLOCKED".equalsIgnoreCase(status) || "DEACTIVATED".equalsIgnoreCase(status)) {
+                incrementTokenVersion();
+            }
+        }
+    }
+
+    public void block(String reason, Instant until) {
+        this.status = "BLOCKED";
+        this.statusReason = reason;
+        this.blockedUntil = until;
+        incrementTokenVersion();
+    }
+
+    public void unblock(String reason) {
+        this.status = "ACTIVE";
+        this.statusReason = reason;
+        this.blockedUntil = null;
+    }
+
+    public void deactivate(String reason) {
+        this.status = "DEACTIVATED";
+        this.statusReason = reason;
+        incrementTokenVersion();
+    }
+
+    public void setLastSeenAt(Instant lastSeenAt) {
+        this.lastSeenAt = lastSeenAt;
     }
 
     public void incrementTokenVersion() {

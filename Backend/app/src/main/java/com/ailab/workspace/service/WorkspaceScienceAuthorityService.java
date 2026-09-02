@@ -35,13 +35,20 @@ public class WorkspaceScienceAuthorityService {
 
     public Map<String, Object> authoritativeEquipment(Map<String, Object> proposed) {
         String profileId = string(proposed.getOrDefault("profileId", proposed.get("equipmentProfileId")));
-        Optional<EquipmentReferenceProfile> profile = profileId.isBlank()
-                ? Optional.empty()
-                : equipmentRepository.findByProfileId(profileId);
+        Optional<EquipmentReferenceProfile> profile = Optional.empty();
+        if (!profileId.isBlank()) {
+            try {
+                profile = equipmentRepository.findByProfileId(profileId);
+            } catch (Exception ignored) {
+            }
+        }
 
         if (profile.isEmpty()) {
             String equipmentType = string(proposed.get("equipmentType"));
-            profile = resolveByType(equipmentType);
+            try {
+                profile = resolveByType(equipmentType);
+            } catch (Exception ignored) {
+            }
         }
 
         if (profile.isPresent()) {
@@ -170,7 +177,12 @@ public class WorkspaceScienceAuthorityService {
         }
 
         String normalized = equipmentType.toUpperCase(Locale.ROOT);
-        List<EquipmentReferenceProfile> active = equipmentRepository.findActive();
+        List<EquipmentReferenceProfile> active;
+        try {
+            active = equipmentRepository.findActive();
+        } catch (Exception ignored) {
+            active = List.of();
+        }
         Optional<EquipmentReferenceProfile> exact = active.stream()
                 .filter(p -> p.type().name().equals(normalized) || p.profileId().equalsIgnoreCase(equipmentType))
                 .findFirst();

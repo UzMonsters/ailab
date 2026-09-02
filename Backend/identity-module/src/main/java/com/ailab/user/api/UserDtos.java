@@ -1,8 +1,11 @@
 package com.ailab.user.api;
 
-import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.Pattern;
 import com.ailab.user.domain.Role;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -45,6 +48,51 @@ public final class UserDtos {
     public record AdminUpdateUserRequest(@Size(min = 3, max = 50) String username,
                                          @jakarta.validation.constraints.Email String email,
                                          Role role) {
+    }
+
+    public record AdminUserListItem(String id, String displayName, String email, Role role, String status,
+                                    int level, long xp, Instant lastActiveAt, Instant createdAt, Long version) {
+    }
+
+    public record PageMetadata(int number, int size, long totalElements, int totalPages) {
+    }
+
+    public record AdminUserListResponse(List<AdminUserListItem> items, PageMetadata page, Map<String, Object> facets) {
+    }
+
+    public record AdminUserDetailResponse(Map<String, Object> user, List<Role> roles, String status,
+                                          Map<String, Long> statistics, Instant createdAt, Instant lastSeenAt, Long version) {
+    }
+
+    public record AdminPatchUserRequest(String username, List<Role> roles, Role role, String status, String reason) {
+    }
+
+    public record AdminBlockUserRequest(String reason, Instant until) {
+    }
+
+    public record AdminBlockUserResponse(String id, String status, int sessionsRevoked) {
+    }
+
+    public record AdminUnblockUserRequest(String reason) {
+    }
+
+    public record AdminUnblockUserResponse(String id, String status) {
+    }
+
+    public record AdminDeleteUserRequest(String reason, String mode) {
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record AdminDeleteUserResponse(String status, Instant deletionScheduledFor) {
+    }
+
+    public record UserActivity(String id, Instant occurredAt, String type, String action, String description, String ip, String userAgent) {
+    }
+
+    public record UserActivityListResponse(List<UserActivity> items, PageMetadata page) {
+    }
+
+    public record UserLearningProgressResponse(List<Map<String, Object>> tracks, int attempts, int completedLevels, Instant lastActivityAt) {
     }
 
     public record SuccessResponse(boolean success) {
