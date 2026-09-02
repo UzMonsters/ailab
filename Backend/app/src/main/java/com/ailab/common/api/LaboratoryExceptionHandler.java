@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
@@ -22,19 +23,33 @@ public class LaboratoryExceptionHandler {
 
     @ExceptionHandler(WorkspaceNotFoundException.class)
     ResponseEntity<ApiError> workspaceNotFound(WorkspaceNotFoundException ex, HttpServletRequest req) {
-        return error(HttpStatus.NOT_FOUND, ex.getMessage(), req, Map.of());
+        return problem(HttpStatus.NOT_FOUND, "WORKSPACE_NOT_FOUND", "Workspace Not Found", ex.getMessage(), req, Map.of());
     }
 
     @ExceptionHandler(VersionConflictException.class)
     ResponseEntity<ApiError> workspaceVersionConflict(VersionConflictException ex, HttpServletRequest req) {
-        return error(HttpStatus.CONFLICT, ex.getMessage(), req, Map.of(
+        return problem(HttpStatus.CONFLICT, "STATE_VERSION_CONFLICT", "State Version Conflict", ex.getMessage(), req, Map.of(
                 "expectedVersion", Long.toString(ex.getExpectedVersion()),
                 "actualVersion", Long.toString(ex.getActualVersion())));
     }
 
+    @ExceptionHandler(ResponseStatusException.class)
+    ResponseEntity<ApiError> responseStatus(ResponseStatusException ex, HttpServletRequest req) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        if (status == null) status = HttpStatus.BAD_REQUEST;
+        String reason = ex.getReason() != null ? ex.getReason() : status.getReasonPhrase();
+        String code = status.name();
+        if (reason.startsWith("PORT_") || reason.startsWith("INVALID_") || reason.startsWith("THERMAL_")
+                || reason.startsWith("LAST_OWNER") || reason.startsWith("STALE_") || reason.startsWith("SHARE_")) {
+            int colon = reason.indexOf(':');
+            code = colon > 0 ? reason.substring(0, colon).trim() : reason;
+        }
+        return problem(status, code, status.getReasonPhrase(), reason, req, Map.of());
+    }
+
     @ExceptionHandler(SafetyException.class)
     ResponseEntity<ApiError> unsafeScientificOperation(SafetyException ex, HttpServletRequest req) {
-        return error(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), req, Map.of(
+        return problem(HttpStatus.UNPROCESSABLE_ENTITY, "SAFETY_VIOLATION_" + ex.getErrorCode().name(), "Laboratory Safety Violation", ex.getMessage(), req, Map.of(
                 "code", ex.getErrorCode().name()));
     }
 
@@ -44,7 +59,7 @@ public class LaboratoryExceptionHandler {
                 || ex.getErrorCode() == SimulationExecutionErrorCode.IDEMPOTENCY_CONFLICT
                 ? HttpStatus.CONFLICT
                 : HttpStatus.BAD_REQUEST;
-        return error(status, ex.getMessage(), req, Map.of("code", ex.getErrorCode().name()));
+        return problem(status, "SIMULATION_" + ex.getErrorCode().name(), "Simulation Execution Error", ex.getMessage(), req, Map.of("code", ex.getErrorCode().name()));
     }
 
     @ExceptionHandler(SimulationStateException.class)
@@ -53,20 +68,12 @@ public class LaboratoryExceptionHandler {
                 || ex.errorCode() == SimulationStateErrorCode.IDEMPOTENCY_CONFLICT
                 ? HttpStatus.CONFLICT
                 : HttpStatus.UNPROCESSABLE_ENTITY;
-        return error(status, ex.getMessage(), req, Map.of("code", ex.errorCode().name()));
+        return problem(status, "STATE_" + ex.errorCode().name(), "Simulation State Error", ex.getMessage(), req, Map.of("code", ex.errorCode().name()));
     }
 
-    private ResponseEntity<ApiError> error(HttpStatus status, String message, HttpServletRequest req, Map<String, String> errors) {
+    private ResponseEntity<ApiError> problem(HttpStatus status, String code, String title, String message, HttpServletRequest req, Map<String, String> errors) {
         String correlationId = req.getHeader("X-Correlation-Id");
-        return ResponseEntity.status(status).body(new ApiError(
-                Instant.now(),
-                status.value(),
-                status.getReasonPhrase(),
-                message == null ? status.getReasonPhrase() : message,
-                req.getRequestURI(),
-                List.of(),
-                List.of(),
-                errors,
-                correlationId == null || correlationId.isBlank() ? null : correlationId));
+        ApiError err = ApiError.ofProblem(status.value(), code, title, message != null ? message : title, req.getRequestURI(), correlationId, errors);
+        return ResponseEntity.status(status).body(err);
     }
 }

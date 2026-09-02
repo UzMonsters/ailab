@@ -11,34 +11,45 @@ import com.ailab.chemistry.domain.simulationengine.SimulationExecutionResult;
 import com.ailab.chemistry.domain.simulationstate.CreateSimulationSessionRequest;
 import com.ailab.chemistry.domain.simulationstate.SimulationSessionId;
 import com.ailab.chemistry.domain.simulationstate.SimulationState;
+import com.ailab.workspace.dto.MeasurementPointDto;
 import com.ailab.workspace.service.LaboratoryAccessService;
+import com.ailab.workspace.service.MeasurementService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/chemistry/experiments")
-@Tag(name = "Laboratory Experiments & Simulation", description = "Virtual experiment lifecycle, scientific operations, simulation execution, safety checks, audit, and replay")
+@Tag(name = "Laboratory Experiments & Simulation", description = "Virtual experiment lifecycle, scientific operations, simulation execution, safety checks, audit, measurements, and replay")
 @SecurityRequirement(name = "bearerAuth")
 public class LaboratoryExperimentController {
 
     private final SimulationSessionService sessionService;
     private final SimulationEngineService engineService;
     private final LaboratoryAccessService accessService;
+    private final MeasurementService measurementService;
 
-    public LaboratoryExperimentController(SimulationSessionService sessionService, SimulationEngineService engineService,
-                                          LaboratoryAccessService accessService) {
+    public LaboratoryExperimentController(
+            SimulationSessionService sessionService,
+            SimulationEngineService engineService,
+            LaboratoryAccessService accessService,
+            MeasurementService measurementService
+    ) {
         this.sessionService = sessionService;
         this.engineService = engineService;
         this.accessService = accessService;
+        this.measurementService = measurementService;
     }
 
     private String getCurrentUserId() {
@@ -113,6 +124,18 @@ public class LaboratoryExperimentController {
                 new SimulationSessionId(sessionId),
                 new LaboratoryEventId(eventId)
         );
+    }
+
+    @GetMapping("/{sessionId}/measurements")
+    @Operation(summary = "Get experiment measurements", description = "Query sensor time-series records (temperature, pH, mass) for an active or completed experiment session.")
+    public List<MeasurementPointDto> getExperimentMeasurements(
+            @PathVariable String sessionId,
+            @RequestParam(required = false) String kind,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
+            @RequestParam(defaultValue = "100") int limit) {
+        accessService.verifyExperimentAccess(sessionId, getCurrentUserId());
+        return measurementService.getMeasurements(sessionId, null, kind, from, to, limit);
     }
 
     public record SimulationOperationRequest(
