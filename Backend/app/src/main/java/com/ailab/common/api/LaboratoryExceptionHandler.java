@@ -71,6 +71,38 @@ public class LaboratoryExceptionHandler {
         return problem(status, "STATE_" + ex.errorCode().name(), "Simulation State Error", ex.getMessage(), req, Map.of("code", ex.errorCode().name()));
     }
 
+    @ExceptionHandler(com.ailab.learning.exception.LevelNotFoundException.class)
+    ResponseEntity<ApiError> levelNotFound(com.ailab.learning.exception.LevelNotFoundException ex, HttpServletRequest req) {
+        return problem(HttpStatus.NOT_FOUND, "LEVEL_NOT_FOUND", "Level Not Found", ex.getMessage(), req, Map.of());
+    }
+
+    @ExceptionHandler(com.ailab.learning.exception.PrerequisiteNotMetException.class)
+    ResponseEntity<ApiError> prerequisiteNotMet(com.ailab.learning.exception.PrerequisiteNotMetException ex, HttpServletRequest req) {
+        return problem(HttpStatus.CONFLICT, "PREREQUISITE_NOT_MET", "Prerequisite Not Met", ex.getMessage(), req, Map.of(
+                "requiredLevelId", ex.getRequiredLevelId() != null ? ex.getRequiredLevelId() : ""));
+    }
+
+    @ExceptionHandler(com.ailab.learning.exception.LevelVersionChangedException.class)
+    ResponseEntity<ApiError> levelVersionChanged(com.ailab.learning.exception.LevelVersionChangedException ex, HttpServletRequest req) {
+        return problem(HttpStatus.CONFLICT, "LEVEL_VERSION_CHANGED", "Level Version Changed", ex.getMessage(), req, Map.of(
+                "expectedVersion", Long.toString(ex.getExpectedVersion()),
+                "actualVersion", Long.toString(ex.getActualVersion())));
+    }
+
+    @ExceptionHandler(com.ailab.learning.exception.LearningStateVersionConflictException.class)
+    ResponseEntity<ApiError> learningStateVersionConflict(com.ailab.learning.exception.LearningStateVersionConflictException ex, HttpServletRequest req) {
+        return problem(HttpStatus.CONFLICT, "STATE_VERSION_CONFLICT", "State Version Conflict", ex.getMessage(), req, Map.of(
+                "expectedVersion", Long.toString(ex.getExpectedVersion()),
+                "actualVersion", Long.toString(ex.getActualVersion())));
+    }
+
+    @ExceptionHandler(com.ailab.learning.exception.StepRequirementNotMetException.class)
+    ResponseEntity<ApiError> stepRequirementNotMet(com.ailab.learning.exception.StepRequirementNotMetException ex, HttpServletRequest req) {
+        return problem(HttpStatus.UNPROCESSABLE_ENTITY, "STEP_REQUIREMENT_NOT_MET", "Step Requirement Not Met", ex.getMessage(), req, Map.of(
+                "reason", ex.getReason() != null ? ex.getReason() : "",
+                "hint", ex.getHint() != null ? ex.getHint() : ""));
+    }
+
     private ResponseEntity<ApiError> problem(HttpStatus status, String code, String title, String message, HttpServletRequest req, Map<String, String> errors) {
         String correlationId = req.getHeader("X-Correlation-Id");
         ApiError err = ApiError.ofProblem(status.value(), code, title, message != null ? message : title, req.getRequestURI(), correlationId, errors);

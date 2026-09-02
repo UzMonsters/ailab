@@ -86,7 +86,7 @@ public class SecurityConfig {
                 .formLogin(formLogin -> formLogin.disable())
                 .authenticationProvider(authenticationProvider)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**", "/api/v1/books/**", "/api/v1/shared-workspaces/**", "/ws/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/health").permitAll()
+                        .requestMatchers("/api/v1/auth/**", "/api/v1/books/**", "/api/v1/learning/**", "/api/v1/shared-workspaces/**", "/ws/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/health").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/users/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated())

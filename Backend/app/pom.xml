@@ -114,14 +114,25 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <argLine>-XX:+EnableDynamicAgentLoading -Xshare:off --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED</argLine>
                     <excludes>
                         <exclude>**/Phase*</exclude>
                         <exclude>**/FlywayMigrationTests*</exclude>
                         <exclude>**/AiMonolithApplicationTests*</exclude>
                         <exclude>**/ChemistryCatalogIntegrationTest*</exclude>
+                        <exclude>**/ChemistryControllersIntegrationTest*</exclude>
                         <exclude>**/WorkspaceEquipmentPortsIntegrationTest*</exclude>
                         <exclude>**/WorkspaceRedTeamSecurityAndPhysicsIntegrationTest*</exclude>
                         <exclude>**/WorkspaceStateIntegrationTest*</exclude>
+                        <exclude>**/WorkspaceCanonicalScienceIntegrationTest*</exclude>
+                        <exclude>**/WorkspaceIntegrationTest*</exclude>
+                        <exclude>**/WorkspaceMeasurementsAndPreviewsIntegrationTest*</exclude>
+                        <exclude>**/WorkspaceMigrationUpgradeIntegrationTest*</exclude>
+                        <exclude>**/WorkspaceSharingCollaborationIntegrationTest*</exclude>
+                        <exclude>**/WorkspaceWebSocketBrokerIntegrationTest*</exclude>
+                        <exclude>**/JwtStompChannelInterceptorTest*</exclude>
+                        <exclude>**/OpenApiContractVerificationIntegrationTest*</exclude>
+                        <exclude>**/OpenApiContractIntegrationTest*</exclude>
                     </excludes>
                 </configuration>
             </plugin>

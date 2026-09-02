@@ -72,11 +72,6 @@ class UserControllerTest {
 
     @Test
     void delegatesExtendedProfileEndpoints() {
-        UserDtos.LearningProgressResponse learningProgress = new UserDtos.LearningProgressResponse(
-                3, Map.of("track", "chemistry"), List.of("BADGE_1"), List.of(), 6, Instant.now()
-        );
-        when(service.getLearningProgress("usr_1", "chemistry")).thenReturn(learningProgress);
-
         UserDtos.AvatarUploadTicketRequest uploadReq = new UserDtos.AvatarUploadTicketRequest("avatar.webp", "image/webp", 1000L, "sha");
         UserDtos.AvatarUploadTicketResponse uploadRes = new UserDtos.AvatarUploadTicketResponse("asset_1", "https://upload.url", Instant.now(), 2097152L, List.of("image/webp"));
         when(service.createAvatarUploadTicket("usr_1", uploadReq)).thenReturn(uploadRes);
@@ -100,7 +95,6 @@ class UserControllerTest {
         UserDtos.AccountDeletionResponse deletionRes = new UserDtos.AccountDeletionResponse("del_123", Instant.now(), "DELETION_SCHEDULED");
         when(service.scheduleAccountDeletion("usr_1", deletionReq)).thenReturn(deletionRes);
 
-        assertThat(controller.learningProgress("usr_1", "chemistry")).isEqualTo(learningProgress);
         assertThat(controller.createAvatarUploadTicket("usr_1", uploadReq)).isEqualTo(uploadRes);
         assertThat(controller.completeAvatarUpload("usr_1", completeReq)).isEqualTo(completeRes);
         assertThat(controller.reAuth("usr_1", reAuthReq)).isEqualTo(reAuthRes);

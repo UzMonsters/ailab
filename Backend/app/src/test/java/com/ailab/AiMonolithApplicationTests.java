@@ -18,31 +18,9 @@ import com.ailab.chemistry.domain.equation.BalancedEquation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(properties = {
-        "spring.datasource.url=jdbc:postgresql://localhost:5432/ai_laboratory",
-        "spring.datasource.username=postgres",
-        "spring.datasource.password=Sardorbek.01",
-        "app.flyway.enabled=true"
-})
+@SpringBootTest
 @ActiveProfiles("test")
 class AiMonolithApplicationTests {
-
-    @org.junit.jupiter.api.BeforeAll
-    static void cleanDb() {
-        try (java.sql.Connection conn = java.sql.DriverManager.getConnection(
-                "jdbc:postgresql://localhost:5432/ai_laboratory", "postgres", "Sardorbek.01")) {
-            conn.createStatement().execute("DROP SCHEMA IF EXISTS chemistry CASCADE;");
-            conn.createStatement().execute("CREATE SCHEMA chemistry;");
-            conn.createStatement().execute("DROP TABLE IF EXISTS workspace_events CASCADE;");
-            conn.createStatement().execute("DROP TABLE IF EXISTS workspace_states CASCADE;");
-            conn.createStatement().execute("DROP TABLE IF EXISTS workspaces CASCADE;");
-            conn.createStatement().execute("DROP TABLE IF EXISTS flyway_schema_history_workspace CASCADE;");
-            conn.createStatement().execute("DROP TABLE IF EXISTS refresh_tokens CASCADE;");
-            conn.createStatement().execute("DROP TABLE IF EXISTS users CASCADE;");
-            conn.createStatement().execute("DROP TABLE IF EXISTS flyway_schema_history CASCADE;");
-        } catch (Exception ignored) {
-        }
-    }
 
     @Autowired
     private ChemicalFormulaService formulaService;

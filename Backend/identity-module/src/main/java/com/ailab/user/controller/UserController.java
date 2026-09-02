@@ -56,11 +56,6 @@ public class UserController {
         return service.getStatistics(userId);
     }
 
-    @GetMapping("/me/learning-progress")
-    public UserDtos.LearningProgressResponse learningProgress(@AuthenticationPrincipal String userId,
-                                                             @RequestParam(value = "track", defaultValue = "chemistry") String track) {
-        return service.getLearningProgress(userId, track);
-    }
 
     @PostMapping("/me/avatar/upload-urls")
     public UserDtos.AvatarUploadTicketResponse createAvatarUploadTicket(@AuthenticationPrincipal String userId,
