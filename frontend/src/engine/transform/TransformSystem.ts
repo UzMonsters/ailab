@@ -1,0 +1,2 @@
+import type { LaboratoryObject } from '../objects/LaboratoryObject';
+export class TransformSystem { move(object: LaboratoryObject, x: number, y: number) { return object.move({ x, y }); } rotate(object: LaboratoryObject, degrees: number) { return object.rotate(degrees); } resize(object: LaboratoryObject, width: number, height: number) { return object.resize({ width, height }); } mirror(object: LaboratoryObject, axis: 'x' | 'y') { object.scale[axis] *= -1; return object; } }

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SearchX, ArrowLeft } from 'lucide-react';
-import ScienceBackground, { BackgroundGlow } from '@/components/common/ScienceBackground';
+import ScienceBackground, { BackgroundGlow } from '@/shared/ui/ScienceBackground';
 
 export default function NotFound() {
   const pathname = usePathname();

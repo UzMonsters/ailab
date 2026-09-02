@@ -24,6 +24,7 @@ class AuthControllerTest {
         controller = new AuthController(service);
         ReflectionTestUtils.setField(controller, "refreshCookieName", "refresh_token");
         ReflectionTestUtils.setField(controller, "refreshCookieSecure", true);
+        ReflectionTestUtils.setField(controller, "refreshCookieSameSite", "Strict");
         ReflectionTestUtils.setField(controller, "refreshTokenTtl", Duration.ofDays(30));
     }
 

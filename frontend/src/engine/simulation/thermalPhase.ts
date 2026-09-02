@@ -1,0 +1,20 @@
+import type { LaboratoryObject } from '../objects/LaboratoryObject';
+import { defaultReactionRegistry } from './ReactionRegistry';
+const amount = (content: Record<string, unknown>) => Math.max(0, Number(content.amount ?? 0));
+const material = (content: Record<string, unknown>) => String(content.materialId ?? content.formula ?? '');
+export const syncVolume = (object: LaboratoryObject) => { const volume = object.contents.filter((content) => content.phase === 'liquid' || content.phase === 'aqueous').reduce((sum, content) => sum + amount(content), 0), capacity = Number(object.properties.capacityMl ?? object.metadata.capacity ?? 100); object.properties.volumeMl = volume; object.properties.liquidLevel = capacity > 0 ? Math.min(1, volume / capacity) : 0; };
+export const applyEvaporation = (object: LaboratoryObject, liquids: Record<string, unknown>[], gases: Record<string, unknown>[], liquidMass: number, power: number, heatCapacity: number, dt: number, closed: boolean, gasOutlet: boolean) => {
+  if (!liquidMass || !liquids.length) return false;
+  const boiling = Math.min(...liquids.map((content) => Number(content.boilingPointC ?? defaultReactionRegistry.getMaterialProperties(material(content)).boilingPointC ?? 100)));
+  const temp = Number(object.properties.contentsTemperature ?? object.properties.temperature ?? 24.5);
+  if (temp < boiling) return false;
+  const source = liquids[0], latent = Number(source.latentHeatVaporizationJPerG ?? defaultReactionRegistry.getMaterialProperties(material(source)).latentHeatJPerG ?? 2260), vaporized = Math.min(liquidMass, Math.max(0, power * dt - heatCapacity * .02) / latent);
+  if (vaporized <= 0) return false;
+  source.amount = amount(source) - vaporized;
+  const gas = gases.find((content) => material(content) === material(source));
+  if (gas) gas.amount = amount(gas) + vaporized;
+  else if (closed || gasOutlet) object.contents.push({ ...source, amount: vaporized, phase: 'gas', name: `${String(source.name ?? material(source))} vapor` });
+  else object.properties.escapedMassG = Number(object.properties.escapedMassG ?? 0) + vaporized;
+  syncVolume(object); return true;
+};
+export const hasGasOutlet = (connections: Iterable<any>, objectId: string) => [...connections].some((connection) => connection.medium === 'gas' && (connection.from.objectId === objectId || connection.to.objectId === objectId));

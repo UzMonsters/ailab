@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test:runtime": "node scripts/test-sandbox-runtime.mjs",
+    "test:acceptance": "node scripts/test-sandbox-acceptance.mjs",
+    "test:browser": "playwright test",
     "check:translations": "node scripts/check-translations.mjs",
     "check": "pnpm check:translations && pnpm typecheck && pnpm lint"
   },
@@ -20,6 +23,7 @@
     "lucide-react": "^1.29.0",
     "next": "16.3.0",
     "next-intl": "^4.13.5",
+    "next-themes": "^0.4.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "tailwind-merge": "^3.6.0",
@@ -27,11 +31,13 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@playwright/test": "1.51.1",
     "@tailwindcss/postcss": "^4",
     "@types/react": "19.2.18",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+    "typescript": "6.0.3"
   },
   "packageManager": "pnpm@11.20.0"
 }

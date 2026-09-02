@@ -1,0 +1,2 @@
+import type { Vector2 } from '../core/types';
+export class Camera { position: Vector2 = { x: 0, y: 0 }; zoom = 1; pan(delta: Vector2) { this.position = { x: this.position.x + delta.x, y: this.position.y + delta.y }; } setZoom(zoom: number) { this.zoom = Math.min(4, Math.max(.25, zoom)); } screenToWorld(point: Vector2) { return { x: (point.x - this.position.x) / this.zoom, y: (point.y - this.position.y) / this.zoom }; } }

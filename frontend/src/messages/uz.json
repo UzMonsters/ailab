@@ -484,7 +484,12 @@
     "status": "Yadro faol"
   },
   "sandbox": {
+    "add": "Qo'shish",
     "untitled": "Nomsiz tajriba",
+    "headerTitle": "Laboratoriya",
+    "freeMode": "Erkin tajriba",
+    "scenarioProgress": "Stsenariy o'tilmoqda",
+    "share": "Ulashish",
     "equipment": "Uskunalar",
     "materials": "Materiallar",
     "properties": "Xususiyatlar",
@@ -506,6 +511,7 @@
     "connectionModeTarget": "Mos keladigan maqsad portini tanlang",
     "selectProperties": "Xususiyatlarni ko'rish uchun elementni tanlang",
     "searchMaterials": "Materiallarni qidirish...",
+    "search": "Qidirish...",
     "addedToCanvas": "{name} maydonga qo'shildi",
     "addedToContainer": "{name} konteynerga qo'shildi",
     "connectionModeToast": "Ulanish rejimi: manba portini, keyin maqsad portini tanlang",
@@ -543,7 +549,26 @@
     "type": "Tur",
     "capacity": "Sig'im",
     "contents": "Tarkib",
-    "actions": "Amallar",
+    "actions": {
+      "rotate": "Aylantirish",
+      "pour": "Quyish",
+      "heat": "Qizdirish",
+      "cool": "Sovitish",
+      "stir": "Aralashtirish",
+      "delete": "O'chirish",
+      "duplicate": "Nusxalash",
+      "connect": "Ulash",
+      "disconnect": "Uzish",
+      "empty": "Tozalash",
+      "ignite": "Yoqish",
+      "extinguish": "O'chirish",
+      "tare": "Tara",
+      "zero": "Nolga keltirish",
+      "calibrate": "Kalibrlash",
+      "attachProbe": "Zond biriktirish",
+      "detachProbe": "Uzib olish",
+      "fitView": "Hammasini ko'rsatish"
+    },
     "heat": "Qizdirish",
     "cool": "Sovutish",
     "stir": "Aralashtirish",
@@ -601,6 +626,966 @@
     "cat_gases": "Gazlar",
     "cat_metals": "Metallar",
     "cat_compounds": "Birikmalar",
-    "eq_tubing": "Naycha"
+    "eq_tubing": "Naycha",
+    "backendEquipment": "Tasdiqlangan uskunalar",
+    "tabs": {
+      "equipment": "Uskunalar",
+      "materials": "Materiallar",
+      "elements": "Elementlar",
+      "ai": "AI-yordamchi"
+    },
+    "inspector": {
+      "general": "Umumiy",
+      "contents": "Tarkib",
+      "physics": "Fizika",
+      "connections": "Ulanishlar",
+      "history": "Tarix"
+    },
+    "warnings": {
+      "vesselFull": "Idish to'la",
+      "invalidConnection": "Mos kelmaydigan port turlari",
+      "noVesselSelected": "Idish tanlanmagan",
+      "cannotPourGas": "Gazni quyib bo'lmaydi",
+      "cannotPourSolid": "Qattiq moddani quyib bo'lmaydi",
+      "heaterNotAttached": "Isitgich ulanmagan",
+      "unknownEquipment": "Noma'lum uskuna turi",
+      "overflowOccurred": "To'lib ketish yuz berdi"
+    },
+    "panels": {
+      "events": "Voqealar",
+      "measurements": "O'lchovlar",
+      "charts": "Grafiklar",
+      "warnings": "Ogohlantirishlar",
+      "simulation": "Simulyatsiya"
+    },
+    "engine": "Dvigatel",
+    "frameRate": "Kadrlar chastotasi",
+    "objectsLabel": "Obyektlar",
+    "thermodynamics": "Termodinamika",
+    "enabled": "Yoqilgan",
+    "fps": "60,0 FPS",
+    "simulationDescription": "Simulyatsiya tizimi brauzerda real vaqt rejimida lokal ishlaydi. Barcha fizik xususiyatlar (Nyuton sovishi, bug‘lanish, issiqlik o‘tkazuvchanligi, kondensatsiya va gaz bosimi) deterministik fizik dvigatel orqali hisoblanadi. Grafiklar va vektor holat React Context orqali interfeysga uzatiladi.",
+    "simulationDescriptionShort": "Mahalliy simulyatsiya brauzerda real vaqt rejimida ishlaydi.",
+    "simulation": {
+      "idle": "Kutish",
+      "running": "Ishlayapti",
+      "paused": "To'xtatilgan",
+      "localProvider": "Mahalliy simulyatsiya"
+    },
+    "scenarios": {
+      "tabTitle": "Stsenariylar",
+      "heating": {
+        "name": "Suvni qizdirish",
+        "desc": "Suyuqlik harorati o'zgarishini o'rganish."
+      },
+      "launch": "Boshlash",
+      "water_intro": {
+        "name": "Idishdagi suv",
+        "desc": "Stakanga suv qo'shing va hajmini tekshiring.",
+        "descKey": "Idishga suv qo'shing va hajm shkalasini o'qing.",
+        "step1": {
+          "title": "Idishni joylashtiring",
+          "hint": "Uskunalar bo'limini ochib, kolba yoki stakanni tanlang."
+        },
+        "step2": {
+          "title": "Suv qo'shing",
+          "hint": "Moddalar bo'limini oching, suvni tanlang va idishga bosing."
+        }
+      },
+      "measure_water": {
+        "name": "Haroratni o'lchash",
+        "desc": "Termometrni ulang va ko'rsatkichni o'qing.",
+        "descKey": "Datchik ulangandan so'ng suv haroratini o'lchang.",
+        "step1": {
+          "title": "Idishni joylashtiring",
+          "hint": "«Uskunalar»ni oching va ish maydoniga stakan qo'ying."
+        },
+        "step2": {
+          "title": "Suv qo'shing",
+          "hint": "«Materiallar»ni oching, suvni tanlang va stakanni bosing."
+        },
+        "step3": {
+          "title": "Termometrni ulang",
+          "hint": "Termometrni idish portiga ulang."
+        }
+      },
+      "heat_water": {
+        "name": "Suvni qizdirish",
+        "desc": "Qizdirgichni ulab, suvni xavfsiz qizdiring.",
+        "descKey": "Haroratni kuzatgan holda suvni qizdiring.",
+        "step1": {
+          "title": "Idishni joylashtiring",
+          "hint": "«Uskunalar»ni oching va ish maydoniga stakan qo'ying."
+        },
+        "step2": {
+          "title": "Suv qo'shing",
+          "hint": "«Materiallar»ni oching, suvni tanlang va stakanni bosing."
+        },
+        "step3": {
+          "title": "Qizdirgichni ulang",
+          "hint": "Plita yoki gorelkani idishga ulang."
+        },
+        "step4": {
+          "title": "Suvni qizdiring",
+          "hint": "Qizdirgichni yoqing va kuting."
+        },
+        "step5": {
+          "title": "Qaynashni kuzating",
+          "hint": "Bug‘ paydo bo‘lguncha simulyatsiyani davom ettiring."
+        }
+      },
+      "transfer_water": {
+        "name": "Suvni quyish",
+        "desc": "Ikki idishni ulang va suyuqlikni o'tkazing.",
+        "descKey": "Suvni mos idishlar orasida o'tkazing.",
+        "step1": {
+          "title": "Birinchi idishni joylashtiring",
+          "hint": "«Uskunalar»ni oching va ish maydoniga stakan qo'ying."
+        },
+        "step2": {
+          "title": "Suv qo'shing",
+          "hint": "«Materiallar»ni oching, suvni tanlang va birinchi stakanni bosing."
+        },
+        "step3": {
+          "title": "Ikkinchi idishni joylashtiring",
+          "hint": "«Uskunalar»ga qayting va yoniga ikkinchi stakan qo'ying."
+        },
+        "step4": {
+          "title": "Suvni quying",
+          "hint": "Suyuqlik portlarini ulang."
+        }
+      },
+      "cuso4": {
+        "name": "CuSO₄ eritmasi",
+        "desc": "Mis sulfatni suvda eritib ko'ring.",
+        "descKey": "Ko'k rangli mis sulfat eritmasini oling.",
+        "step1": {
+          "title": "Idishni joylashtiring",
+          "hint": "«Uskunalar»ni oching va ish maydoniga stakan qo'ying."
+        },
+        "step2": {
+          "title": "Mis sulfat qo'shing",
+          "hint": "«Materiallar»ni oching va stakanga CuSO₄ qo'shing."
+        },
+        "step3": {
+          "title": "Suv qo'shing",
+          "hint": "Suvni shu yoki ulangan idishga qo'shing."
+        },
+        "step4": {
+          "title": "Aralashtiring",
+          "hint": "Idishlarni ulang yoki tarkibni aralashtiring."
+        }
+      },
+      "kmno4": {
+        "name": "KMnO₄ suyultirish",
+        "desc": "Kaliy permanganatni suv bilan suyultiring.",
+        "descKey": "Rangli eritma konsentratsiyasi qanday o'zgarishini kuzating.",
+        "step1": {
+          "title": "Permanganat qo'shing",
+          "hint": "KMnO₄ ni tanlang."
+        },
+        "step2": {
+          "title": "Suv qo'shing",
+          "hint": "Idishga suv qo'shing."
+        },
+        "step3": {
+          "title": "Aralashtiring",
+          "hint": "Tarkibiy qismlarni quying yoki aralashtiring."
+        }
+      },
+      "hcl_naoh": {
+        "name": "HCl + NaOH neytrallanishi",
+        "desc": "Kislota va ishqorni aralashtirib, tuz va suv oling.",
+        "descKey": "Xavfsiz neytrallanish reaksiyasini bajaring.",
+        "step1": {
+          "title": "Kislota qo'shing",
+          "hint": "Kolbaga HCl qo'shing."
+        },
+        "step2": {
+          "title": "Ishqor qo'shing",
+          "hint": "Ikkinchi idishga NaOH qo'shing."
+        },
+        "step3": {
+          "title": "Aralashtiring",
+          "hint": "Idishlarni ulang va natijani kuzating."
+        }
+      },
+      "zn_hcl": {
+        "name": "Zn + HCl reaksiyasi",
+        "desc": "Ruxni kislota bilan reaksiyaga kiritib, vodorodni kuzating.",
+        "descKey": "Rux kislota bilan reaksiyaga kirishganda gaz ajralishini kuzating.",
+        "step1": {
+          "title": "Rux qo'shing",
+          "hint": "Zn ni idishga joylang."
+        },
+        "step2": {
+          "title": "Kislota qo'shing",
+          "hint": "HCl qo'shing."
+        },
+        "step3": {
+          "title": "Reaksiyani kuzating",
+          "hint": "Tarkibiy qismlarni ulang va tajribani boshlang."
+        }
+      },
+      "sulfur_heat": {
+        "name": "Oltingugurtni eritish",
+        "desc": "Oltingugurtni 115 °C dan yuqorida qizdiring.",
+        "descKey": "Qizdirish vaqtida oltingugurt faza o'tishini o'rganing.",
+        "step1": {
+          "title": "Oltingugurt qo'shing",
+          "hint": "Oltingugurtni issiqqa chidamli idishga soling."
+        },
+        "step2": {
+          "title": "Qizdirgichni ulang",
+          "hint": "Qizdirgichni idishga ulang."
+        },
+        "step3": {
+          "title": "Erishni kuzating",
+          "hint": "Haroratni 115 °C dan yuqoriga ko'taring."
+        }
+      },
+      "distillation": {
+        "name": "Oddiy distillatsiya",
+        "desc": "Idishlar, qizdirgich va kondensordan qurilma yig'ing.",
+        "descKey": "Suyuqlikni ajratish uchun barqaror qurilma yig'ing.",
+        "step1": {
+          "title": "Qurilmani yig'ing",
+          "hint": "Suvli kolbani joylashtiring."
+        },
+        "step2": {
+          "title": "Jihozlarni qo'shing",
+          "hint": "Qizdirgich, termometr va kondensorni qo'shing."
+        },
+        "step3": {
+          "title": "Zanjirni ulang",
+          "hint": "Kerakli barcha ulanishlarni yarating."
+        },
+        "step4": {
+          "title": "Kondensatni yig‘ing",
+          "hint": "Simulyatsiyani ishga tushiring va suyuqlik qabul qilgichga kirishini kuzating."
+        }
+      }
+    },
+    "menu": {
+      "file": "Fayl",
+      "edit": "Tahrirlash",
+      "view": "Ko'rinish",
+      "arrange": "Tartiblash",
+      "extra": "Qo'shimcha",
+      "new_exp": "Yangi tajriba",
+      "save_exp": "Tajribani saqlash",
+      "save_copy": "Nusxasini saqlash",
+      "import_snap": "Snapshot import qilish...",
+      "export_snap": "Snapshot eksport qilish...",
+      "share": "Ulashish...",
+      "clear_workspace": "Ish maydonini tozalash",
+      "undo": "Bekor qilish",
+      "redo": "Qaytarish",
+      "no_undo": "Bekor qilish uchun hech narsa yoq",
+      "no_redo": "Qaytarish uchun hech narsa yo'q",
+      "copy": "Nusxalash",
+      "delete_selected": "Tanlanganni o'chirish",
+      "select_all": "Barchasini tanlash",
+      "snap_grid": "To'rga yopishtirish",
+      "toggle_library": "Kutubxonani ko'rsatish yoki yashirish",
+      "toggle_inspector": "Inspektorni ko'rsatish yoki yashirish",
+      "hide_navbar": "Yuqori panelni yashirish",
+      "show_navbar": "Yuqori panelni ko'rsatish",
+      "align_left": "Chapga tekislash",
+      "align_center_h": "Gorizontal markazga",
+      "align_right": "O'ngga tekislash",
+      "align_top": "Yuqoriga tekislash",
+      "align_bottom": "Pastga tekislash",
+      "distribute_h": "Gorizontal taqsimlash",
+      "distribute_v": "Vertikal taqsimlash",
+      "show_grid": "Panjara",
+      "theme": "Mavzuni almashtirish",
+      "zoom_in": "Kattalashtirish",
+      "zoom_out": "Kichraytirish",
+      "center_scene": "Sahnani markazlash",
+      "toggle_fullscreen": "To'liq ekran",
+      "deselect": "Tanlovni bekor qilish"
+    },
+    "dock": {
+      "engine": "Dvigatel",
+      "frameRate": "Kadrlar chastotasi",
+      "objectsLabel": "Obyektlar",
+      "thermodynamics": "Termodinamika",
+      "enabled": "Yoqilgan",
+      "fps": "60,0 FPS",
+      "simulationDescription": "Simulyatsiya tizimi brauzerda real vaqt rejimida lokal ishlaydi. Barcha fizik xususiyatlar (Nyuton sovishi, bug‘lanish, issiqlik o‘tkazuvchanligi, kondensatsiya va gaz bosimi) deterministik fizik dvigatel orqali hisoblanadi. Grafiklar va vektor holat React Context orqali interfeysga uzatiladi.",
+      "simulationDescriptionShort": "Mahalliy simulyatsiya brauzerda real vaqt rejimida ishlaydi.",
+      "events": "Reaksiyalar jurnali",
+      "measurements": "O'lchovlar",
+      "charts": "Grafiklar",
+      "simulation": "Simulyatsiya",
+      "closePanel": "Panelni yopish",
+      "selectApparatus": "Xususiyatlari va ulanishlarini ko'rish uchun ishchi maydondan uskunani tanlang.",
+      "selectHint": "Maslahat: sahnadagi uskunani bosing.",
+      "equipmentDetails": "Uskuna tafsilotlari",
+      "description": "Tavsif",
+      "generalInfo": "Umumiy ma'lumotlar",
+      "volume": "Hajm",
+      "emptyVessel": "Idish bo'sh. Kutubxonadan modda qo'shing.",
+      "availablePorts": "Mavjud portlar",
+      "glass": "Shisha",
+      "liquid": "Suyuqlik",
+      "gas": "Gaz",
+      "thermal": "Isitish",
+      "sensor": "Datchik",
+      "emptyLog": "Jurnal bo'sh",
+      "objects": "obyekt",
+      "sync": {
+        "idle": "Tayyor",
+        "loading": "Yuklanmoqda…",
+        "hydrating": "Tiklanmoqda…",
+        "ready": "Tayyor",
+        "reconciling": "Sinxronlanmoqda…",
+        "offline": "Oflayn navbat",
+        "conflict": "Ziddiyat",
+        "saving": "Saqlanmoqda…",
+        "saved": "Saqlandi",
+        "error": "Saqlash xatosi"
+      },
+      "event": {
+        "item_added": "Obyekt qo'shildi",
+        "item_moved": "Obyekt ko'chirildi",
+        "item_resized": "O'lcham o'zgartirildi",
+        "item_rotated": "Obyekt burildi",
+        "material_added": "Modda qo'shildi",
+        "connection_added": "Ulanish yaratildi",
+        "connection_removed": "Ulanish o'chirildi",
+        "result_obtained": "Natija olindi",
+        "simulation_started": "Simulyatsiya boshlandi",
+        "simulation_paused": "Simulyatsiya pauza qilindi",
+        "simulation_stopped": "Simulyatsiya to'xtatildi",
+        "remove_item": "Uskuna o'chirildi",
+        "material_removed": "Modda o'chirildi",
+        "connect": "Ulanish yaratildi",
+        "disconnect": "Ulanish uzildi",
+        "pour": "Suyuqlik quyildi",
+        "heat_start": "Qizdirish boshlandi",
+        "heat_stop": "Qizdirish to'xtatildi",
+        "cool": "Sovitish boshlandi",
+        "stir_start": "Aralashtirish boshlandi",
+        "device_action": "Amal bajarildi",
+        "remote_event": "Tashqi yangilanish"
+      },
+      "readMore": "Batafsil...",
+      "readOnWiki": "Saytda batafsil o'qish",
+      "encyclopedia": "Ensiklopediya"
+    },
+    "quickActions": {
+      "title": "Tezkor harakatlar",
+      "pour": "Quyish",
+      "pourTo": "Qayerga quyish",
+      "pourTooltip": "Suyuqlikni quyish",
+      "noPour": "Quyish uchun suyuqlik yo'q",
+      "mix": "Aralashtirish",
+      "mixing": "Aralashtirilmoqda…",
+      "stop": "To'xtatish",
+      "mixTooltip": "Aralashtirish",
+      "noMix": "Bu idishni aralashtirib bo'lmaydi",
+      "copy": "Nusxalash",
+      "copyTooltip": "Uskunani nusxalash",
+      "delete": "O'chirish",
+      "deleteTooltip": "Uskunani o'chirish",
+      "noConnected": "Ulangan qurilmalar yoq.",
+      "cancel": "Bekor qilish"
+    },
+    "library": {
+      "liquids": "Suyuqliklar",
+      "salts": "Tuzlar",
+      "metals": "Metallar",
+      "others": "Boshqalar"
+    },
+    "equip": {
+      "beaker": {
+        "name": "Stakan 250ml",
+        "desc": "Suyuqliklarni aralashtirish va isitish uchun"
+      },
+      "erlenmeyer": {
+        "name": "Erlenmeyer kolbasi",
+        "desc": "Aralashtirish va reaksiyalar uchun"
+      },
+      "roundflask": {
+        "name": "Yumaloq tubli kolba",
+        "desc": "Reaksiyalar uchun uskunalar"
+      },
+      "testtube": {
+        "name": "Probirkalar",
+        "desc": "Kichik hajmlar uchun"
+      },
+      "graduated_cylinder": {
+        "name": "O’lchov silindri",
+        "desc": "Aniq hajm o’lchovi"
+      },
+      "separatory_funnel": {
+        "name": "Ajratish voronkasi",
+        "desc": "Laboratoriya uskunasi"
+      },
+      "volumetric_flask": {
+        "name": "O’lchov kolbasi",
+        "desc": "Laboratoriya uskunasi"
+      },
+      "burette": {
+        "name": "Byuretka",
+        "desc": "Laboratoriya uskunasi"
+      },
+      "pipette": {
+        "name": "Pipetka",
+        "desc": "Laboratoriya uskunasi"
+      },
+      "petri_dish": {
+        "name": "Petri idishi",
+        "desc": "Laboratoriya uskunasi"
+      },
+      "watch_glass": {
+        "name": "Soat shishasi",
+        "desc": "Laboratoriya uskunasi"
+      },
+      "funnel": {
+        "name": "Voronka",
+        "desc": "Suyuqliklarni quyish uchun"
+      },
+      "thermometer": {
+        "name": "Termometr",
+        "desc": "Haroratni o’lchaydi"
+      },
+      "phmeter": {
+        "name": "pH metr",
+        "desc": "pH o’lchaydi"
+      },
+      "hotplate": {
+        "name": "Magnit aralashtirgich",
+        "desc": "Isitish va aralashtirish"
+      },
+      "burner": {
+        "name": "Gorelka",
+        "desc": "Ochiq olovda isitish"
+      },
+      "condenser": {
+        "name": "Sovutgich",
+        "desc": "Bug’larni sovutadi"
+      },
+      "glass_tube": {
+        "name": "Shisha nay",
+        "desc": "Idishlarni ulash uchun"
+      },
+      "stand": {
+        "name": "Shtativ",
+        "desc": "Laboratoriya idishlari uchun tayanch"
+      }
+    },
+    "toolbar": {
+      "select": "Tanlash",
+      "pan": "Ko'chirish",
+      "connect": "Ulash"
+    },
+    "reward": {
+      "eyebrow": "Daraja yakunlandi",
+      "title": "Ajoyib ish!",
+      "description": "Tajriba yakunlandi. Natijangiz akademiya taraqqiyotiga saqlandi.",
+      "xp": "+{xp} XP",
+      "badge": "Tadqiqotchi nishoni",
+      "nextTitle": "Keyingi daraja tayyor",
+      "nextDescription": "O'qishni davom ettiring va yangi tajribani oching.",
+      "nextButton": "{level}-darajaga o'tish",
+      "academyButton": "Akademiyani ochish",
+      "closeButton": "Laboratoriyada qolish"
+    },
+    "guide": {
+      "clickHere": "Shu yerga bosing",
+      "connectPort": "Bu portni ulang"
+    },
+    "result": {
+      "waterIntro": { "title": "Suv qo'shildi", "description": "Idish suv bilan to'ldi, hajmni shkala orqali tekshirishingiz mumkin." },
+      "measureWater": { "title": "Harorat o'lchandi", "description": "Termometr to'g'ri ulandi va idish haroratini ko'rsatmoqda." },
+      "heatWater": { "title": "Qizdirish yakunlandi", "description": "Suv ulangan qizdirgich yordamida isitildi." },
+      "transferWater": { "title": "Quyish yakunlandi", "description": "Suv idishlar orasida suyuqlik ulanishi orqali o'tkazildi." },
+      "cuso4": { "title": "Eritma tayyor", "description": "Siz mis kuporosi eritmasini muvaffaqiyatli tayyorladingiz." },
+      "hclNaoh": { "title": "Neytrallanish yakunlandi", "description": "Kislota va ishqor reaksiyaga kirishib, issiqlik hamda tuz hosil qildi." },
+      "kmno4": { "title": "Suyultirish yakunlandi", "description": "Siz kaliy permanganat eritmasini muvaffaqiyatli suyultirdingiz." },
+      "zinc": { "title": "Reaksiya yakunlandi", "description": "Rux xlorid kislota bilan reaksiyaga kirishib, rux xlorid va vodorod hosil qildi." },
+      "sulfur": { "title": "Oltingugurt eridi", "description": "Oltingugurt erish haroratidan yuqori qizdirilgach suyuq fazaga o'tdi." },
+      "distillation": { "title": "Qurilma yig'ildi", "description": "Distillatsiya qurilmasi ulangan va ishga tayyor." },
+      "generic": { "title": "Natija olindi", "description": "Ssenariy muvaffaqiyatli yakunlandi." }
+    }
+  },
+  "academy": {
+    "title": "jasScience — The Scientific OS",
+    "subtitle": "Interaktiv kimyo akademiyasi. Haqiqiy tadqiqotchi bo'lish uchun darajalarni yakunlang!",
+    "eyebrow": "Tadqiqotchi qo'llanmasi",
+    "entryCount": "Qo'llanmadagi yozuvlar: {count}",
+    "readHint": "Yozuvni o'qing, so'ng sandboxda sinang",
+    "fieldNote": "Yozuv №{id}",
+    "current": "JORIY",
+    "researchEntry": "Tadqiqot yozuvi",
+    "levelLabel": "Daraja {id}",
+    "objectLabel": "Tadqiqot obyekti",
+    "equipmentLabel": "Kerak bo'ladi",
+    "skillLabel": "Ko'nikma",
+    "catalog": "Yozuvlar katalogi",
+    "chapters": "Tadqiqotchi yo'li",
+    "readingTipTitle": "Qo'llanmadan foydalanish",
+    "readingTip": "Har bir yozuv kichik laboratoriya hikoyasi: g'oyani o'rganing, qurilmani yig'ing va sandboxda sinab ko'ring.",
+    "platformLink": "To'liq laboratoriyani ochish",
+    "continue": "Davom etish",
+    "start": "Yozuvni boshlash",
+    "levels": {
+      "l1": {
+        "title": "Laboratoriya asoslari",
+        "desc": "Kimyoviy idishlar bilan tanishish, ish stolidagi obyektlarni to'g'ri harakatlantirish va asosiy xavfsizlik qoidalari.",
+        "object": "Shisha idishlar va ish stoli",
+        "equipment": "Stakan, Erlenmeyer kolbasi",
+        "skill": "Toza va tartibli ish joyini yig'ish",
+        "reward": "+100 XP · Birinchi qadam nishoni"
+      },
+      "l2": {
+        "title": "O'lchash va qizdirish",
+        "desc": "Bunsen gorelkalari va plitkalardan foydalanish, termometrni ulash va suyuqlik haroratini aniq o'lchash.",
+        "object": "Suv harorati va issiqlik oqimi",
+        "equipment": "Termometr, isitgich, idish",
+        "skill": "Sekin qizdirish va ko'rsatkichlarni o'qish",
+        "reward": "+160 XP · Issiqlik nazorati nishoni"
+      },
+      "l3": {
+        "title": "Reaksiyalar va suyuqlik xossalari",
+        "desc": "Suyuqliklarni quyish, eritmalarni aralashtirish va kislota-ishqor neytrallashish kabi kimyoviy reaksiyalarni vizuallashtirish.",
+        "object": "Suv, CuSO₄ eritmasi va rang o'zgarishi",
+        "equipment": "Ikki idish, naycha yoki pipetka",
+        "skill": "Moddani tarkibini yo'qotmasdan ko'chirish",
+        "reward": "+220 XP · Aralashtirish nishoni"
+      },
+      "l4": {
+        "title": "Termodinamika va gazlar",
+        "desc": "Bosim bilan ishlash, yopiq kolbalarda gazlarni ushlab turish, faza o'tishlari va kondensatsiya.",
+        "object": "Bosim, fazalar va tizim barqarorligi",
+        "equipment": "Kolba, isitgich, ulanish",
+        "skill": "Tajriba oldidan xavfsizlikni tekshirish",
+        "reward": "+300 XP · Termodinamika nishoni"
+      }
+    },
+    "menuLabel": "Qo'llanma"
+  },
+  "adventure": {
+    "title": "Kimyogarning sarguzashti",
+    "subtitle": "Tajriba kimyosi olamiga yo‘riqnoma",
+    "open": "Sarguzashtni boshlash",
+    "tagline": "Bilimlar jonli laboratoriyasi",
+    "online": "Sarguzasht onlayn",
+    "chapter": "BOB",
+    "previous": "Orqaga",
+    "next": "Keyingi",
+    "chapter01": "1-bob · Tasvirlangan atlas",
+    "equipment": "Jihozlar",
+    "studied": "o‘rganilgan",
+    "equipmentIntro": "Jihozlar vazifasi, materiali va ulanish turiga ko‘ra tartiblangan.",
+    "openFieldNotes": "Qaydlarni ochish uchun rasmni bosing",
+    "index": "Kimyogarning sarguzashti · Mundarija",
+    "guideTitle": "Tajriba kimyosi bo‘yicha qo‘llanma",
+    "guideText": "Jihozlar, moddalar va har bir tajriba qoidalari haqidagi jonli ma’lumotnoma.",
+    "contents": "Mundarija",
+    "equipmentCount": "43 ta asbob va jihoz",
+    "substances": "Moddalar",
+    "substancesDesc": "Elementlar, birikmalar va aralashmalar",
+    "ports": "Ulanish atlasi",
+    "portsDesc": "Suyuqlik, bug‘, issiqlik va interfeyslar",
+    "experiments": "Tajribalar",
+    "experimentsDesc": "Interaktiv laboratoriya tadqiqotlari",
+    "physics": "Fizika",
+    "physicsDesc": "Laboratoriyada ishlaydigan qonunlar",
+    "safety": "Xavfsizlik",
+    "safetyDesc": "Xavflar va jihoz cheklovlari",
+    "completion": "Jarayon · 34 / 43 jihoz",
+    "category": {
+      "Vessels": "Idishlar",
+      "Heating": "Qizdirish",
+      "Measurement": "O‘lchash",
+      "Cooling": "Sovitish"
+    }
+  },
+  "textbook": {
+    "title": "Kimyo ensiklopediyasi",
+    "subtitle": "Jihozlar, moddalar va ulanishlar haqida tushunarli qo'llanma",
+    "back": "Sandboxga qaytish",
+    "contents": "Mundarija",
+    "chapterEquipment": "Jihozlar",
+    "chapterPorts": "Portlar va ulanishlar",
+    "chapterMaterials": "Moddalar",
+    "chapterSafety": "Xavfsizlik",
+    "read": "O'qilayotgan bo'lim",
+    "equipmentTitle": "Laboratoriya idishlari — bu tizim",
+    "equipmentText": "Har bir jihozning vazifasi, o'lchami, sig'imi va portlari bor. Sandboxda uni ko'chirish, ulash va holatini kuzatish mumkin.",
+    "portTitle": "Portlar: jihozlar qayerda ulanadi",
+    "portText": "Port — ulanish nuqtasi. Ulanish faqat mos turlar orasida ishlaydi: suyuqlik suyuqlikka, termik port isitgichga, o'lchov porti sensorga.",
+    "materialTitle": "Modda faqat rang emas",
+    "materialText": "Har bir modda faza, zichlik, erish harorati, xavfsizlik va reaktivlikni hisobga oladi. Shu sababli suv, kislota va mis kuporosi turlicha ishlaydi.",
+    "safetyTitle": "Xavfsiz tajriba",
+    "safetyText": "Boshlashdan oldin sig'im, germetiklik, ruxsat etilgan harorat va jihozlar mosligini tekshiring. Xatolar ish maydonida ko'rsatiladi.",
+    "ports": "Port turlari",
+    "glass": "Shisha · idish ulanishi",
+    "liquid": "Suyuqlik · quyish",
+    "gas": "Gaz · yopiq tizim",
+    "thermal": "Termik · isitish aloqasi",
+    "electrical": "Elektr · quvvat",
+    "tipTitle": "Tadqiqotchi maslahati",
+    "tipText": "Kutubxonadan jihozni tanlang, uni setkaga joylang, so'ng portni bosib boshqa jihozdagi mos portni tanlang.",
+    "openSandbox": "Sandboxni ochish"
+  },
+  "codex": {
+    "openScenario": "Ssenariyni laboratoriyada ochish",
+    "openApparatus": "Jihozni laboratoriyada ochish",
+    "technicalNotes": "Texnik qaydlar",
+    "specification": "Tavsif",
+    "purpose": "Vazifasi",
+    "capacity": "Nominal sig'im",
+    "material": "Material",
+    "connections": "Ulanishlar"
+  },
+  "book": {
+    "cover": {
+      "archive": "jasScience · DALA JURNALI",
+      "volume": "I Jild · 2026",
+      "openBtn": "OCHISH",
+      "langLabel": "TIL",
+      "themeLabel": "SAHIFALAR",
+      "subtitle1": "KIMYOGAR SARGUZASHTI",
+      "subtitle2": "Eksperimental kimyoga interaktiv qo'llanma"
+    },
+    "language": {
+      "hint": "Ushbu jurnal qanday tilda so'zlashini tanlang.",
+      "header": "TIL",
+      "title": "Til"
+    },
+    "title": {
+      "journal": "jasScience Ilmiy Jurnali",
+      "guide": "Tajriba kimyosi bo'yicha qo'llanma",
+      "lab": "jasScience Ilmiy Laboratoriyasi"
+    },
+    "contents": {
+      "authorTitle": "Muallifdan",
+      "p1": "Ushbu jurnal shunchaki dalillar to'plami emas. U tadqiqotchining ish qurolidir. Bu yerda jasScience laboratoriyasida o'tkazilgan kuzatuvlar, xatolar va tajribalar yozilgan.",
+      "p2": "Ushbu sahifalardagi har bir asbob, reaksiyalar va formulalar Qumdon bilan uzviy bog'liq. Kitob va simulyatsiya bir butundir. Bu yerda nazariyani o'rganing, so'ng gipotezalaringizni amalda sinab ko'ring.",
+      "p3": "Yodingizda bo'lsin: tajriba reaksiyadan emas, balki kuzatishdan boshlanadi.",
+      "header": "MUNDARIJA",
+      "ch1": "Kirish",
+      "ch2": "Antuan Lavuazye",
+      "ch3": "Dmitriy Mendeleyev",
+      "ch4": "Mariya Kyuri",
+      "ch5": "Robert Boyl",
+      "ch6": "Qumdon",
+      "ch7": "Jihozlar",
+      "ch8": "Kolbaning tuzilishi",
+      "ch9": "Moddalar",
+      "ch10": "Ssenariylar",
+      "ch11": "Fizika",
+      "ch12": "Xavfsizlik",
+      "ch13": "Xulosa",
+      "ch1_page": "007",
+      "ch2_page": "015",
+      "ch3_page": "017",
+      "ch4_page": "019",
+      "ch5_page": "021",
+      "ch6_page": "023",
+      "ch7_page": "027",
+      "ch8_page": "031",
+      "ch9_page": "055",
+      "ch10_page": "065",
+      "ch11_page": "067",
+      "ch12_page": "075",
+      "ch13_page": "077",
+      "chapterI": "I BOB. KIMYO",
+      "chapterII": "II BOB. TARIX VA OLIMLAR",
+      "chapterIII": "III BOB. VIRTUAL LABORATORIYA",
+      "chapterIV": "IV BOB. TAJRIBA",
+      "ch_history": "Kimyo tarixi",
+      "ch_scientists": "Buyuk olimlar"
+    },
+    "intro": {
+      "title": "Kirish",
+      "dearDiary": "Aziz kundalik",
+      "noBook": "yo'q. kitob.",
+      "p1": "Kimyo bu sehr emas, garchi ba'zida unga juda o'xshab ketsa ham. U aniqlik, sabr-toqat va tabiat qonunlariga hurmatni talab qiluvchi, o'zgarishlar haqidagi qat'iy fandir.",
+      "p2": "Ushbu qo'llanmada zamonaviy virtual laboratoriyada ishlashning asosiy prinsiplari keltirilgan. Bu yerda ortiqcha so'zlar yo'q — faqat tajribani muvaffaqiyatli o'tkazishga yordam beradigan narsalar. Biz asosiy tushunchalardan boshlab, asta-sekin murakkab qurilmalarga o'tamiz.",
+      "p3": "Har bir tadqiqotchi o'z uskunasini bilishi kerak. Nima uchun Erlenmeyer kolbasi aynan shunday shaklga ega ekanligini va Libig sovitgichini qanday to'g'ri ulashni tushunish muhimdir.",
+      "fig1": "1-rasm — Tajriba reaksiyadan emas, balki kuzatishdan boshlanadi.",
+      "date": "27 avgust",
+      "expId": "tajriba №001",
+      "expTemp": "t = 23°C",
+      "expNote": "???",
+      "strike1": "Kimyo — bu sehrdir",
+      "correction1": "juda baland",
+      "annotation1": "keyinroq tekshirish",
+      "annotation2": "buni qumloqda tekshirish →",
+      "p4": "Ushbu sahifadan boshlab, laboratoriyada sodir bo'layotgan hamma narsani yozishga harakat qilaman. Go'zallik uchun emas — aniqlik uchun. Yaxshi tajriba gorelka yoqilgunga qadar boshlanadi.",
+      "p5": "Laboratoriyaning birinchi saboqlaridan biri: kutganingiz va haqiqatda sodir bo'lgan narsa o'rtasidagi farq — bu fanining boshlanish nuqtasidir."
+    },
+    "lavoisier": {
+      "header": "TARIX VA ASOSLAR",
+      "name": "Antuan Lavuazye",
+      "fig": "7-rasm — Antuan Lavuazye. Badiiy gravyura.",
+      "p1": "Zamonaviy kimyoning otasi. Aynan u alximik taxminlarni qat'iy o'lchovlar va taroziga tortishlarga asoslangan aniq fanga aylantirdi.",
+      "p2": "Lavuazyegacha olimlar yonish jarayonida ajralib chiqadigan mifik modda - 'flogiston' mavjudligiga ishonishgan. Lavuazye yonish bu kislorod bilan birikish jarayoni ekanligini isbotladi.",
+      "quote": "\"Na sun'iy operatsiyalarda, na tabiatda hech narsa yaratilmaydi: qabul qilish mumkinki, har qanday operatsiyada tajribadan oldin va keyin materiya miqdori bir xil qoladi.\"",
+      "p3": "Bizning Qumdonda, kolba ichida qanday reaksiyalar sodir bo'lishidan qat'i nazar, yopiq tizimning massasi doimo doimiy bo'lib qoladi."
+    },
+    "mendeleev": {
+      "header": "DAVRIY QONUN",
+      "name": "Dmitriy Mendeleyev",
+      "fig": "8-rasm — Dmitriy Mendeleyev. Badiiy gravyura.",
+      "p1": "Xaosda tartibni ko'ra olgan olim. U elementlarni atom massasi bo'yicha joylashtirdi va tabiatning fundamental qonunini kashf etib, hali ochilmagan elementlarning xususiyatlarini bashorat qildi.",
+      "p2": "Davriy jadval shunchaki katalog emas, bu kimyoviy koinot xaritasi. Laboratoriyamizda har bir moddaning xususiyatlari aynan u tuzgan qonunlardan kelib chiqadi.",
+      "quote": "\"Ilm-fan o'lchash boshlangan joydan boshlanadi. Aniq fanni o'lchovsiz tasavvur qilib bo'lmaydi.\"",
+      "p3": "Simulyatorda o'rnatilgan elementlar atlasi mavjud bo'lib, noma'lum reaktivlar qanday harakat qilishini bashorat qilish imkonini beradi."
+    },
+    "curie": {
+      "header": "RADIOAKTIVLIK",
+      "name": "Mariya Kyuri",
+      "fig": "9-rasm — Mariya Kyuri. Badiiy gravyura.",
+      "p1": "Radioaktivlik tadqiqotlarining kashshofi, ikki marta Nobel mukofotiga sazovor bo'lgan yagona ayol.",
+      "p2": "Uning ishi shuni ko'rsatdiki, atom bo'linmas emas - u juda katta ichki energiyani o'z ichiga oladi. Radiy va poloniyning ochilishi materiya haqidagi tushunchamizni o'zgartirdi.",
+      "quote": "\"Hayotda hech narsadan qo'rqmaslik kerak, uni faqat tushunish kerak. Endi kamroq qo'rqishimiz uchun ko'proq tushunish vaqti keldi.\"",
+      "p3": "Laboratoriyada biz yuqori energiyali reaksiyalar bilan ishlashda energiya muvozanatini va xavfsizlikni diqqat bilan simulyatsiya qilamiz."
+    },
+    "boyle": {
+      "header": "GAZ QONUNLARI",
+      "name": "Robert Boyl",
+      "fig": "10-rasm — Robert Boyl. Badiiy gravyura.",
+      "p1": "Qat'iy tajriba usulini birinchi bo'lib qo'llagan zamonaviy kimyo asoschilaridan biri. U gaz hajmi bosimga teskari proporsional ekanligini isbotladi.",
+      "p2": "Boyl-Mariott qonuni gazlarning xatti-harakatlarini tushunishdagi birinchi qadamdir. Bu bug' sovitgichlari va yopiq tizimlar ishlashining asosidir.",
+      "quote": "\"Tabiatni o'rganuvchi kishi birinchi navbatda o'zini shubhalanishga o'rgatishi kerak.\"",
+      "p3": "Siz yopiq kolbadagi suyuqlikni qizdira boshlaganingizda, bug' bosimi qanday ko'tarilishini kuzatib, ushbu qonunning amalda ekanligiga guvoh bo'lasiz."
+    },
+    "sandbox": {
+      "header": "QUMDON",
+      "subtitle": "Nazariya amalga aylanadigan joy",
+      "p1": "Virtual laboratoriya to'liq harakat erkinligini beradi. Bu skriptli animatsiyalar to'plami emas, balki harorat, bosim, faza o'tishlari va reaksiyalarning jismoniy jihatdan aniq simulyatsiyasi.",
+      "p2": "Siz istalgan qurilmani yig'ishingiz mumkin: stakanda suv qizdirishdan tortib, teskari sovitgichli murakkab distillash tizimigacha.",
+      "fig": "12-rasm — Kursorning uchta asosiy rejimi.",
+      "ui1": "Library — jihozlar katalogi",
+      "ui2": "Canvas — ish zonasi",
+      "ui3": "Toolbar — asboblar",
+      "ui4": "Inspector — parametrlar",
+      "ui5": "Simulation — boshqaruv",
+      "section1": "2.1 Ish maydoni",
+      "section2": "2.2 Kursor rejimlari",
+      "section3": "2.3 Ulanishlar",
+      "section4": "2.4 Inspektor",
+      "mode_select": "SELECT — obyektlarni tanlash va ko'chirish",
+      "mode_connect": "CONNECT — obyekt portlarini ulash",
+      "mode_inspect": "INSPECT — xossalar va holatlarni o'qish",
+      "annotation_sandbox": "bu yerdan boshlang →",
+      "caption_diagram": "Rasm 3.1 — Qumloqning uchta ish rejimi.",
+      "p3": "Ish maydonidagi har bir obyektda portlar — ulanish nuqtalari mavjud.",
+      "p4": "Inspektor — tanlangan obyekt xossalarini ko'rsatuvchi o'ng panel."
+    },
+    "equipment": {
+      "header": "JIHOZLAR",
+      "title": "ASBOBLAR KATALOGI",
+      "p1": "Asboblar — kimyogar qo'llarining davomi. Har bir idish nima uchun mo'ljallanganligini va uning jismoniy chegaralarini bilish muhimdir.",
+      "vessels": "IDISHLAR",
+      "heating": "QIZDIRISH",
+      "flask": "Erlenmeyer kolbasi",
+      "beaker": "Stakan",
+      "tube": "Probirkalar",
+      "bunsen": "Bunzen gorelkasi",
+      "hotplate": "Isitish plitasi",
+      "openLab": "Laboratoriyani ochish"
+    },
+    "detail": {
+      "header": "ERLENMEYER KOLBASI",
+      "title": "TEXNIK PASPORT",
+      "fig": "14-rasm — Borosilikat shisha, 500°C gacha chidaydi.",
+      "neck": "TOR BO'YIN",
+      "bottom": "KENG ASOS",
+      "purposeTitle": "Maqsad va shakl",
+      "purpose": "Konus shakli suyuqlikni aralashtirishda sachrashning oldini oladi va bo'yinni tiqin bilan yopish imkonini beradi. Titrlash uchun ideal.",
+      "portsTitle": "Ulanishlar (Portlar)",
+      "portIn": "Yuqori teshik suyuqliklarni qabul qiladi (masalan, byuretkadan).",
+      "portVapor": "Agar tiqin bilan yopilmagan bo'lsa, gazlar bug'lanishi uchun ochiq.",
+      "portHeat": "Yassi taglik plitaga o'rnatish uchun maqbuldir."
+    },
+    "substance": {
+      "header": "MODDALAR",
+      "title": "OLDINDAN KO'RISH",
+      "water": "Distillangan suv",
+      "salt": "Natriy xlorid",
+      "ethanol": "Etanol (96%)",
+      "copper": "Mis(II) sulfat",
+      "sulfuricAcid": "Oltingugurt kislotasi",
+      "hydrochloricAcid": "Xlorid kislota",
+      "hydrogenPeroxide": "Vodorod peroksidi",
+      "copperSolution": "Mis sulfat eritmasi",
+      "potassiumPermanganate": "Kaliy permanganat",
+      "permanganateSolution": "Kaliy permanganat eritmasi",
+      "sodiumHydroxide": "Natriy gidroksid",
+      "sodiumCarbonate": "Natriy karbonat",
+      "zinc": "Rux",
+      "copperMetal": "Mis",
+      "gold": "Oltin",
+      "sulfur": "Oltingugurt",
+      "phIndicator": "pH indikatori",
+      "state": "Holati",
+      "stateLiquid": "Suyuqlik",
+      "molar": "Molyar massa",
+      "boiling": "Qaynash harorati",
+      "density": "Zichlik",
+      "stateSolid": "Qattiq modda"
+    },
+    "scenario": {
+      "header": "SSENARIYLAR",
+      "title": "INDEKS",
+      "p1": "Ushbu bo'limda asosiy va ilg'or tajribalarni o'tkazish bo'yicha bosqichma-bosqich ko'rsatmalar mavjud.",
+      "p2": "Har bir ssenariy shunday tayyorlanganki, uni to'g'ridan-to'g'ri Qumdonga yuklashingiz mumkin. Qurilma avtomatik ravishda yig'iladi, siz faqat haroratni kuzatishingiz, reaktivlarni qo'shishingiz va xulosalar chiqarishingiz kerak.",
+      "sc1": "Suvni qizdirish",
+      "sc2": "Haroratni o'lchash",
+      "sc3": "Byuretka bilan ishlash",
+      "sc4": "Bug'ning kondensatsiyasi",
+      "sc5": "Oddiy distillash",
+      "loadProtocol": "Protokolni yuklash"
+    },
+    "physics": {
+      "header": "FIZIKA",
+      "title": "ISSIQLIK ALMASHINUVI",
+      "name": "Dvigatel fizikasi",
+      "p1": "Laboratoriya termodinamik model asosida ishlaydi. Har bir kolba, har bir konforka va har bir tomchi suyuqlik doimiy ravishda energiya almashadi.",
+      "p2": "Shuni tushunish kerakki, plita suvni darhol qizdirmaydi. Issiqlik spiraldan shishaga, shishadan esa suyuqlikka o'tadi. Haroratning bu gradiyenti shishaning yorilishiga (thermal shock) olib kelishi mumkin.",
+      "fig": "22-rasm — Issiqlik gradiyenti diagrammasi."
+    },
+    "safety": {
+      "header": "XAVFSIZLIK",
+      "title": "QOIDALAR",
+      "p1": "Simulyatorda kolbani portlatish mumkin. Shisha haroratning keskin o'zgarishidan (Thermal stress) yoriladi, yopiq tizim esa ortiqcha bosimdan yorilib ketadi.",
+      "p2": "Tajribalaringiz favqulodda to'xtatish tizimi ishga tushmasdan oxiriga yetishi uchun qoidalarga rioya qiling.",
+      "rule1": "Sovuq kolbani qizdirilgan plitaga qo'ymang. Asta-sekin qizdiring.",
+      "rule2": "Gazlarni qizdirganda ochiq port (Vapor) mavjudligiga ishonch hosil qiling yoki kengaytirish idishini ulang.",
+      "rule3": "Bunzen gorelkani etanol kabi tez yonuvchi moddalardan uzoqroq tuting."
+    },
+    "conclusion": {
+      "header": "XULOSA",
+      "p1": "Biz massaning saqlanish qonunlaridan tortib murakkab tizimlarni yig'ishgacha bo'lgan uzoq yo'lni bosib o'tdik.",
+      "p2": "Lekin kimyo faqat tugallangan tajribalar to'plami emas. Bu tabiatga beriladigan uzluksiz savollar jarayoni. Endi sizning Qumdoningiz o'z gipotezalaringizni kutmoqda.",
+      "quote": "Kitob tugaydi. Tajriba esa yo'q.",
+      "lab": "JASSCIENCE RESEARCH"
+    },
+    "owner": {
+      "header": "DALA JURNALI",
+      "title": "Bu jurnal egasi",
+      "owner": "Tadqiqotchi",
+      "lab": "jasScience Laboratoriyasi",
+      "year": "2026",
+      "classification": "TADQIQOT QAYDLARI · I TOM",
+      "warning": "Ehtiyotkorlik bilan muomala qiling. Tugallanmagan tajribalar mavjud.",
+      "note": "Boshlangan: 2026 yil avgust"
+    },
+    "chemistry": {
+      "chapterTitle": "Kimyo",
+      "section1": "1.1 Kimyo nima o'rgatadi",
+      "section2": "1.2 Moddalar va hodisalar",
+      "section3": "1.3 Kimyoviy reaktsiya",
+      "p1": "Kimyo — moddalar va ularning o'zgarishlari haqidagi fan. U moddaning tarkibini, tuzilishini va xossalarini, shuningdek, ba'zi moddalarning boshqalariga aylanish shartlarini o'rganadi.",
+      "p2": "Fizikadan farqli o'laroq, kimyo aynan o'zgarishlarni o'rganadi: atomlar qanday qayta tuziladi, yangi xossalarga ega yangi molekulalar hosil qiladi.",
+      "p3": "Kimyo predmeti butun diapazonni qamrab oladi: Mendeleev jadvalidagi eng oddiy elementlardan tortib, eng murakkab DNK molekulalarigacha.",
+      "box1_title": "ASOSIY TUSHUNCHALAR",
+      "box1_1": "Kimyo — modda tarkibi va o'zgarishlarini o'rganish",
+      "box1_2": "Modda — barcha jismlarning tarkibiy qismi",
+      "box1_3": "Hodisa — moddada sodir bo'ladigan har qanday o'zgarish",
+      "box1_4": "Kimyoviy reaktsiya — bir moddaning boshqasiga aylanish jarayoni",
+      "box2_title": "ESLAB QOL",
+      "box2_content": "Kimyo faqat yangi moddalar hosil bo'ladigan o'zgarishlarni o'rganadi.",
+      "caption1": "Rasm 1.1 — Massa saqlanish qonuni.",
+      "caption2": "Rasm 1.2 — Moddaning agregat holatlari."
+    },
+    "history": {
+      "chapterTitle": "Kimyo tarixi",
+      "intro": "Mingllab yillar davomida insoniyat kimyoviy hodisalarni kuzatdi, lekin ularning tabiatini tushunmadi.",
+      "period1_year": "до н.э.",
+      "period1_title": "Alkimyogacha bo'lgan davr",
+      "period1_text": "Misrliklar, yunoklar va xitoyliklar metallurgiya, shisha yasash va bo'yashni kashf etishdi.",
+      "period2_year": "VIII–XVI в.",
+      "period2_title": "Alkimyo",
+      "period2_text": "Arab va evropalik alkimyogarlar falsafiy tosh va abadiylik eliksirini izlashdi.",
+      "period3_year": "XVII в.",
+      "period3_title": "Ilmiy kimyo",
+      "period3_text": "Boyl alkimyoviy elementlarni rad etdi va 'kimyoviy element' tushunchasini kiritdi.",
+      "period4_year": "XIX в.",
+      "period4_title": "Klassik kimyo",
+      "period4_text": "Dalton atom nazariyasini ilgari surdi. Mendeleev davriy jadvalni yaratdi. Kyuri radioaktivlikni kashf etdi.",
+      "period5_year": "XX–XXI в.",
+      "period5_title": "Zamonaviy kimyo",
+      "period5_text": "Kvant mexanikasi kimyoviy bog'lanishni tushuntirdi. Polimerlar, farmatsevtika va nanokimyo dunyoni o'zgartirdi."
+    },
+    "jabir": {
+      "header": "ISLOM KIMYOSI",
+      "name1": "Jobir ibn Hayyon",
+      "dates1": "taxminan 721–815 CE",
+      "p1": "Arab olimi Jobir ibn Hayyon, Yevropada Geber nomi bilan tanilgan, kimyoning otasi hisoblanadi.",
+      "name2": "Muhammad al-Roziy",
+      "dates2": "854–925 CE",
+      "p2": "Fors olimi al-Roziy kimyoviy moddalarni hayvon, o'simlik va mineral kategoriyalarga tasnifladi — bu birinchi tizimli tasniflash edi.",
+      "annotation": "Bu tajribalarni Qumloqda takrorlang →"
+    },
+    "practice": {
+      "header": "AMALIYOT",
+      "p01_number": "AMALIYOT 01",
+      "p01_title": "Isitish tizimi",
+      "p01_question": "Suyuqlik haroratini kuzatish uchun qaysi asbobni isitish plitasiga ulash kerak?",
+      "p01_goal": "Maqsad: harorat nazorati bilan isitish tizimini yig'ish.",
+      "p01_equipment": "Ishlating: Isitish plitasi · Stakan · Termometr",
+      "p01_a1": "Termometr",
+      "p01_a2": "Byuretka",
+      "p01_a3": "Erlenmeyer kolbasi",
+      "p01_a4": "Liebig sovutgichi",
+      "p01_correct": 0,
+      "p01_feedback_correct": "To'g'ri. Termometr suyuqlik haroratini real vaqtda o'qish imkonini beruvchi issiqlik portiga ega.",
+      "p01_feedback_wrong": "To'liq emas. Bu asbobda suyuqlik haroratini o'lchash uchun port yo'q.",
+      "p02_number": "AMALIYOT 02",
+      "p02_title": "Jihozni aniqlang",
+      "p02_question": "Aniq o'lchash va tomchilab suyuqlik uzatish uchun qaysi jihozdan foydalaniladi?",
+      "p02_a1": "Stakan",
+      "p02_a2": "Pipetka",
+      "p02_a3": "Byuretka",
+      "p02_a4": "Huni",
+      "p02_correct": 2,
+      "p02_feedback_correct": "To'g'ri. Byuretka — graduirovka shkalasi va ta'minot nazorati uchun kranga ega aniq titratsiya asbobi.",
+      "p02_feedback_wrong": "To'liq emas. Yana urinib ko'ring — aniq dozalash haqida o'ylang.",
+      "p03_number": "AMALIYOT 03",
+      "p03_title": "Modda formulasi",
+      "p03_question": "H₂O formulasiga ega va ko'pgina kimyoviy reaktsiyalarda asosiy erituvchi bo'lgan modda qaysi?",
+      "p03_a1": "Etanol",
+      "p03_a2": "Suv",
+      "p03_a3": "Vodorod peroksid",
+      "p03_a4": "Sulfat kislota",
+      "p03_correct": 1,
+      "p03_feedback_correct": "To'g'ri. H₂O — suv. Ko'pgina reaktsiyalar uchun universal qutbli erituvchi.",
+      "p03_feedback_wrong": "Noto'g'ri. Suv molekulasining tarkibini eslang: ikki vodorod atomi va bitta kislorod atomi.",
+      "p04_number": "AMALIYOT 04",
+      "p04_title": "To'g'ri tartib",
+      "p04_question": "Haroratni o'lchash bilan suyuqlikni isitish qurilmasini qaysi tartibda yig'ish kerak?",
+      "p04_step1": "Isitish plitasini joylashtiring",
+      "p04_step2": "Stakanni plitaga qo'ying",
+      "p04_step3": "Termometrni stakanga qo'shing",
+      "p04_step4": "Isitish portlarini ulang",
+      "p04_step5": "Simulyatsiyani ishga tushiring",
+      "p04_feedback": "To'g'ri ketma-ketlik! Har qanday laboratoriya qurilmasini yig'ish uchun tavsiya etilgan tartib: avval asos, keyin idishlar, keyin sensorlar va ulanishlar."
+    },
+    "torn": {
+      "header": "TUGALLANMAGAN TAJRIBA",
+      "page085": "Keyingi tajribada tekshirish kerak, qanday o'zgaradi",
+      "page086": "Agar harorat kritik chegara oshib ketsa, reaktsiya...",
+      "handwriting1": "natija g'alati",
+      "handwriting2": "takrorlash",
+      "handwriting3": "ulanishni tekshirish",
+      "handwriting4": "???",
+      "handwriting5": "Agar mening gipotezam to'g'ri bo'lsa, keyingi...",
+      "continue": "Davomi laboratoriyada..."
+    },
+    "buttons": {
+      "openLab": "Laboratoriyada ochish",
+      "back": "← orqaga",
+      "toContents": "Mundarija",
+      "loadScenario": "Stsenariyni yuklash"
+    }
   }
 }

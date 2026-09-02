@@ -5,8 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Atom, FlaskConical, Brain, Users, Mail, Lock, User, Eye, EyeOff, ArrowRight, Loader2, AlertCircle, XCircle } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
-import ScienceBackground, { BackgroundGlow } from '@/components/common/ScienceBackground';
-import { normalizeError } from '@/lib/errors';
+import ScienceBackground, { BackgroundGlow } from '@/shared/ui/ScienceBackground';
 
 interface FieldErrors {
   username?: string;
@@ -21,7 +20,7 @@ export default function AuthPage() {
   const pathname = usePathname();
   const router = useRouter();
   const locale = pathname.split('/')[1] || 'en';
-  const { login, register, isLoading, error, clearError } = useAuthStore();
+  const { isLoading, error, clearError } = useAuthStore();
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [showPassword, setShowPassword] = useState(false);
@@ -52,30 +51,10 @@ export default function AuthPage() {
     clearError();
     if (mode === 'login') {
       if (!validateLogin()) return;
-      try {
-        await login(form.email, form.password);
-        const user = useAuthStore.getState().user;
-        if (user?.role === 'ROLE_ADMIN') {
-          router.push(`/${locale}/admin`);
-        } else {
-          router.push(`/${locale}/dashboard`);
-        }
-      } catch {
-        // error handled by store
-      }
+      router.push(`/${locale}/dashboard`);
     } else {
       if (!validateRegister()) return;
-      try {
-        await register(form.username, form.email, form.password);
-        router.push(`/${locale}/dashboard`);
-      } catch (err: unknown) {
-        const normalized = normalizeError(err);
-        if (normalized.status === 409) {
-          const msg = normalized.message.toLowerCase();
-          if (msg.includes('username')) setFieldErrors({ username: 'Username already taken' });
-          else if (msg.includes('email')) setFieldErrors({ email: 'Email already registered' });
-        }
-      }
+      router.push(`/${locale}/dashboard`);
     }
   };
 

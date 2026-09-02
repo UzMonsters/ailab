@@ -1,0 +1,1811 @@
+/* ============================================================
+   JasScience Research Journal — book.css
+   Full redesign: textbook + field journal aesthetic
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&family=Cinzel:wght@400..900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Fira+Code:wght@300..700&display=swap');
+
+/* ── Font Variables ──────────────────────────────────────────── */
+:root {
+  --font-serif:      'Cormorant Garamond', Georgia, serif;
+  --font-sans:       ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-handwriting:'Caveat', cursive;
+  --font-mono:       'Fira Code', monospace;
+  --font-cinzel:     'Cinzel', serif;
+}
+
+/* ── Dark Theme Variables ────────────────────────────────────── */
+.academy-page.dark-theme {
+  --book-bg:          #111827;
+  --book-page:        #131E2E;
+  --book-text:        #E5DED0;
+  --book-muted:       rgba(229,222,208,0.5);
+  --book-border:      rgba(229,222,208,0.12);
+  --book-accent:      #7FB5C5;
+  --book-accent-2:    #9675C8;
+  --book-accent-3:    #6B9E6B;
+  --book-accent-red:  #9F4747;
+  --book-spine:       #0A0E17;
+  --book-red:         #C24B4B;
+  --book-red-muted:   rgba(194,75,75,0.5);
+  --book-ribbon:      #8D3038;
+  --book-texture:     url('/journal/textures/dark-paper.png');
+  --book-annotation:  #C24B4B;
+  --book-pencil:      rgba(229,222,208,0.55);
+}
+
+/* ── Light Theme Variables ───────────────────────────────────── */
+.academy-page.light-theme {
+  --book-bg:          #C9BCA4;
+  --book-page:        #E8E2D4;
+  --book-text:        #272520;
+  --book-muted:       #6B6460;
+  --book-border:      rgba(37,36,33,0.14);
+  --book-accent:      #1A6B6B;
+  --book-accent-2:    #5B3E8A;
+  --book-accent-3:    #3A6B3A;
+  --book-accent-red:  #8B2020;
+  --book-spine:       #B8A88A;
+  --book-red:         #B91C1C;
+  --book-red-muted:   rgba(185,28,28,0.5);
+  --book-ribbon:      #8D3038;
+  --book-texture:     url('/journal/textures/light-paper.png');
+  --book-annotation:  #B91C1C;
+  --book-pencil:      rgba(37,36,33,0.45);
+}
+
+/* ============================================================
+   1. PAGE BASE
+   ============================================================ */
+
+.academy-page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  color: var(--book-text, #e2e8f0);
+  transition: color 300ms ease;
+}
+
+.academy-background {
+  position: absolute;
+  inset: 0;
+  background: rgba(3, 6, 14, 0.86);
+  backdrop-filter: blur(8px) saturate(0.7);
+  z-index: -1;
+}
+
+.academy-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.academy-book-scale-wrapper {
+  position: relative;
+  width: 1120px;
+  height: 680px;
+  transform-origin: center center;
+}
+
+/* ============================================================
+   2. COVER
+   ============================================================ */
+
+.academy-cover-wrapper {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 500px;
+  height: 680px;
+  z-index: 100;
+  perspective: 2000px;
+}
+
+.academy-cover {
+  width: 100%;
+  height: 100%;
+  background: #0f1623;
+  border-radius: 4px 12px 12px 4px;
+  box-shadow:
+    inset 4px 0 10px rgba(0,0,0,0.6),
+    inset -1px 0 3px rgba(255,255,255,0.08),
+    20px 20px 50px rgba(0,0,0,0.75),
+    0 0 0 1px rgba(255,255,255,0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 2rem;
+  transform-style: preserve-3d;
+  transform: rotateY(15deg) rotateX(5deg) scale(0.95);
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.6s ease;
+  cursor: pointer;
+  border-left: 12px solid #070b14;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.academy-cover:hover {
+  transform: rotateY(5deg) rotateX(2deg) scale(0.98);
+  box-shadow:
+    inset 4px 0 10px rgba(0,0,0,0.6),
+    inset -1px 0 3px rgba(255,255,255,0.08),
+    30px 30px 60px rgba(0,0,0,0.8),
+    0 0 0 1px rgba(255,255,255,0.04);
+}
+
+.academy-cover-spine {
+  content: '';
+  position: absolute;
+  left: -24px;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  background: linear-gradient(to right, #05080e, #111a29, #070b14);
+  transform: rotateY(-90deg);
+  transform-origin: right;
+  border-radius: 4px 0 0 4px;
+}
+
+.academy-cover.is-opening {
+  transform: translateY(-20px) rotateY(-15deg) scale(1.02);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.academy-cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/codex/chemist-adventure-cover-art-v1.png') center/cover no-repeat;
+  opacity: 0.12;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Decorative border lines on cover */
+.academy-cover::after {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.academy-cover-archive {
+  font-family: var(--font-sans);
+  font-size: 9px;
+  letter-spacing: 0.35em;
+  color: #a5f3fc;
+  opacity: 0.6;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+  z-index: 2;
+  position: relative;
+}
+
+.academy-cover h1 {
+  position: relative;
+  z-index: 2;
+}
+
+.academy-cover-action {
+  margin-top: 3rem;
+  font-family: var(--font-sans);
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid rgba(203,213,225,0.25);
+  background: rgba(255,255,255,0.04);
+  transition: all 0.3s;
+  z-index: 2;
+  position: relative;
+}
+.academy-cover:hover .academy-cover-action {
+  background: rgba(255,255,255,0.09);
+  color: #f1f5f9;
+  border-color: rgba(203,213,225,0.45);
+}
+
+/* ── Cover Controls ──────────────────────────────────────────── */
+.cover-controls {
+  position: absolute;
+  bottom: 2rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 150;
+  pointer-events: auto;
+}
+
+.cover-controls-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cover-controls-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.25em;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+}
+
+.cover-controls-row {
+  display: flex;
+  gap: 3px;
+}
+
+.cover-control-btn {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.4);
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  border-radius: 0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.cover-control-btn:hover {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.75);
+  border-color: rgba(255,255,255,0.25);
+}
+.cover-control-btn.active {
+  background: rgba(255,255,255,0.06);
+  color: #a5f3fc;
+  border-color: rgba(165,243,252,0.35);
+  font-weight: 700;
+  box-shadow:
+    inset 0 2px 5px rgba(0,0,0,0.6),
+    inset 0 1px 2px rgba(0,0,0,0.4);
+}
+
+/* ============================================================
+   3. OPEN BOOK
+   ============================================================ */
+
+.academy-book {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  background: var(--book-bg);
+  border-radius: 4px 12px 12px 4px;
+  box-shadow:
+    0 40px 90px rgba(0,0,0,0.75),
+    0 8px 32px rgba(0,0,0,0.5),
+    0 0 160px rgba(0,0,0,0.45);
+  transform-style: preserve-3d;
+  opacity: 0;
+  transform: translateY(20px) scale(0.98);
+  transition: transform 0.9s cubic-bezier(.32,.72,.18,1), opacity 0.9s;
+  pointer-events: none;
+}
+.academy-book.is-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.academy-page.light-theme .academy-book{--book-page:#E8E2D4;--book-edge:rgba(37,36,33,.18);background:linear-gradient(90deg,#b7aa91 0%,#ded5c4 3%,#eee7d7 49%,#b9aa8f 50%,#eee7d7 97%,#b7aa91 100%)}
+.academy-page.dark-theme .academy-book{--book-page:#131E2E;--book-edge:rgba(148,163,184,.18)}
+.academy-book:has(.periodic-foldout) .academy-nav{opacity:.12;pointer-events:none}
+
+.academy-book::before,
+.academy-book::after {
+  content: '';
+  position: absolute;
+  inset: -4px -6px -4px -6px;
+  z-index: -1;
+  background: var(--book-spine);
+  border-radius: 6px 14px 14px 6px;
+}
+.academy-book::after {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--book-bg) 0px,
+    var(--book-spine) 2px
+  );
+  top: 4px;
+  bottom: 4px;
+  left: 2px;
+  right: 2px;
+  z-index: -2;
+  opacity: 0.5;
+}
+
+.academy-spine-shadow {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 100px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(0,0,0,0.18) 30%,
+    rgba(0,0,0,0.38) 50%,
+    rgba(0,0,0,0.18) 70%,
+    transparent 100%
+  );
+  z-index: 10;
+  pointer-events: none;
+}
+.academy-page.light-theme .academy-spine-shadow {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(0,0,0,0.04) 30%,
+    rgba(0,0,0,0.13) 50%,
+    rgba(0,0,0,0.04) 70%,
+    transparent 100%
+  );
+}
+
+/* ── Page Surfaces ───────────────────────────────────────────── */
+
+.academy-page-surface {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  background: var(--book-page);
+  background-image: var(--book-texture);
+  background-size: cover;
+  background-blend-mode: overlay;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 300ms ease;
+}
+.academy-page.light-theme .academy-page-surface {
+  background-blend-mode: multiply;
+  box-shadow: inset 0 0 60px rgba(0,0,0,0.08);
+}
+.academy-page.dark-theme .academy-page-surface {
+  box-shadow: inset 0 0 60px rgba(0,0,0,0.15);
+}
+
+/* Subtle left/right page color differentiation */
+.academy-page.dark-theme .academy-page-surface.left  { background-color: #111827; }
+.academy-page.dark-theme .academy-page-surface.right { background-color: #121A2A; }
+.academy-page.light-theme .academy-page-surface.left  { background-color: #E8E2D4; }
+.academy-page.light-theme .academy-page-surface.right { background-color: #E4DECF; }
+
+/* Paper grain pseudo-element */
+.academy-page.dark-theme .academy-page-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+.academy-page.light-theme .academy-page-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+.academy-page-surface.left {
+  left: 0;
+  border-radius: 4px 0 0 4px;
+  transform-origin: right center;
+}
+.academy-page-surface.right {
+  right: 0;
+  border-radius: 0 4px 4px 0;
+  transform-origin: left center;
+}
+
+/* Page edge ornament — subtle molecule on right edge */
+.academy-page.light-theme .academy-page-surface.right::after {
+  content: '';
+  position: absolute;
+  right: 6px;
+  top: 80px;
+  bottom: 80px;
+  width: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='80' viewBox='0 0 40 80'%3E%3Ccircle cx='20' cy='20' r='6' fill='none' stroke='%23252421' stroke-width='1'/%3E%3Ccircle cx='10' cy='40' r='4' fill='none' stroke='%23252421' stroke-width='1'/%3E%3Ccircle cx='30' cy='40' r='4' fill='none' stroke='%23252421' stroke-width='1'/%3E%3Ccircle cx='20' cy='60' r='4' fill='none' stroke='%23252421' stroke-width='1'/%3E%3Cline x1='20' y1='26' x2='10' y2='36' stroke='%23252421' stroke-width='0.8'/%3E%3Cline x1='20' y1='26' x2='30' y2='36' stroke='%23252421' stroke-width='0.8'/%3E%3Cline x1='12' y1='44' x2='18' y2='56' stroke='%23252421' stroke-width='0.8'/%3E%3Cline x1='28' y1='44' x2='22' y2='56' stroke='%23252421' stroke-width='0.8'/%3E%3C/svg%3E");
+  background-repeat: repeat-y;
+  background-size: 40px 80px;
+  opacity: 0.055;
+  pointer-events: none;
+}
+.academy-page.dark-theme .academy-page-surface.right::after {
+  content: '';
+  position: absolute;
+  right: 6px;
+  top: 80px;
+  bottom: 80px;
+  width: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='80' viewBox='0 0 40 80'%3E%3Ccircle cx='20' cy='20' r='6' fill='none' stroke='%23E5DED0' stroke-width='1'/%3E%3Ccircle cx='10' cy='40' r='4' fill='none' stroke='%23E5DED0' stroke-width='1'/%3E%3Ccircle cx='30' cy='40' r='4' fill='none' stroke='%23E5DED0' stroke-width='1'/%3E%3Ccircle cx='20' cy='60' r='4' fill='none' stroke='%23E5DED0' stroke-width='1'/%3E%3Cline x1='20' y1='26' x2='10' y2='36' stroke='%23E5DED0' stroke-width='0.8'/%3E%3Cline x1='20' y1='26' x2='30' y2='36' stroke='%23E5DED0' stroke-width='0.8'/%3E%3C/svg%3E");
+  background-repeat: repeat-y;
+  background-size: 40px 80px;
+  opacity: 0.045;
+  pointer-events: none;
+}
+
+/* ── Page Inner ──────────────────────────────────────────────── */
+
+.academy-page-inner {
+  flex: 1;
+  padding: 46px 48px 42px 48px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.academy-page-surface.left .academy-page-inner {
+  padding-right: 60px;
+}
+.academy-page-surface.right .academy-page-inner {
+  padding-left: 60px;
+}
+
+/* ── Running Headers & Page Numbers ──────────────────────────── */
+
+.academy-running-header {
+  position: absolute;
+  top: 18px;
+  font-family: var(--font-sans);
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  opacity: 0.35;
+  pointer-events: none;
+}
+.academy-page-surface.left .academy-running-header  { left: 48px; }
+.academy-page-surface.right .academy-running-header { right: 48px; }
+
+.academy-page-number {
+  position: absolute;
+  bottom: 18px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.academy-page-surface.left .academy-page-number  { left: 48px; }
+.academy-page-surface.right .academy-page-number { right: 48px; }
+
+.academy-chapter-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  opacity: 0.35;
+  text-transform: uppercase;
+  display: block;
+}
+
+/* ============================================================
+   4. NAVIGATION
+   ============================================================ */
+
+.academy-nav {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 58px;
+  height: 76px;
+  top: 50%;
+  bottom: auto;
+  margin-top: -38px;
+  border: 1px solid rgba(167,139,250,.28);
+  border-radius: 999px;
+  background: rgba(8,12,25,.72);
+  box-shadow: 0 12px 30px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.1);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+  line-height: 1;
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  z-index: 50;
+  transition: color 0.3s;
+  background: rgba(8,12,25,.52);
+}
+.academy-nav:hover { color: rgba(255,255,255,0.9); border-color: rgba(167,139,250,.7); transform: scale(1.08); }
+.academy-nav.prev { left: -72px; }
+.academy-nav.next { right: -72px; }
+@media (max-width: 767px) {
+  .academy-nav { width: 54px; height: 54px; margin-top: -27px; font-size: 36px; background: rgba(8,12,25,.86); }
+  .academy-nav.prev { left: 8px; }
+  .academy-nav.next { right: 8px; }
+}
+
+/* ============================================================
+   5. BOOK FLIP ANIMATION
+   ============================================================ */
+
+.academy-flip-container {
+  position: absolute;
+  inset: 0;
+  perspective: 2000px;
+  pointer-events: none;
+  z-index: 20;
+}
+.academy-spread-turn{transform-origin:center;backface-visibility:hidden;animation:journal-page-next 620ms cubic-bezier(.22,.7,.2,1)}.academy-spread-turn-prev{animation-name:journal-page-prev}@keyframes journal-page-next{0%{opacity:.4;transform:perspective(1800px) rotateY(-4deg) translateX(7px);filter:brightness(.72)}55%{box-shadow:inset 45px 0 45px rgba(0,0,0,.16)}100%{opacity:1;transform:none;filter:none}}@keyframes journal-page-prev{0%{opacity:.4;transform:perspective(1800px) rotateY(4deg) translateX(-7px);filter:brightness(.72)}55%{box-shadow:inset -45px 0 45px rgba(0,0,0,.16)}100%{opacity:1;transform:none;filter:none}}
+.academy-flipper {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  transform-style: preserve-3d;
+  transition: transform 0.75s cubic-bezier(.32,.72,.18,1);
+}
+.academy-flipper.left  { left: 0;  transform-origin: right center; }
+.academy-flipper.right { right: 0; transform-origin: left center; }
+
+.academy-flipper-front,
+.academy-flipper-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  background: var(--book-page);
+  background-image: var(--book-texture);
+  background-size: cover;
+  background-blend-mode: overlay;
+  overflow: hidden;
+}
+.academy-page.light-theme .academy-flipper-front,
+.academy-page.light-theme .academy-flipper-back {
+  background-blend-mode: multiply;
+}
+.academy-flipper-back { transform: rotateY(180deg); }
+
+/* ============================================================
+   6. BOOKMARK RIBBON
+   ============================================================ */
+
+.academy-ribbon {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 82px;
+  background-color: var(--book-ribbon);
+  background-image: repeating-linear-gradient(45deg,
+    transparent, transparent 1px,
+    rgba(0,0,0,0.15) 1px, rgba(0,0,0,0.15) 2px
+  );
+  z-index: 30;
+  box-shadow: 2px 4px 6px rgba(0,0,0,0.4), inset 0 0 4px rgba(0,0,0,0.2);
+  cursor: pointer;
+}
+.academy-ribbon::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 8px solid var(--book-page);
+}
+
+/* Chapter color variants */
+.academy-ribbon.ch-history   { background-color: #2D5A8E; }
+.academy-ribbon.ch-sandbox   { background-color: #2D6B5A; }
+.academy-ribbon.ch-equipment { background-color: #5B3E8A; }
+.academy-ribbon.ch-substances{ background-color: #3A6B3A; }
+.academy-ribbon.ch-practices { background-color: #7A2020; }
+.academy-ribbon.is-saved{filter:saturate(1.35) brightness(1.12);transform:translateY(7px)}.academy-bookmark-slip{position:absolute;right:24px;top:48px;z-index:25;background:var(--book-page);color:var(--book-text);border:1px solid var(--book-border);padding:.45rem .8rem;box-shadow:0 8px 18px rgba(0,0,0,.2);transform:rotate(2deg);font-size:.82rem}
+
+/* ============================================================
+   7. TYPOGRAPHY
+   ============================================================ */
+
+.codex-serif      { font-family: var(--font-serif); }
+.codex-mono       { font-family: var(--font-mono); }
+.codex-handwriting{ font-family: var(--font-handwriting); font-size: 1.35rem; color: var(--book-text); }
+.codex-cinzel     { font-family: var(--font-cinzel); }
+
+.academy-book h1,
+.academy-page-surface h1 {
+  font-family: var(--font-cinzel);
+  font-size: 2.8rem;
+  margin-bottom: 1.2rem;
+  color: var(--book-text);
+  line-height: 1.15;
+}
+.academy-book h2,
+.academy-page-surface h2 {
+  font-size: 1.9rem;
+  margin-bottom: 1rem;
+  color: var(--book-text);
+  line-height: 1.2;
+}
+.academy-book h3,
+.academy-page-surface h3 {
+  font-size: 1.4rem;
+  margin-bottom: 0.8rem;
+  color: var(--book-text);
+}
+.academy-book h4,
+.academy-page-surface h4 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: var(--book-text);
+}
+.academy-book p,
+.academy-page-surface p {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+  color: var(--book-text);
+}
+.academy-book blockquote {
+  border-left: 3px solid var(--book-accent);
+  padding-left: 1rem;
+  margin: 1.2rem 0;
+  font-style: italic;
+  opacity: 0.8;
+  font-family: var(--font-serif);
+}
+
+/* ── Drop Cap ────────────────────────────────────────────────── */
+
+.drop-cap::first-letter {
+  font-family: var(--font-cinzel);
+  font-size: 3.4rem;
+  font-weight: 700;
+  float: left;
+  line-height: 0.78;
+  padding-right: 0.12em;
+  padding-top: 0.06em;
+  color: var(--book-accent);
+}
+
+/* ── Section Heading Block ───────────────────────────────────── */
+
+.section-heading-block {
+  margin-bottom: 0.8rem;
+}
+.section-number {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  opacity: 0.45;
+  margin-bottom: 0.2rem;
+  text-transform: uppercase;
+}
+.section-heading {
+  font-family: var(--font-cinzel);
+  font-size: 1.1rem;
+  border-bottom: 1px solid var(--book-border);
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.8rem;
+  color: var(--book-text);
+}
+
+/* ── Figure Caption ──────────────────────────────────────────── */
+
+.figure-caption {
+  display: block;
+  text-align: center;
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  color: var(--book-muted);
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+/* ── Blockquote Styled ───────────────────────────────────────── */
+
+.blockquote-styled {
+  border-left: 3px solid var(--book-accent);
+  padding: 0.5rem 1rem;
+  margin: 1.2rem 0;
+  font-style: italic;
+  opacity: 0.85;
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+/* ── Chapter Opening ─────────────────────────────────────────── */
+
+.chapter-opening {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 2rem 1rem;
+}
+.chapter-roman {
+  font-size: 0.8rem;
+  letter-spacing: 0.5em;
+  opacity: 0.45;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 1.5rem;
+}
+.chapter-title {
+  font-family: var(--font-cinzel);
+  font-size: 3rem;
+  line-height: 1.1;
+  color: var(--book-text);
+  margin: 0;
+}
+.chapter-subtitle {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-style: italic;
+  opacity: 0.6;
+  margin-top: 1rem;
+}
+.chapter-divider {
+  width: 80px;
+  height: 1px;
+  background: var(--book-border);
+  margin: 1.5rem auto;
+}
+.chapter-epigraph {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1rem;
+  opacity: 0.6;
+  max-width: 300px;
+  line-height: 1.6;
+  margin-top: 1rem;
+}
+
+/* ============================================================
+   8. INFORMATION BOXES (Textbook colored boxes)
+   ============================================================ */
+
+.info-box {
+  border-radius: 1px;
+  padding: 0.8rem 1rem 0.8rem 1.1rem;
+  margin: 1rem 0;
+  position: relative;
+}
+.info-box-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+.info-box-content {
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+/* Green box — Key Concepts */
+.info-box-green {
+  border-left: 4px solid var(--book-accent-3);
+  background: rgba(107,158,107,0.07);
+}
+.info-box-green .info-box-label { color: var(--book-accent-3); }
+
+/* Purple box — Interesting Fact */
+.info-box-purple {
+  border-left: 4px solid var(--book-accent-2);
+  background: rgba(150,117,200,0.07);
+}
+.info-box-purple .info-box-label { color: var(--book-accent-2); }
+
+/* Blue box — Remember */
+.info-box-blue {
+  border-left: 4px solid var(--book-accent);
+  background: rgba(127,181,197,0.07);
+}
+.info-box-blue .info-box-label { color: var(--book-accent); }
+
+/* Red box — Warning */
+.info-box-red {
+  border-left: 4px solid var(--book-accent-red);
+  background: rgba(159,71,71,0.07);
+}
+.info-box-red .info-box-label { color: var(--book-accent-red); }
+
+/* Light theme adjustments */
+.academy-page.light-theme .info-box-green  { background: rgba(58,107,58,0.06); }
+.academy-page.light-theme .info-box-purple { background: rgba(91,62,138,0.06); }
+.academy-page.light-theme .info-box-blue   { background: rgba(26,107,107,0.06); }
+.academy-page.light-theme .info-box-red    { background: rgba(139,32,32,0.06); }
+
+/* ============================================================
+   9. FORMULA BLOCK
+   ============================================================ */
+
+.formula-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 1.2rem auto;
+  padding: 0.8rem 1.5rem;
+  border: 1px solid var(--book-border);
+  background: rgba(0,0,0,0.04);
+  text-align: center;
+  width: fit-content;
+  min-width: 120px;
+}
+.academy-page.dark-theme .formula-block {
+  background: rgba(255,255,255,0.04);
+}
+.formula-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.45;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+.formula-content {
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  color: var(--book-text);
+}
+
+/* ============================================================
+   10. HANDWRITTEN ANNOTATIONS
+   ============================================================ */
+
+.margin-note {
+  position: absolute;
+  font-family: var(--font-handwriting);
+  font-size: 1rem;
+  line-height: 1.35;
+  width: 130px;
+  pointer-events: none;
+}
+.margin-note-left {
+  left: -8px;
+  top: 100px;
+  transform: rotate(-3deg);
+}
+.margin-note-right {
+  right: -8px;
+  top: 100px;
+  transform: rotate(2deg);
+}
+.margin-note-bottom {
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%) rotate(-1deg);
+}
+.margin-note-red    { color: var(--book-annotation); }
+.margin-note-pencil { color: var(--book-pencil); font-size: 0.95rem; }
+
+/* Legacy compatibility */
+.margin-annotation {
+  position: absolute;
+  right: -16px;
+  top: 100px;
+  width: 140px;
+  color: var(--book-pencil);
+  font-family: var(--font-handwriting);
+  font-size: 1rem;
+  line-height: 1.3;
+}
+.academy-page-surface.right .margin-annotation {
+  right: auto;
+  left: -16px;
+  transform: rotate(2deg);
+}
+
+/* ── SVG Strikethrough ───────────────────────────────────────── */
+
+.handwritten-strike {
+  position: relative;
+  display: inline;
+  font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+.handwritten-strike-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 10px;
+  margin-top: -5px;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='10' viewBox='0 0 200 10'%3E%3Cpath d='M2,6 Q50,3 100,5 Q150,8 198,4' stroke='%23C24B4B' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+}
+.academy-page.light-theme .handwritten-strike-line {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='10' viewBox='0 0 200 10'%3E%3Cpath d='M2,6 Q50,3 100,5 Q150,8 198,4' stroke='%23B91C1C' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* ── Red Strike / Corrections ────────────────────────────────── */
+
+.red-strike {
+  text-decoration: line-through;
+  text-decoration-color: var(--book-red);
+  text-decoration-thickness: 2px;
+  opacity: 0.8;
+}
+.red-correction {
+  color: var(--book-annotation);
+  font-family: var(--font-handwriting);
+  font-size: 1.2rem;
+  display: inline-block;
+}
+
+/* ============================================================
+   11. PAGE LAYOUT HELPERS
+   ============================================================ */
+
+.page-layout-dense {
+  display: flex;
+  flex-direction: column;
+  padding-top: 0.5rem;
+  height: 100%;
+  overflow: hidden;
+}
+.page-layout-balanced {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+}
+.atomic-layout{justify-content:flex-start}
+.owner-cover-page{justify-content:flex-start!important;align-items:center!important;padding-top:2.6rem!important}.owner-cover-page>img{width:min(72%,300px)!important;height:220px!important;object-fit:contain;margin-top:3.8rem}.owner-cover-page>div{width:100%;margin-top:auto!important;padding:0 1.25rem 2.2rem}.owner-cover-page .codex-mono{color:var(--book-text);opacity:.58!important}.owner-cover-page .codex-handwriting{color:var(--book-pencil);opacity:.72!important}
+.page-layout-image-focused {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 1.5rem;
+  height: 100%;
+}
+.page-layout-image-focused h2 { width: 100%; }
+.page-layout-grid {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-top: 0.5rem;
+}
+.page-layout-textbook {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100%;
+  overflow: hidden;
+}
+/* Readable column width — prevent text that's too narrow or too wide */
+.page-layout-textbook > p,
+.page-layout-textbook > .codex-serif {
+  max-width: 60ch;
+}
+.page-layout-journal {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: var(--font-handwriting);
+}
+.intro-experiment-layout{display:grid;grid-template-columns:minmax(0,.52fr) minmax(0,1fr);align-items:center;column-gap:1.25rem}
+.intro-experiment-layout>p:first-child{grid-column:2;grid-row:1}
+.intro-experiment-layout>img{grid-column:1;grid-row:1;justify-self:start;width:100%!important;margin:0!important}
+.intro-experiment-layout>.figure-caption,.intro-experiment-layout>.codex-handwriting{grid-column:1 / -1}
+.atomic-layout{display:grid;grid-template-columns:minmax(0,.52fr) minmax(0,1fr);align-items:start;column-gap:1.25rem;row-gap:.7rem}
+.atomic-layout>*{min-width:0}.atomic-layout>img{grid-column:1;grid-row:1 / span 2;width:100%!important;margin:0!important}.atomic-layout>.textbook-blockquote,.atomic-layout>.codex-serif{grid-column:2}
+.atomic-structure-note{grid-column:2;font-size:.82rem!important;line-height:1.55!important;opacity:.78}
+.atomic-reading-note{grid-column:1 / -1;margin-top:.3rem;padding-top:.65rem;border-top:1px solid var(--book-border)}
+.atomic-reading-note .codex-mono,.safety-log-note .codex-mono{margin:0 0 .32rem;color:var(--book-accent);font-size:.58rem;letter-spacing:.16em}
+.atomic-reading-note .codex-serif{margin:0;max-width:none;font-size:.83rem;line-height:1.52}
+.figure-row{display:flex;gap:1.1rem;margin-bottom:.55rem;align-items:flex-start}
+.figure-row>figure{margin:0;flex:0 0 40%;display:flex;flex-direction:column;align-items:center}
+.figure-row-copy{flex:1 1 auto;display:flex;flex-direction:column;gap:.48rem}
+.figure-row-copy .codex-serif{margin:0;line-height:1.55}
+.page-layout-textbook .figure-row-copy .codex-serif{font-size:.88rem;line-height:1.47}
+.page-layout-scientist-right .figure-row-copy .codex-serif{font-size:.86rem;line-height:1.48}
+.page-layout-scientist-right .scientist-img{max-height:185px}
+.mendeleev-layout .figure-row{gap:.8rem;margin-bottom:.25rem}
+.mendeleev-layout .figure-row-copy{gap:.32rem}
+.mendeleev-layout .figure-row-copy .codex-serif{font-size:.76rem;line-height:1.34}
+.mendeleev-layout .textbook-blockquote{margin:0 0 .55rem;font-size:.86rem;line-height:1.4}
+.mendeleev-layout .scientist-note-block{margin-top:.45rem;padding-top:.45rem}
+.mendeleev-layout .scientist-note-block .codex-serif{font-size:.72rem;line-height:1.35}
+.chemistry-formula-note{display:flex;align-items:baseline;justify-content:center;gap:.8rem;margin-top:.8rem;padding:.5rem .75rem;border-top:1px solid var(--book-border);border-bottom:1px solid var(--book-border);color:var(--book-accent)}
+.chemistry-formula-note .codex-handwriting{font-size:1.35rem;transform:rotate(-2deg);color:var(--book-text)}
+.chemistry-formula-note small{font: .62rem/1.3 var(--font-mono);opacity:.58}
+.chemistry-opening-page .chapter-header{margin-bottom:.35rem}
+.chemistry-content-page>.codex-serif{line-height:1.58}
+.history-opening-page{isolation:isolate}
+.history-alchemy-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:58% center;opacity:.34;filter:saturate(.72) contrast(.92);z-index:-2}
+.history-opening-page::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,16,30,.9) 0%,rgba(10,16,30,.68) 42%,rgba(10,16,30,.28) 100%),linear-gradient(0deg,rgba(10,16,30,.72),transparent 45%,rgba(10,16,30,.5));z-index:-1;pointer-events:none}
+.history-opening-content{position:relative;z-index:1}
+.scientist-discoveries{margin-top:1rem;border-top:1px solid var(--book-border);padding-top:.65rem}
+.scientist-discoveries-label{margin:0 0 .35rem;color:var(--book-accent);font-size:.58rem;letter-spacing:.16em}
+.scientist-discoveries p:not(.scientist-discoveries-label){display:flex;gap:.65rem;margin:.28rem 0;font-size:.78rem;line-height:1.35}
+.scientist-discoveries p span{min-width:1.3rem;color:var(--book-accent);font: .62rem var(--font-mono);opacity:.75}
+.scientist-note-block{margin-top:.85rem;border-top:1px solid var(--book-border);padding-top:.6rem}
+.scientist-note-block--accent{border-left:2px solid var(--book-accent);padding-left:.75rem}
+.scientist-note-label{margin:0 0 .3rem;color:var(--book-accent);font-size:.58rem;letter-spacing:.16em}
+.scientist-note-block .codex-serif{margin:0;font-size:.8rem;line-height:1.45}
+.scientist-continuation{margin:.65rem 0 0;max-width:none!important;font-size:.84rem;line-height:1.55}
+.safety-log-note{margin-top:1rem;padding-top:.7rem;border-top:1px solid var(--book-border)}
+.safety-log-note .codex-serif{margin:0;font-size:.82rem;line-height:1.52}
+.equipment-practice-note{margin-top:.7rem;border:1px solid color-mix(in srgb,var(--book-accent) 35%,transparent);background:color-mix(in srgb,var(--book-accent) 7%,transparent);padding:.65rem .75rem}
+.equipment-practice-label{margin:0 0 .3rem;color:var(--book-accent);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase}
+.equipment-practice-note .codex-serif{margin:0;font-size:.78rem;line-height:1.45}
+@media (max-width:700px){.intro-experiment-layout,.atomic-layout{display:flex;flex-direction:column;gap:.7rem}.intro-experiment-layout>img,.atomic-layout>img{width:52%!important;align-self:flex-start}.intro-experiment-layout>p:first-child{order:2}.atomic-layout>.textbook-blockquote,.atomic-layout>.codex-serif{order:2}}
+@media (max-width:700px){.academy-page-inner{padding:24px 20px 30px!important}.academy-running-header{font-size:8px!important;letter-spacing:.12em!important}.academy-page-number{font-size:8px!important}.academy-book p{font-size:clamp(11px,2.8vw,14px);line-height:1.55}.academy-book h2{font-size:clamp(20px,6vw,30px)}.equipment-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}.equipment-grid-item{min-width:0}.detail-spread img{max-width:78%}.detail-spread-right{padding-inline:4px}.textured-image{max-width:100%}}
+.page-layout-scientist-left {
+  position: relative;
+  height: 100%;
+  padding-bottom: 1.25rem;
+}
+.page-layout-scientist-right {
+  position: relative;
+  height: 100%;
+  padding-bottom: 1.25rem;
+}
+.page-layout-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  padding-top: 1rem;
+  text-align: center;
+}
+.page-layout-catalogue {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.page-layout-practice {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-top: 0.5rem;
+}
+.page-layout-torn {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ============================================================
+   12. EDITORIAL INDEX (Table of Contents)
+   ============================================================ */
+
+.editorial-index {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+.editorial-index-row {
+  display: flex;
+  align-items: baseline;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--book-text);
+  padding: 0.15rem 0;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.2s;
+}
+.editorial-index-row:hover { color: var(--book-accent); }
+
+.index-chapter-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.4;
+  display: block;
+  margin-top: 0.8rem;
+  margin-bottom: 0.2rem;
+}
+.index-title {
+  font-size: 1rem;
+  font-family: var(--font-serif);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+.index-dots {
+  flex-grow: 1;
+  border-bottom: 2px dotted var(--book-muted);
+  margin: 0 0.4rem;
+  opacity: 0.4;
+  flex-shrink: 1;
+  min-width: 16px;
+}
+.index-page {
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  color: var(--book-muted);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   13. EQUIPMENT CATALOGUE GRID
+   ============================================================ */
+
+.equipment-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  flex: 1;
+}
+.equipment-grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--book-border);
+  padding: 0.6rem 0.4rem 0.8rem;
+  transition: border-color 0.2s, transform 0.15s;
+  color: var(--book-text);
+  text-align: center;
+}
+.equipment-grid-item:hover {
+  border-color: var(--book-accent);
+  transform: translateY(-2px);
+}
+.equipment-number {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  opacity: 0.35;
+  margin-bottom: 0.3rem;
+  letter-spacing: 0.1em;
+  display: block;
+}
+.equipment-name {
+  font-family: var(--font-serif);
+  font-size: 0.8rem;
+  margin-top: 0.4rem;
+  text-align: center;
+  line-height: 1.2;
+  display: block;
+}
+.equipment-category {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  opacity: 0.35;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 0.2rem;
+  display: block;
+}
+
+/* ── Visual Grid (legacy compatibility) ──────────────────────── */
+
+.visual-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 0.8rem;
+}
+.visual-grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--book-border);
+  padding: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--book-text);
+  border-radius: 2px;
+}
+.visual-grid-item:hover {
+  border-color: var(--book-accent);
+  transform: translateY(-1px);
+}
+.visual-grid-item span {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* ============================================================
+   14. SUBSTANCE DISPLAY
+   ============================================================ */
+
+.substance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  flex: 1;
+}
+.substance-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.8rem 0.4rem;
+  border-bottom: 1px solid var(--book-border);
+  cursor: pointer;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  text-align: center;
+  color: var(--book-text);
+  transition: border-color 0.2s;
+}
+.substance-item:hover { border-color: var(--book-accent); }
+
+.substance-properties {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+}
+.substance-properties li {
+  padding: 0.4rem 0;
+  border-bottom: 1px dotted var(--book-border);
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
+}
+
+.formula-display {
+  font-size: 1.4rem;
+  text-align: center;
+  padding: 0.75rem;
+  background: rgba(0,0,0,0.04);
+  font-family: var(--font-mono);
+}
+.academy-page.dark-theme .formula-display {
+  background: rgba(255,255,255,0.04);
+}
+
+.featured-substance {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+/* ============================================================
+   15. HISTORY TIMELINE
+   ============================================================ */
+
+.history-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-left: 0.5rem;
+  border-left: 2px solid var(--book-border);
+}
+.history-period {
+  display: flex;
+  gap: 1rem;
+  padding-left: 1rem;
+  padding-bottom: 1.1rem;
+  position: relative;
+}
+.history-period::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--book-accent);
+  border: 2px solid var(--book-page);
+}
+.history-period-year {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  opacity: 0.45;
+  flex-shrink: 0;
+  width: 68px;
+  text-align: right;
+  padding-top: 0.1rem;
+  letter-spacing: 0.05em;
+}
+.history-period-content { flex: 1; }
+.history-period-title {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+  color: var(--book-text);
+}
+.history-period-text {
+  font-family: var(--font-serif);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--book-muted);
+}
+
+/* ============================================================
+   16. JOURNAL DATE / EXPERIMENT ID
+   ============================================================ */
+
+.journal-date-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.5rem;
+}
+.journal-date {
+  font-family: var(--font-handwriting);
+  font-size: 1.2rem;
+  color: var(--book-pencil);
+  display: block;
+}
+.experiment-id {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.4;
+  display: block;
+}
+
+/* ============================================================
+   17. PRACTICE / QUIZ
+   ============================================================ */
+
+.practice-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.practice-number {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  opacity: 0.4;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+.practice-header {
+  font-family: var(--font-handwriting);
+  font-size: 1.7rem;
+  color: var(--book-accent);
+  margin-bottom: 0.8rem;
+  line-height: 1.2;
+}
+.practice-goal {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  opacity: 0.55;
+  margin-bottom: 0.5rem;
+}
+.practice-equipment-hint {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  opacity: 0.45;
+  margin-bottom: 0.8rem;
+  letter-spacing: 0.05em;
+}
+.practice-question {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+.practice-illustration {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.8rem;
+}
+.practice-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+}
+.practice-option {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.6rem;
+  background: none;
+  border: none;
+  border-bottom: 1px dotted var(--book-border);
+  color: var(--book-text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  width: 100%;
+}
+.practice-option:hover:not(:disabled) {
+  background: rgba(127,181,197,0.06);
+}
+.practice-option:disabled {
+  cursor: default;
+}
+.practice-option.selected-correct {
+  border-left: 3px solid var(--book-accent-3);
+  background: rgba(107,158,107,0.08);
+}
+.practice-option.selected-wrong {
+  border-left: 3px solid var(--book-accent-red);
+  background: rgba(159,71,71,0.08);
+}
+.practice-checkbox {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--book-border);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+}
+.practice-radio-dot { width: 8px; height: 8px; border-radius: 999px; background: transparent; }
+.practice-radio-dot.active { background: var(--book-accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--book-accent) 22%, transparent); }
+.practice-option.selected-correct .practice-checkbox {
+  border-color: var(--book-accent-3);
+  color: var(--book-accent-3);
+}
+.practice-option.selected-wrong .practice-checkbox {
+  border-color: var(--book-accent-red);
+  color: var(--book-accent-red);
+}
+.practice-option-text {
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+}
+.practice-feedback {
+  font-family: var(--font-handwriting);
+  font-size: 1rem;
+  margin-top: 0.8rem;
+  padding: 0.5rem 0;
+  line-height: 1.4;
+}
+.practice-feedback strong, .practice-feedback span { display: block; }
+.practice-feedback span { margin-top: .35rem; color: var(--book-text); font-family: var(--font-serif); font-size: .88rem; }
+.practice-result-line { display: flex !important; justify-content: space-between; margin-top: .65rem !important; padding-top: .55rem; border-top: 1px dotted var(--book-border); color: var(--book-text) !important; font-size: .7rem !important; }
+.practice-next-btn { margin-top: .7rem; }
+.practice-feedback-correct { color: var(--book-accent-3); }
+.practice-feedback-wrong   { color: var(--book-accent-red); }
+
+/* Interactive paper instruments */
+.journal-interaction-label { font-family: var(--font-mono); font-size: .58rem; letter-spacing: .18em; opacity: .5; }
+.journal-mini-lab { margin-top: 1rem; border: 1px solid var(--book-border); padding: .65rem; background: color-mix(in srgb, var(--book-page) 84%, var(--book-accent) 16%); }
+.mini-lab-stage { display:flex; align-items:center; justify-content:center; gap:.45rem; margin:.45rem 0; }
+.mini-lab-stage>div:not(.mini-lab-connection){display:flex;flex-direction:column;align-items:center;font: .52rem var(--font-mono);opacity:.86}
+.mini-lab-connection{width:44px;text-align:center;font:.5rem var(--font-mono);opacity:.55}.mini-lab-connection i{display:block;height:2px;background:var(--book-border);transition:.3s}.mini-lab-connection.active i{background:#f59e0b;box-shadow:0 0 8px #f59e0b}.mini-lab-connection.active{color:#f59e0b;opacity:1}
+.mini-lab-readout{display:flex;align-items:center;justify-content:space-between;border-top:1px dotted var(--book-border);padding-top:.45rem;font:.55rem var(--font-mono)}.mini-lab-readout span{opacity:.55}.mini-lab-readout span.active{color:#d99132;opacity:1}.mini-lab-readout strong{font-size:.85rem}
+.journal-controls{display:flex;gap:.35rem;margin-top:.45rem}.journal-controls button,.periodic-open,.comparison-tabs button,.element-insert button{border:1px solid var(--book-border);background:transparent;color:var(--book-text);padding:.3rem .45rem;font:.55rem var(--font-mono);cursor:pointer}.journal-controls button:hover,.periodic-open:hover{border-color:var(--book-accent);color:var(--book-accent)}.journal-controls button:disabled{opacity:.3}
+
+.substance-state-demo{margin-top:.8rem;border:1px solid var(--book-border);padding:.65rem}.particle-vessel{position:relative;height:72px;margin:.45rem 0;border:1px solid var(--book-border);overflow:hidden}.particle-vessel strong{position:absolute;inset:0;display:grid;place-items:center;font:1rem var(--font-mono);z-index:2}.particle-vessel i{--x:calc((var(--i) * 37) % 92);position:absolute;width:6px;height:6px;border-radius:50%;left:calc(var(--x) * 1%);bottom:calc(8% + ((var(--i) * 17) % 42) * 1%);background:var(--book-accent);opacity:.45;transition:.4s}.particle-vessel.state-solid i{bottom:calc(5% + ((var(--i) % 3) * 11px));left:calc(18% + ((var(--i) % 4) * 18%))}.particle-vessel.state-gas i{bottom:calc(8% + ((var(--i) * 29) % 85) * 1%);animation:journal-particle 2.2s ease-in-out infinite alternate}.substance-state-row{display:flex;justify-content:space-between;font:.56rem var(--font-mono)}.substance-state-demo input{width:100%;accent-color:var(--book-accent)}.substance-state-demo small{display:block;font:.52rem var(--font-mono);opacity:.45}@keyframes journal-particle{to{transform:translate(5px,-12px)}}
+.substance-visual{position:relative;display:grid;place-items:center;margin:auto;border-radius:50%;background:radial-gradient(circle,rgba(127,181,197,.13),transparent 68%)}.substance-visual strong{position:relative;z-index:3;font:1rem var(--font-mono);text-shadow:0 1px 8px var(--book-page)}.substance-orbit{position:absolute;inset:8%;animation:substance-drift 8s linear infinite}.substance-orbit i{position:absolute;width:20%;height:20%;border-radius:50%;background:var(--book-accent);box-shadow:inset -3px -3px 7px rgba(0,0,0,.2)}.substance-orbit i:nth-child(1){left:40%;top:4%}.substance-orbit i:nth-child(2){right:8%;top:36%;background:var(--book-accent-2)}.substance-orbit i:nth-child(3){left:14%;top:38%;background:var(--book-accent-3)}.substance-orbit i:nth-child(4){left:35%;bottom:5%;background:var(--book-accent-red)}.substance-orbit i:nth-child(5){right:16%;bottom:15%}.substance-visual.crystal{border-radius:16%;background:linear-gradient(135deg,rgba(127,181,197,.08),rgba(152,126,184,.14))}.substance-visual.crystal .substance-orbit{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;animation:none}.substance-visual.crystal .substance-orbit i{position:static;width:auto;height:auto;border-radius:3px}.substance-copper_sulfate .substance-orbit i:nth-child(odd){background:#3b82f6}@keyframes substance-drift{to{transform:rotate(360deg)}}
+
+.periodic-foldout-wrap{margin-top:.85rem}.periodic-open{width:100%;padding:.55rem;letter-spacing:.08em}.periodic-foldout{position:fixed;left:40px;top:35px;width:1040px;height:610px;z-index:180;padding:24px;background:var(--book-page);color:var(--book-text);border:1px solid var(--book-border);box-shadow:0 25px 90px rgba(0,0,0,.58),inset 0 0 50px rgba(0,0,0,.08);animation:foldout-in .35s ease-out}.periodic-foldout:before{content:"";position:absolute;inset:7px;border:1px dashed color-mix(in srgb,var(--book-border) 75%,transparent);pointer-events:none}.periodic-foldout-head,.periodic-body{position:relative;z-index:1}.periodic-foldout-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.periodic-foldout-head h3{font-size:1.35rem;margin:.2rem 0}.periodic-foldout-head>div:last-child{display:flex;gap:8px}.periodic-foldout-head input{width:210px;border:0;border-bottom:1px solid var(--book-border);background:transparent;color:var(--book-text);font:.7rem var(--font-mono);outline:none}.periodic-foldout-head button{width:30px;border:1px solid var(--book-border);background:transparent;color:var(--book-text);cursor:pointer}.periodic-body{display:grid;grid-template-columns:1fr 190px;gap:18px}.periodic-grid{display:grid;grid-template-columns:repeat(18,1fr);gap:3px;align-content:start}.periodic-grid>i{min-height:38px}.element-cell{min-width:0;height:38px;border:1px solid var(--book-border);background:rgba(127,181,197,.05);color:var(--book-text);padding:2px;cursor:pointer;transition:.15s}.element-cell:hover{transform:scale(1.18);z-index:3;border-color:var(--book-accent);box-shadow:0 5px 14px rgba(0,0,0,.28)}.element-cell small,.element-cell strong{display:block}.element-cell small{font:.42rem var(--font-mono);opacity:.45}.element-cell strong{font:.74rem var(--font-serif)}.element-cell.dim{opacity:.12}.element-cell.alkali{background:rgba(201,112,112,.13)}.element-cell.halogen{background:rgba(124,178,129,.13)}.element-cell.noble{background:rgba(127,181,197,.18)}.element-cell.lanthanide,.element-cell.actinide{background:rgba(152,126,184,.16)}.element-series{grid-column:3/19;display:grid;grid-template-columns:repeat(15,1fr);gap:3px;margin-top:8px}.element-insert{border-left:1px solid var(--book-border);padding:12px 0 0 18px}.element-insert>span{font:.55rem var(--font-mono);opacity:.5}.element-insert>strong{display:block;font:4rem/1 var(--font-serif);color:var(--book-accent);margin-top:20px}.element-insert h4{font:1.05rem var(--font-cinzel);margin:.4rem 0}.element-insert p{font:.72rem/1.45 var(--font-serif);opacity:.75}.element-insert dl{font:.58rem var(--font-mono)}.element-insert dl div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--book-border);padding:.35rem 0}.element-insert dd{margin:0}.element-insert button{margin-top:12px}@keyframes foldout-in{from{opacity:0;transform:scale(.94) rotateX(-7deg)}to{opacity:1;transform:none}}
+
+.boyle-lab{width:190px;padding:.55rem;border:1px solid var(--book-border)}.boyle-values{display:flex;justify-content:space-between;margin:.4rem 0;font:.58rem var(--font-mono)}.boyle-lab input{width:100%;accent-color:var(--book-accent)}.boyle-graph{display:flex;height:55px;align-items:flex-end;gap:4px;border-left:1px solid var(--book-border);border-bottom:1px solid var(--book-border);padding:4px}.boyle-graph i{flex:1;max-height:100%;background:var(--book-accent);opacity:.55}.boyle-lab small,.mendeleev-compare small{display:block;margin-top:.4rem;font:.52rem/1.35 var(--font-mono);opacity:.5}
+.mendeleev-compare{width:220px;border:1px solid var(--book-border);padding:.55rem}.comparison-tabs{display:flex;gap:.3rem;margin-bottom:.5rem}.comparison-tabs button.active{border-color:var(--book-accent);color:var(--book-accent)}.historical-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;transition:.35s}.historical-grid.modern{grid-template-columns:repeat(9,1fr)}.historical-grid span{display:grid;place-items:center;min-height:26px;border:1px solid var(--book-border);font:.6rem var(--font-mono);animation:element-reveal .25s ease both}.historical-grid span.unknown{border-style:dashed;color:var(--book-annotation)}@keyframes element-reveal{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+@media (prefers-reduced-motion:reduce){.periodic-foldout,.historical-grid span,.particle-vessel.state-gas i,.academy-spread-turn{animation:none!important}.element-cell{transition:none}}
+
+/* Step sorter */
+.practice-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+}
+.practice-step-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--book-border);
+  background: rgba(255,255,255,0.02);
+}
+.practice-step-num {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  opacity: 0.4;
+  width: 16px;
+  flex-shrink: 0;
+}
+.practice-step-text {
+  font-family: var(--font-serif);
+  font-size: 0.85rem;
+  flex: 1;
+}
+.practice-step-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.practice-step-controls button {
+  background: none;
+  border: 1px solid var(--book-border);
+  color: var(--book-muted);
+  font-size: 0.65rem;
+  padding: 1px 3px;
+  cursor: pointer;
+  line-height: 1;
+}
+.practice-step-controls button:disabled { opacity: 0.2; cursor: default; }
+.practice-check-btn {
+  margin-top: 0.8rem;
+  align-self: flex-start;
+}
+
+/* ============================================================
+   18. TORN PAGE EFFECT
+   ============================================================ */
+
+.torn-bg-reveal {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(100,120,145,0.25) 1px, transparent 1px);
+  background-size: 28px 28px;
+  z-index: 0;
+}
+.torn-bg-reveal-full {
+  z-index: 1;
+}
+.torn-page-clip {
+  position: absolute;
+  inset: 0;
+  /* Torn edge — right 45% of the page survives */
+  clip-path: polygon(
+    55% 0%,   60% 5%,   56% 11%,  62% 18%,
+    57% 24%,  63% 30%,  58% 37%,  64% 43%,
+    59% 50%,  65% 56%,  60% 63%,  66% 70%,
+    61% 76%,  67% 83%,  62% 89%,  68% 95%,
+    63% 100%, 100% 100%, 100% 0%
+  );
+  background: var(--book-page);
+  z-index: 2;
+}
+.torn-page-clip-heavy {
+  clip-path: polygon(
+    72% 0%,   76% 7%,   70% 14%,  78% 21%,
+    72% 29%,  79% 36%,  73% 44%,  80% 52%,
+    74% 59%,  81% 67%,  75% 74%,  82% 82%,
+    76% 89%,  83% 96%,  78% 100%,
+    100% 100%, 100% 0%
+  );
+}
+.torn-page-text {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 42%;
+  height: 100%;
+  padding: 46px 48px 42px 20px;
+  box-sizing: border-box;
+}
+.torn-fragment {
+  width: 25%;
+}
+.torn-edge-svg {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 80px;
+  z-index: 3;
+  pointer-events: none;
+}
+.torn-edge-heavy {
+  width: 120px;
+}
+.torn-right-edge {
+  position: absolute;
+  inset: 0;
+  background: var(--book-page);
+  clip-path: polygon(0 0, 15% 0, 20% 5%, 14% 12%, 22% 20%, 16% 28%, 23% 36%, 17% 44%, 24% 52%, 18% 60%, 25% 68%, 19% 76%, 26% 84%, 20% 92%, 27% 100%, 0 100%);
+  z-index: 2;
+}
+.torn-ghost-text {
+  pointer-events: none;
+}
+
+/* ============================================================
+   19. SCIENTIST IMAGES
+   ============================================================ */
+
+.scientist-img {
+  max-height: 280px;
+  object-fit: contain;
+  display: block;
+}
+.textured-image {
+  mix-blend-mode: multiply;
+  filter: contrast(1.08) sepia(0.15);
+}
+.academy-page.dark-theme .textured-image {
+  mix-blend-mode: screen;
+  filter: none;
+}
+.scientist-image {
+  max-height: 200px;
+  object-fit: contain;
+}
+
+/* ============================================================
+   20. ACTION BUTTONS
+   ============================================================ */
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: transparent;
+  border: 1px solid var(--book-border);
+  color: var(--book-text);
+  padding: 0.45rem 0.9rem;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  border-radius: 0;
+}
+.action-btn:hover {
+  border-color: var(--book-accent);
+  color: var(--book-accent);
+}
+.open-in-lab-btn {
+  border-color: var(--book-accent);
+  color: var(--book-accent);
+  opacity: 0.8;
+}
+.open-in-lab-btn:hover {
+  opacity: 1;
+  background: rgba(127,181,197,0.08);
+}
+
+/* ============================================================
+   21. DETAIL SPREADS
+   ============================================================ */
+
+.detail-spread { padding-bottom: 1rem; justify-content: flex-start; gap: .7rem; }
+.detail-spread-right { padding-top: .9rem; justify-content: flex-start; gap: .55rem; }
+.detail-spread-right h2 { margin-bottom: .65rem !important; }
+.detail-spread-right .substance-properties { margin-bottom: .65rem; }
+.detail-spread-right .substance-state-demo { margin-top: .2rem; }
+.detail-spread-right .codex-handwriting { margin-top: .55rem !important; }
+.detail-spread-right > div:last-child { margin-top: .65rem !important; }
+
+.detail-image-container {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.sandbox-material-visual { position: relative; display: grid; place-items: center; overflow: hidden; border: 1px solid var(--book-border); background: rgba(127,181,197,.06); }
+.sandbox-material-visual img { width: 100%; height: 100%; object-fit: contain; padding: 8%; filter: saturate(.9) contrast(1.02); }
+.sandbox-material-visual strong { position: absolute; bottom: 5%; left: 0; right: 0; text-align: center; font: 700 .82rem/1 var(--font-mono, monospace); color: var(--book-text); text-shadow: 0 1px 5px rgba(0,0,0,.8); }
+.detail-specs {
+  font-size: 0.75rem;
+  color: var(--book-muted);
+  margin-top: 0.5rem;
+}
+
+/* ============================================================
+   22. LANGUAGE SPREAD (legacy)
+   ============================================================ */
+
+.spread-language {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1rem;
+}
+.lang-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: 1px solid var(--book-border);
+  color: var(--book-text);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+.lang-entry:hover {
+  border-color: var(--book-accent);
+  color: var(--book-accent);
+}
+
+/* ============================================================
+   23. INTERRUPTED / UNFINISHED ELEMENTS
+   ============================================================ */
+
+.interrupted-sentence {
+  position: relative;
+  display: inline-block;
+}
+.interrupted-sentence::after {
+  content: '';
+  position: absolute;
+  right: -30px;
+  bottom: 5px;
+  width: 40px;
+  height: 2px;
+  background: var(--book-text);
+  transform: rotate(5deg);
+}
+.unfinished-diagram {
+  position: relative;
+  width: 200px;
+  height: 150px;
+  margin: 1.5rem auto;
+  opacity: 0.65;
+}
+.ink-splatter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle, var(--book-text) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(2px);
+  opacity: 0.5;
+  transform: translate(-50%,-50%);
+}
+.academy-page.light-theme .ink-splatter {
+  background: radial-gradient(circle, rgba(0,0,0,0.5) 0%, transparent 70%);
+}
+
+/* ============================================================
+   24. MISC UTILITIES
+   ============================================================ */
+
+.sandbox-illustration {
+  filter: none;
+  mix-blend-mode: normal;
+}
+.academy-page.light-theme .sandbox-illustration {
+  mix-blend-mode: multiply;
+  filter: contrast(1.05);
+}
+
+.clickable-figure {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.clickable-figure:hover { opacity: 0.85; }

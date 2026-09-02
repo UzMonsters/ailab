@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useRef, useEffect, useState } from 'react';
 import { Atom, FlaskConical, Microscope, BrainCircuit, Route, Users, Sparkles, ArrowRight, CheckCircle2, Cpu, ShieldCheck, Network } from 'lucide-react';
-import ScienceBackground, { BackgroundGlow } from '@/components/common/ScienceBackground';
+import ScienceBackground, { BackgroundGlow } from '@/shared/ui/ScienceBackground';
 
 function Reveal({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null);

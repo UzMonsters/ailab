@@ -2,10 +2,6 @@
 
 import { create } from 'zustand';
 import type { UserMeResponse } from '@/types';
-import { authApi } from '@/services/api/auth.api';
-import { userApi } from '@/services/api/user.api';
-import { getAccessToken } from '@/services/api/client';
-import { normalizeError } from '@/lib/errors';
 
 interface AuthState {
   user: UserMeResponse | null;
@@ -20,58 +16,65 @@ interface AuthState {
   clearError: () => void;
 }
 
+import { authApi } from '@/entities/auth/api/auth.api';
+import { userApi } from '@/entities/user/api/user.api';
+import { errorMessage } from '@/shared/utils/errorMessage';
+let fetchUserPromise: Promise<void> | null = null;
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
+  // Auth is currently optional in the frontend demo flow. Do not block the
+  // auth screen while the backend is unavailable.
   isLoading: false,
   error: null,
 
-  login: async (email: string, password: string) => {
+  login: async (email, password) => {
     set({ isLoading: true, error: null });
     try {
       await authApi.login(email, password);
-      const user = await userApi.getMe();
-      set({ user, isAuthenticated: true, isLoading: false });
-    } catch (err: unknown) {
-      set({ error: normalizeError(err, 'Login failed').message, isLoading: false, isAuthenticated: false });
-      throw err;
+      await get().fetchUser();
+    } catch (e: unknown) {
+      set({ error: errorMessage(e, 'Login failed'), isLoading: false });
     }
   },
 
-  register: async (username: string, email: string, password: string) => {
+  register: async (username, email, password) => {
     set({ isLoading: true, error: null });
     try {
       await authApi.register(username, email, password);
-      await authApi.login(email, password);
-      const user = await userApi.getMe();
-      set({ user, isAuthenticated: true, isLoading: false });
-    } catch (err: unknown) {
-      set({ error: normalizeError(err, 'Registration failed').message, isLoading: false });
-      throw err;
+      await get().login(email, password);
+    } catch (e: unknown) {
+      set({ error: errorMessage(e, 'Registration failed'), isLoading: false });
     }
   },
 
   logout: async () => {
-    set({ isLoading: true });
     try {
       await authApi.logout();
-    } catch {
-      // Even if logout fails, clear local state
+    } finally {
+      set({ user: null, isAuthenticated: false, isLoading: false, error: null });
     }
-    set({ user: null, isAuthenticated: false, isLoading: false, error: null });
   },
 
-  fetchUser: async () => {
-    set({ isLoading: true });
-    try {
-      if (!getAccessToken()) {
-        await authApi.refresh();
+  fetchUser: () => {
+    if (fetchUserPromise) return fetchUserPromise;
+    
+    const promise = (async () => {
+      set({ isLoading: true, error: null });
+      try {
+        const user = await userApi.getMe();
+        set({ user, isAuthenticated: true, isLoading: false });
+      } catch (e: unknown) {
+        set({ user: null, isAuthenticated: false, isLoading: false, error: errorMessage(e, 'Failed to fetch user') });
       }
-      const user = await userApi.getMe();
-      set({ user, isAuthenticated: true, isLoading: false });
-    } catch {
-      set({ user: null, isAuthenticated: false, isLoading: false });
-    }
+    })();
+    
+    fetchUserPromise = promise;
+    void promise.finally(() => {
+      if (fetchUserPromise === promise) fetchUserPromise = null;
+    });
+    return promise;
   },
 
   clearError: () => set({ error: null }),
@@ -80,7 +83,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 if (typeof window !== 'undefined') {
   window.addEventListener('auth:unauthorized', () => {
     useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false, error: null });
-    if (!window.location.pathname.endsWith('/auth')) {
+    // The public demo flow intentionally works without a backend token. A
+    // 401 from optional persistence must not send the user back to landing.
+    if (process.env.NEXT_PUBLIC_AUTH_ENABLED !== 'true') return;
+    const path = window.location.pathname;
+    const isPublic = /^\/(en|ru|uz)?(\/auth|\/)?$/.test(path);
+    if (!isPublic) {
       window.location.replace('/');
     }
   });

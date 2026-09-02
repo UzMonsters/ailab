@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import ScientificCoreModel from '@/components/scientific-core'
+import dynamic from 'next/dynamic'
+const ScientificCoreModel = dynamic(() => import('@/components/scientific-core'), { ssr: false })
 import { useAuthStore } from '@/stores/auth.store'
-import LanguageSwitcher from '@/components/common/LanguageSwitcher'
+import LanguageSwitcher from '@/shared/ui/LanguageSwitcher'
 import {
   ArrowRight, Atom, Beaker, BrainCircuit, ChevronRight,
   Database, Dna, Droplets, FlaskConical, Gauge, Globe2, Hexagon, Layers3, Menu,
@@ -159,7 +161,8 @@ export default function LandingPage() {
   const [thinking, setThinking] = useState(false)
   useEffect(() => {
     if (!user) void fetchUser()
-  }, [fetchUser, user])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchUser])
   const selected = elements.find((element) => element.symbol === selectedSymbol) ?? elements[1]
   const askAssistant = () => { const prompt = assistantInput.trim(); if (!prompt || thinking) return; setThinking(true); setAssistantInput(''); window.setTimeout(() => { setAssistantReply(`${t('copilotReplyPrefix')} ${prompt}. ${t('copilotReplySuffix')}`); setThinking(false) }, 850) }
   const defaultReply = `${t('copilotReplyPrefix')} ${t('copilotUserQuestion')}. ${t('copilotReplySuffix')}`
@@ -199,15 +202,15 @@ export default function LandingPage() {
 
     <section className="section-wrap section-block" id="sciences">
       <div className="section-decor" aria-hidden="true" style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: '100vw', transform: 'translateX(-50%)', zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-        <img src="/decor-blueprint.png" alt="" style={{ position: 'absolute', width: 'min(540px, 46vw)', opacity: 0.12, top: '-120px', left: '-145px', transform: 'rotate(-11deg)', filter: 'drop-shadow(0 0 18px rgba(139,92,246,.22))', mixBlendMode: 'screen' }} />
-        <img src="/decor-atom.png" alt="" style={{ position: 'absolute', width: 'min(280px, 24vw)', opacity: 0.2, right: '-70px', top: '18px', transform: 'rotate(18deg)', filter: 'drop-shadow(0 0 15px rgba(139,92,246,.3))', mixBlendMode: 'screen' }} />
-        <img src="/decor-molecule.png" alt="" style={{ position: 'absolute', width: 'min(230px, 20vw)', opacity: 0.22, left: '-62px', bottom: '24px', transform: 'rotate(-12deg)', filter: 'drop-shadow(0 0 12px rgba(139,92,246,.25))', mixBlendMode: 'screen' }} />
+        <Image src="/decor-blueprint.png" alt="" width={540} height={540} sizes="46vw" style={{ position: 'absolute', width: 'min(540px, 46vw)', height: 'auto', opacity: 0.12, top: '-120px', left: '-145px', transform: 'rotate(-11deg)', filter: 'drop-shadow(0 0 18px rgba(139,92,246,.22))', mixBlendMode: 'screen' }} />
+        <Image src="/decor-atom.png" alt="" width={280} height={280} sizes="24vw" style={{ position: 'absolute', width: 'min(280px, 24vw)', height: 'auto', opacity: 0.2, right: '-70px', top: '18px', transform: 'rotate(18deg)', filter: 'drop-shadow(0 0 15px rgba(139,92,246,.3))', mixBlendMode: 'screen' }} />
+        <Image src="/decor-molecule.png" alt="" width={230} height={230} sizes="20vw" style={{ position: 'absolute', width: 'min(230px, 20vw)', height: 'auto', opacity: 0.22, left: '-62px', bottom: '24px', transform: 'rotate(-12deg)', filter: 'drop-shadow(0 0 12px rgba(139,92,246,.25))', mixBlendMode: 'screen' }} />
       </div>
       <Reveal className="section-heading"><div><p className="eyebrow">{t('sciencesBadge')}</p><h2>{t('sciencesTitle')}</h2></div><p>{t('sciencesDesc')}</p></Reveal>
       <Reveal className="science-grid reveal-stagger">
         {sciences.map(({ icon: Icon, nameKey, copyKey, statKey, image }) => (
           <a className="science-card" href="#workspace" key={nameKey}>
-            <span className="science-icon"><img src={image} alt={t(nameKey)} /></span>
+            <span className="science-icon"><Image src={image} alt={t(nameKey)} width={96} height={96} /></span>
             <div><h3>{t(nameKey)}</h3><p>{t(copyKey)}</p><small>{t(statKey)}</small></div>
             <ChevronRight className="card-arrow" />
           </a>
@@ -235,7 +238,7 @@ export default function LandingPage() {
               <p>{t(molecule.copyKey)}</p>
               <a href="#workspace">{t('moleculeInspect')} <ArrowRight /></a>
             </div>
-            <img className="molecule-art" src={molecule.image} alt={t(molecule.nameKey)} />
+            <Image className="molecule-art" src={molecule.image} alt={t(molecule.nameKey)} width={320} height={240} />
           </article>
         ))}
       </Reveal>

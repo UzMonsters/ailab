@@ -1,7 +1,7 @@
 'use client';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import ScienceBackground, { BackgroundGlow } from '@/components/common/ScienceBackground';
+import ScienceBackground, { BackgroundGlow } from '@/shared/ui/ScienceBackground';
 import { Atom } from 'lucide-react';
 
 export default function TermsPage() {
