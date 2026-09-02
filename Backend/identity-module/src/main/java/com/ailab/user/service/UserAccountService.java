@@ -15,6 +15,8 @@ public interface UserAccountService {
 
     UserDtos.UserMeResponse getMe(String id);
 
+    UserDtos.UserMeResponse patchProfile(String id, UserDtos.PatchProfileRequest request, String ifMatch);
+
     UserDtos.PreferencesResponse getPreferences(String id);
 
     void updatePreferences(String id, UserDtos.UpdatePreferencesRequest request);
@@ -32,6 +34,26 @@ public interface UserAccountService {
     void removeAvatar(String id);
 
     void invalidateSessions(String id);
+
+    UserDtos.LearningProgressResponse getLearningProgress(String id, String track);
+
+    UserDtos.AvatarUploadTicketResponse createAvatarUploadTicket(String id, UserDtos.AvatarUploadTicketRequest request);
+
+    UserDtos.AvatarCompleteResponse completeAvatarUpload(String id, UserDtos.AvatarCompleteRequest request);
+
+    UserDtos.ReAuthResponse reAuthenticate(String id, UserDtos.ReAuthRequest request);
+
+    void changePassword(String id, UserDtos.ChangePasswordRequest request);
+
+    UserDtos.EmailChangeResponse requestEmailChange(String id, UserDtos.EmailChangeRequest request);
+
+    UserDtos.SessionListResponse getUserSessions(String id, int page, int size);
+
+    void revokeUserSession(String id, String sessionId);
+
+    UserDtos.AccountDeletionResponse scheduleAccountDeletion(String id, UserDtos.AccountDeletionRequest request);
+
+    void cancelAccountDeletion(String id, String deletionId);
 
     List<UserDtos.AdminUserResponse> getAllUsers();
 

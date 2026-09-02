@@ -21,6 +21,10 @@ public class User {
     private String id;
     @Column(nullable = false, unique = true, length = 50)
     private String username;
+    @Column(name = "display_name", length = 100)
+    private String displayName;
+    @Column(name = "bio", length = 500)
+    private String bio;
     @Column(nullable = false, unique = true, length = 320)
     private String email;
     @Column(name = "password_hash", nullable = false)
@@ -46,6 +50,10 @@ public class User {
     private Instant blockedUntil;
     @Column(name = "last_seen_at")
     private Instant lastSeenAt;
+    @Column(name = "deletion_id", length = 64)
+    private String deletionId;
+    @Column(name = "deletion_scheduled_for")
+    private Instant deletionScheduledFor;
     @Version
     @Column(nullable = false)
     private Long version = 0L;
@@ -71,6 +79,8 @@ public class User {
 
     public String getId() { return id; }
     public String getUsername() { return username; }
+    public String getDisplayName() { return displayName; }
+    public String getBio() { return bio; }
     public String getEmail() { return email; }
     public String getPasswordHash() { return passwordHash; }
     public Role getRole() { return role; }
@@ -83,6 +93,8 @@ public class User {
     public String getStatusReason() { return statusReason; }
     public Instant getBlockedUntil() { return blockedUntil; }
     public Instant getLastSeenAt() { return lastSeenAt; }
+    public String getDeletionId() { return deletionId; }
+    public Instant getDeletionScheduledFor() { return deletionScheduledFor; }
     public Long getVersion() { return version; }
     public Map<String, Object> getApplicationSettings() { return Collections.unmodifiableMap(new HashMap<>(applicationSettings)); }
     public Map<String, Long> getStatistics() { return Collections.unmodifiableMap(new HashMap<>(statistics)); }
@@ -110,6 +122,16 @@ public class User {
         if (avatarUrl != null) this.avatarUrl = avatarUrl;
     }
 
+    public void patchProfile(String username, String displayName, String bio) {
+        if (username != null && !username.isBlank()) this.username = username;
+        if (displayName != null) this.displayName = displayName;
+        if (bio != null) this.bio = bio;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
     public void removeAvatar() {
         this.avatarUrl = null;
     }
@@ -118,6 +140,29 @@ public class User {
         if (language != null && !language.isBlank()) this.language = language;
         if (theme != null && !theme.isBlank()) this.theme = theme;
         if (settings != null) this.applicationSettings = new HashMap<>(settings);
+    }
+
+    public void updatePassword(String newPasswordHash) {
+        this.passwordHash = newPasswordHash;
+        incrementTokenVersion();
+    }
+
+    public void updateEmail(String newEmail) {
+        this.email = newEmail;
+    }
+
+    public void scheduleDeletion(String deletionId, Instant scheduledFor) {
+        this.deletionId = deletionId;
+        this.deletionScheduledFor = scheduledFor;
+        this.status = "DELETION_SCHEDULED";
+        this.statusReason = "Scheduled by user";
+    }
+
+    public void cancelDeletion() {
+        this.deletionId = null;
+        this.deletionScheduledFor = null;
+        this.status = "ACTIVE";
+        this.statusReason = null;
     }
 
     public void updateAdminProfile(String username, String email, Role role) {
@@ -140,7 +185,7 @@ public class User {
         if (status != null && !status.isBlank()) {
             this.status = status;
             this.statusReason = reason;
-            if ("BLOCKED".equalsIgnoreCase(status) || "DEACTIVATED".equalsIgnoreCase(status)) {
+            if ("BLOCKED".equalsIgnoreCase(status) || "DEACTIVATED".equalsIgnoreCase(status) || "DELETION_SCHEDULED".equalsIgnoreCase(status)) {
                 incrementTokenVersion();
             }
         }
