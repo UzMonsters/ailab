@@ -6,3 +6,7 @@ export { experimentApi } from '@/entities/experiment/api/experiment.api';
 export { catalogApi } from '@/entities/equipment/api/catalog.api';
 export { adminApi } from '@/entities/user/api/admin.api';
 export { workspacesApi } from '@/entities/workspace/api/workspace.api';
+export { workspaceCollaborationApi } from '@/entities/workspace/api/collaboration.api';
+export { learningApi, adminLearningApi } from '@/entities/learning/api/learning.api';
+export { bookApi, adminBookApi } from '@/entities/book/api/book.api';
+export { adminPlatformApi } from '@/entities/admin/api/platform-admin.api';

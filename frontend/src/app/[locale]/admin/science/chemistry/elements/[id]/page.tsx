@@ -1,3 +1,2 @@
-import ElementEditorForm from '@/widgets/admin/ElementEditorForm';
-
-export default async function ElementPage({ params }: { params: Promise<{ id: string }> }) { const { id } = await params; return <ElementEditorForm elementId={id} />; }
+'use client';
+import {useParams} from 'next/navigation';import AdminBackendEditor from '@/widgets/admin/AdminBackendEditor';import {adminPlatformApi} from '@/entities/admin/api/platform-admin.api';export default function Page(){const {id}=useParams<{id:string}>();return <AdminBackendEditor title="Chemical Element" id={id} api={adminPlatformApi.chemistry.elements}/>}

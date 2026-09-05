@@ -16,6 +16,10 @@ import {
   ArrowLeft,
   ArrowRight,
   Award,
+  Bot,
+  BookOpen,
+  Eye,
+  FlaskConical,
   Sparkles,
   X,
 } from "lucide-react";
@@ -57,7 +61,7 @@ import { Properties, equipmentDescription } from "@/features/sandbox/edit-proper
 import { ConnectionDialog, PourDialog, ResetConfirmDialog, JasScienceModal } from "@/widgets/sandbox/Dialogs";
 import { LaboratoryObject } from "@/engine/objects/LaboratoryObject";
 import { SandboxMenuBar } from "./SandboxMenuBar";
-import { ShareDialog, serializeSnapshot, SandboxSnapshot, parseSnapshotFromHash } from "@/features/sandbox/share-workspace/ui/ShareDialog";
+import { ShareDialog, serializeSnapshot, SandboxSnapshot, parseSnapshotFromHash, parseShareModeFromHash } from "@/features/sandbox/share-workspace/ui/ShareDialog";
 import { useSandboxSync } from "./hooks/useSandboxSync";
 import { useSandboxGestures } from "./hooks/useSandboxGestures";
 import { useConnections } from "@/features/sandbox/manage-connections/model/useConnections";
@@ -72,26 +76,35 @@ import { applyAcidBaseTemplate, applyItemPatch, applyOperationToScene } from "./
 import { CodexModal } from "@/widgets/academy/CodexModal";
 import type { CodexLabContext } from "@/widgets/academy/CodexModal";
 import { mixObjectContents } from "@/engine/simulation/mixContents";
-import { getChemistryLevel, type SupportedLocale } from "@/data/chemistryLevels";
 import { LevelIntro } from "./LevelIntro";
 import { GuideCursor } from "./GuideCursor";
+import { AssistantPanel } from "./AssistantPanel";
+import { useAssistant } from "./hooks/useAssistant";
+import { learningApi } from '@/entities/learning/api/learning.api';
+import { useScenarioRuntime } from './runtime/useScenarioRuntime';
+import { collectRuntimeFacts, evaluateRuntimeStep } from './runtime/evaluateRuntimeRule';
+import { flattenRuntimeConditions } from './runtime/runtime.types';
+import { reconcileSimulationResult } from './runtime/reconcileSimulationResult';
+import { canonicalizeLegacyMaterialId, legacyHelpTab, legacyHelpTargets, legacyLevelDefinition, legacyScenarioForExperiment, legacyScenarioForLevel, type SupportedLocale } from './runtime/legacy/legacyScenarioAdapter';
+import { runtimeScenarioFromDraft, runtimeStepIndex } from './runtime/normalizeScenarioRuntime';
+import { normalizeRuntimeLevelIntro } from './runtime/normalizeRuntimeLevel';
+import type { ScenarioDraft } from '@/widgets/admin/scenario/scenario.types';
+import { ScenarioGuideOverlay } from './runtime/ScenarioGuideOverlay';
+import { ScenarioRuntimeProvider } from './runtime/ScenarioRuntimeProvider';
+import type { JsonObject } from '@/shared/api/contracts/platform';
+import { getRuntimeEquipment, getRuntimeEquipmentRenderer, getRuntimeMaterial, getRuntimeMaterialTranslation } from './runtime/runtimeCatalog';
+import { convertRuntimeUnit } from './runtime/unitConversion';
+import type { PortDefinition, PortDirection, PortType } from '@/engine/core/types';
 
 const MobileSheet = SandboxMobileSheet;
 
 const ru = (locale: string) => locale === "ru";
 const uz = (locale: string) => locale === "uz";
 
-const backendMaterialId = (id: string) =>
-  ({
-    water: "COMP-H2O",
-    ethanol: "COMP-ETHANOL",
-    acid: "COMP-HCL",
-    nacl: "COMP-NACL",
-    naoh: "COMP-NAOH",
-    cuso4: "COMP-CUSO4",
-  })[id] || id;
-
 const registry = createDefaultEquipmentRegistry();
+const runtimePortType = (value: unknown): PortType => ({ FLUID: 'Liquid', LIQUID: 'Liquid', GAS: 'Gas', POWER: 'Electric', ELECTRICAL: 'Electric', THERMAL: 'Thermal', SENSOR: 'Sensor', GLASS: 'Glass' }[String(value).toUpperCase()] ?? 'Glass') as PortType;
+const runtimePortDirection = (value: unknown): PortDirection => ({ INPUT: 'in', IN: 'in', OUTPUT: 'out', OUT: 'out', BIDIRECTIONAL: 'bidirectional' }[String(value).toUpperCase()] ?? 'bidirectional') as PortDirection;
+const runtimePort = (raw: JsonObject): PortDefinition => { const position = raw.position && typeof raw.position === 'object' && !Array.isArray(raw.position) ? raw.position as JsonObject : {}; const connector = String(raw.connector ?? raw.requiredConnector ?? ''); return { id: String(raw.id), name: String(raw.name ?? raw.id), role: typeof raw.role === 'string' ? raw.role : undefined, type: runtimePortType(raw.type ?? raw.medium), position: { x: Number(position.x ?? .5), y: Number(position.y ?? .5) }, direction: runtimePortDirection(raw.direction), capacity: raw.allowMultiple ? undefined : 1, requiredConnector: ['glass-tube', 'rubber-hose', 'wire', 'direct'].includes(connector) ? connector as PortDefinition['requiredConnector'] : undefined, isOpen: true }; };
 
 function HelpArrows({ targets, active, locale }: { targets?: string[]; active: boolean; locale: string }) {
   const [points, setPoints] = useState<Array<{ id: string; x: number; y: number; label: string }>>([]);
@@ -103,8 +116,8 @@ function HelpArrows({ targets, active, locale }: { targets?: string[]; active: b
 
   useEffect(() => {
     if (!active) {
-      setPoints([]);
-      return;
+      const timer = window.setTimeout(() => setPoints([]), 0);
+      return () => window.clearTimeout(timer);
     }
     const update = () => {
       const next: Array<{ id: string; x: number; y: number; label: string }> = [];
@@ -190,7 +203,7 @@ function LevelRewardOverlay({ level, nextLevel, onNext, onAcademy, onClose }: { 
   );
 }
 
-export function SandboxWorkspace() {
+export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = false }: { previewDraft?: ScenarioDraft; previewCatalog?: { equipment?: JsonObject[]; materials?: JsonObject[] }; embedded?: boolean } = {}) {
   const ts = useTranslations("sandbox");
 
   const pathname = usePathname();
@@ -206,9 +219,16 @@ export function SandboxWorkspace() {
   const workspaceId = query.get("workspace");
   const template = query.get("template");
   const academyLevel = query.get("level");
-  const levelNumber = academyLevel ? Number(academyLevel) : undefined;
-  const levelDefinition = getChemistryLevel(Number.isInteger(levelNumber) ? levelNumber : undefined);
-  const levelMode = Boolean(levelDefinition);
+  const canonicalLevelId = query.get("levelId");
+  const learningAttemptId = query.get("attempt");
+  const levelDefinition = legacyLevelDefinition(academyLevel);
+  const loadedScenarioRuntime = useScenarioRuntime({ attemptId: learningAttemptId, levelId: canonicalLevelId, legacyLevelNumber: academyLevel, locale: (['en', 'ru', 'uz'].includes(locale) ? locale : 'en') as 'en' | 'ru' | 'uz' });
+  const previewRuntime = previewDraft ? runtimeScenarioFromDraft(previewDraft, (['en', 'ru', 'uz'].includes(locale) ? locale : 'en') as 'en' | 'ru' | 'uz', previewCatalog) : null;
+  const scenarioRuntime = previewRuntime ? { scenario: previewRuntime, level: null, attempt: null, loading: false, error: null } : loadedScenarioRuntime;
+  const runtimeLevelIntro = normalizeRuntimeLevelIntro(scenarioRuntime.level, scenarioRuntime.attempt, scenarioRuntime.scenario);
+  const activeLevelIntro = runtimeLevelIntro ?? levelDefinition;
+  const sandboxMode = previewRuntime ? 'ADMIN_PREVIEW' : scenarioRuntime.scenario ? 'LEARNING' : 'NORMAL';
+  const levelMode = Boolean(levelDefinition || learningAttemptId || scenarioRuntime.scenario);
   const levelLabel = levelDefinition
     ? `${locale === "ru" ? "Уровень" : locale === "uz" ? "Daraja" : "Level"} ${levelDefinition.id} · ${levelDefinition.title[locale as SupportedLocale] ?? levelDefinition.title.en}`
     : undefined;
@@ -220,6 +240,8 @@ export function SandboxWorkspace() {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const { engine } = useLabEngine(workspaceId ?? undefined, sessionId ?? undefined);
+  const { messages: assistantMessages, sendMessage: sendAssistantMessage, executeAction: executeAssistantAction, isTeamChat } = useAssistant(engine, registry, workspaceId);
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const [history] = useState(() => new CommandHistory());
   const mixTimersRef = useRef<Map<string, number>>(new Map());
 
@@ -251,48 +273,22 @@ export function SandboxWorkspace() {
     if (changed) engine.notifyUpdate();
   }, [engine]);
 
-  const getHelpTargets = (scenarioId?: string, step?: number) => {
+  const resolveGuideTargets = (scenarioId?: string, step?: number) => {
     if (!scenarioId || step === undefined) return undefined;
-    switch (scenarioId) {
-      case "cuso4":
-        return step === 0 ? ["beaker"] : step === 1 ? ["CuSO4"] : step === 2 ? ["H2O"] : ["action:mix"];
-      case "kmno4":
-        return step === 0 ? ["KMnO4"] : step === 1 ? ["H2O"] : ["beaker", "erlenmeyer", "port:beaker:liquid"];
-      case "hcl_naoh":
-        return step === 0 ? ["HCl"] : step === 1 ? ["NaOH"] : ["beaker", "erlenmeyer", "watchglass", "port:beaker:liquid"];
-      case "zn_hcl":
-        return step === 0 ? ["Zn"] : step === 1 ? ["HCl"] : ["beaker", "erlenmeyer", "watchglass", "port:beaker:liquid"];
-      case "water_intro":
-        return step === 0 ? ["beaker", "erlenmeyer", "roundflask", "testtube", "graduated_cylinder"] : ["H2O"];
-      case "measure_water":
-        if (step === 0) return ["beaker"];
-        if (step === 1) return ["H2O"];
-        if (tool !== "connect") return ["toolbar:connect"];
-        return connectSourcePort ? ["port:beaker:sensor"] : ["port:thermometer:sensor"];
-      case "transfer_water":
-        return step === 0 ? ["beaker"] : step === 1 ? ["H2O"] : step === 2 ? ["beaker"] : ["beaker", "port:beaker:liquid"];
-      case "heat_water":
-      case "sulfur_heat":
-        return scenarioId === "sulfur_heat" && step === 0 ? ["sulfur"] : scenarioId === "heat_water" && step === 0 ? ["beaker"] : scenarioId === "heat_water" && step === 1 ? ["H2O"] : step === (scenarioId === "heat_water" ? 2 : 1) ? ["hotplate", "burner", "port:hotplate:heat", "port:beaker:thermal"] : ["beaker", "erlenmeyer", "crucible"];
-      case "distillation":
-        if (step === 0) return ["beaker", "erlenmeyer", "roundflask"];
-        if (step === 1) return ["hotplate", "thermometer", "condenser", "burner"];
-        return ["condenser", "roundflask", "erlenmeyer", "beaker", "hotplate", "thermometer", "port:condenser:vapor-in", "port:condenser:condensate-out"]; // Step 2 (Connect)
-      default:
-        return ["beaker", "erlenmeyer", "hotplate", "condenser"];
-    }
+    const runtime = scenarioRuntime.scenario;
+    if (!runtime || runtime.source === 'legacy') return legacyHelpTargets(scenarioId, step);
+    const current = runtime.steps[step];
+    if (!current) return undefined;
+    const aliasTypes = new Map(runtime.initialScene?.objects.map((item) => [item.alias, item.equipmentId]));
+    const targets = current.hints.flatMap((hint) => [hint.targetAlias && aliasTypes.get(hint.targetAlias), hint.targetAlias, hint.targetPortId && hint.targetAlias ? `port:${aliasTypes.get(hint.targetAlias) ?? hint.targetAlias}:${hint.targetPortId}` : undefined, hint.fromAlias && aliasTypes.get(hint.fromAlias), hint.toAlias && aliasTypes.get(hint.toAlias)]).filter(Boolean) as string[];
+    flattenRuntimeConditions(current.completionRule).forEach((condition) => { if (condition.materialId) targets.push(condition.materialId); });
+    return [...new Set(targets)];
   };
   const getHelpTab = (scenarioId?: string, step?: number): LibraryTab => {
     if (!scenarioId || step === undefined) return "equipment";
-    if (["water_intro", "cuso4", "kmno4", "hcl_naoh", "zn_hcl", "sulfur_heat"].includes(scenarioId)) {
-      const materialSteps: Record<string, number[]> = {
-        water_intro: [1], cuso4: [1, 2], kmno4: [0, 1], hcl_naoh: [0, 1], zn_hcl: [0, 1], sulfur_heat: [0],
-      };
-      if (materialSteps[scenarioId]?.includes(step)) return "materials";
-    }
-    if (["measure_water", "heat_water", "transfer_water"].includes(scenarioId) && step === 1) return "materials";
-    if (scenarioId === "distillation" && step === 0) return "materials";
-    return "equipment";
+    const runtime = scenarioRuntime.scenario;
+    if (!runtime || runtime.source === 'legacy') return legacyHelpTab(scenarioId, step);
+    return runtime.steps[step] && flattenRuntimeConditions(runtime.steps[step].completionRule).some((condition) => condition.type === 'MATERIAL_PRESENT') ? 'materials' : 'equipment';
   };
   const handleHelp = () => {
     if (!activeScenario) return;
@@ -371,6 +367,8 @@ export function SandboxWorkspace() {
   const [rightPanelVisible, setRightPanelVisible] = useState(true);
   const [showNavbar, setShowNavbar] = useState(true);
   const [showGrid, setShowGrid] = useState(true);
+  const [snapToGrid, setSnapToGrid] = useState(false);
+  const [shareMode, setShareMode] = useState<"viewer" | "editor" | null>(null);
   const [collisionItemId, setCollisionItemId] = useState<string | null>(null);
   const {
     connectSource, setConnectSource,
@@ -396,25 +394,15 @@ export function SandboxWorkspace() {
   const [simulationSpeed, setSimulationSpeed] = useState(1);
   const panelResizeRef = useRef<{ side: "left" | "right"; startX: number; startWidth: number } | null>(null);
   const templateLoaded = useRef(false);
+  const runtimeSceneLoaded = useRef<string | null>(null);
   const codexContextLoaded = useRef(false);
   
   const [, setQuickAction] = useState<QuickActionState | null>(null);
-  const academyScenarioByLevel: Record<string, string> = {
-    "1": "water_intro",
-    "2": "measure_water",
-    "3": "heat_water",
-    "4": "transfer_water",
-    "5": "cuso4",
-    "6": "hcl_naoh",
-    "7": "sulfur_heat",
-    "8": "distillation",
-    "9": "zn_hcl",
-    "10": "kmno4",
-  };
-  const initialScenarioId = academyLevel ? academyScenarioByLevel[academyLevel] : undefined;
+  const initialScenarioId = scenarioRuntime.scenario?.id ?? legacyScenarioForLevel(academyLevel);
   const [activeScenario, setActiveScenario] = useState<{ id: string; step: number } | null>(() => initialScenarioId ? { id: initialScenarioId, step: 0 } : null);
+  const [authoritativeFacts, setAuthoritativeFacts] = useState({ reactionIds: [] as string[], formedMaterialIds: [] as string[] });
   const [scenarioIntro, setScenarioIntro] = useState(() => Boolean(initialScenarioId));
-  const [levelIntroOpen, setLevelIntroOpen] = useState(() => Boolean(levelDefinition));
+  const [levelIntroOpen, setLevelIntroOpen] = useState(() => Boolean(activeLevelIntro));
   const [codexOpen, setCodexOpen] = useState(adventureFromUrl);
   const [codexTarget, setCodexTarget] = useState<CodexLabContext | undefined>();
 
@@ -428,15 +416,7 @@ export function SandboxWorkspace() {
       engine.notifyUpdate();
       addToast(`Adventure equipment loaded: ${equipmentId}`, "success");
     }
-    const scenarioByExperiment: Record<string, string> = {
-      "heating-water": "heat_water",
-      "simple-distillation": "distillation",
-      "acid-base-titration": "hcl_naoh",
-      "Heating Water": "heat_water",
-      "Simple Distillation": "distillation",
-      "Acid–Base Titration": "hcl_naoh",
-    };
-    const scenarioId = experimentId ? scenarioByExperiment[experimentId] : undefined;
+    const scenarioId = legacyScenarioForExperiment(experimentId);
     if (scenarioId) {
       // This effect hydrates the existing sandbox UI from an explicit Codex URL context.
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -452,18 +432,27 @@ export function SandboxWorkspace() {
   }, [engine, equipmentId, experimentId, materialId, addToast]);
 
   useEffect(() => {
-    const scenarioId = academyLevel ? academyScenarioByLevel[academyLevel] : undefined;
+    const scenarioId = scenarioRuntime.scenario?.id ?? legacyScenarioForLevel(academyLevel);
     if (!scenarioId) return;
-    if (activeScenario?.id !== scenarioId) setActiveScenario({ id: scenarioId, step: 0 });
-    setBottomDockOpen(true);
-    const timer = window.setTimeout(() => setScenarioIntro(false), 4200);
-    return () => window.clearTimeout(timer);
-  }, [academyLevel, activeScenario?.id]);
+    const initTimer = window.setTimeout(() => {
+      if (activeScenario?.id !== scenarioId) setActiveScenario({ id: scenarioId, step: runtimeStepIndex(scenarioRuntime.attempt) });
+      setBottomDockOpen(true);
+    }, 0);
+    const introTimer = window.setTimeout(() => setScenarioIntro(false), 4200);
+    return () => { window.clearTimeout(initTimer); window.clearTimeout(introTimer); };
+  }, [academyLevel, activeScenario?.id, scenarioRuntime.attempt, scenarioRuntime.scenario?.id]);
 
   useEffect(() => {
-    if (levelDefinition) setLevelIntroOpen(true);
-  }, [academyLevel]);
+    setAuthoritativeFacts({ reactionIds: [], formedMaterialIds: [] });
+  }, [scenarioRuntime.scenario?.id]);
+
+  useEffect(() => {
+    if (!activeLevelIntro || previewRuntime) return;
+    const timer = window.setTimeout(() => setLevelIntroOpen(true), 0);
+    return () => window.clearTimeout(timer);
+  }, [activeLevelIntro, previewRuntime]);
   const [helpActive, setHelpActive] = useState(false);
+  const [scenarioHintIndex, setScenarioHintIndex] = useState(0);
   const [guideDemoOpen, setGuideDemoOpen] = useState(false);
   const [experimentResult, setExperimentResult] = useState<ExperimentResult | null>(null);
   const [rewardDismissed, setRewardDismissed] = useState(false);
@@ -475,6 +464,36 @@ export function SandboxWorkspace() {
     if (!helpActive || !activeScenario) return;
     setLibraryTab(getHelpTab(activeScenario.id, activeScenario.step));
   }, [activeScenario?.id, activeScenario?.step, helpActive]);
+
+  useEffect(() => {
+    const runtime = scenarioRuntime.scenario;
+    if (!engine || !runtime?.initialScene || runtime.source === 'legacy' || runtimeSceneLoaded.current === runtime.id || workspaceId || template) return;
+    runtimeSceneLoaded.current = runtime.id;
+    const aliases = new Map<string, LaboratoryObject>();
+    let skipped = 0;
+    for (const sceneItem of runtime.initialScene.objects) {
+      const equipmentDefinition = getRuntimeEquipment(runtime.catalog, sceneItem.equipmentId);
+      const equipmentType = getRuntimeEquipmentRenderer(runtime.catalog, sceneItem.equipmentId) ?? (registry.get(sceneItem.equipmentId) ? sceneItem.equipmentId : '');
+      if (!equipmentType || !registry.get(equipmentType)) { skipped += 1; continue; }
+      const object = registry.create(equipmentType, { id: sceneItem.id, position: { x: sceneItem.x, y: sceneItem.y } });
+      if (equipmentDefinition?.ports.length) object.ports = equipmentDefinition.ports.map(runtimePort);
+      object.rotation = sceneItem.rotation;
+      object.boundingBox = { x: sceneItem.x, y: sceneItem.y, width: sceneItem.width, height: sceneItem.height };
+      object.metadata = { ...object.metadata, scenarioAlias: sceneItem.alias, equipmentId: sceneItem.equipmentId, equipmentCode: equipmentDefinition?.code, rendererKey: equipmentType };
+      object.properties = { ...object.properties, temperature: sceneItem.temperatureC, contentsTemperature: sceneItem.temperatureC, volumeMl: sceneItem.contents.reduce((sum, content) => sum + (convertRuntimeUnit(content.amount, content.unit, 'mL') ?? 0), 0) };
+      object.contents = sceneItem.contents.map((content) => { const material = getRuntimeMaterial(runtime.catalog, content.materialId); return { materialId: content.materialId, name: getRuntimeMaterialTranslation(runtime.catalog, content.materialId, (['en', 'ru', 'uz'].includes(locale) ? locale : 'en') as 'en' | 'ru' | 'uz'), formula: material?.formula ?? content.materialId, amount: content.amount, unit: content.unit, phase: String(material?.phase ?? content.phase).toLowerCase(), color: material?.color ?? '#94a3b8', metadata: { opacity: material?.opacity ?? 1 } }; });
+      engine.workspace.scene.add(object);
+      aliases.set(sceneItem.alias, object);
+    }
+    const connectionEngine = new ConnectionEngine();
+    for (const link of runtime.initialScene.connections) {
+      const from = aliases.get(link.fromAlias), to = aliases.get(link.toAlias);
+      if (!from || !to) continue;
+      try { engine.workspace.scene.connect({ ...connectionEngine.create(from, link.fromPortId, to, link.toPortId, [...engine.workspace.scene.connections.values()]), id: link.id }); } catch { skipped += 1; }
+    }
+    engine.notifyUpdate();
+    if (skipped) addToast(`${skipped} Scenario resource${skipped === 1 ? '' : 's'} could not be resolved in the Sandbox registry.`, 'error');
+  }, [addToast, engine, scenarioRuntime.scenario, template, workspaceId]);
 
   useEffect(() => {
     if (!engine || templateLoaded.current) return;
@@ -496,6 +515,7 @@ export function SandboxWorkspace() {
     }
     const data = parseSnapshotFromHash();
     if (data && data.version === 2) {
+      const mode = parseShareModeFromHash() ?? "viewer";
       templateLoaded.current = true;
       engine.workspace.scene.objects.clear();
       engine.workspace.scene.connections.clear();
@@ -512,6 +532,7 @@ export function SandboxWorkspace() {
         setPan({ x: data.viewport.panX || 0, y: data.viewport.panY || 0 });
       }
       engine.notifyUpdate();
+      setShareMode(mode);
       addToast("Эксперимент загружен по ссылке", "success");
       if (typeof window !== "undefined") window.history.replaceState(null, "", window.location.pathname + window.location.search);
     }
@@ -715,48 +736,30 @@ export function SandboxWorkspace() {
 
   useEffect(() => {
     if (!activeScenario || !engine) return;
-    const scenario = require("./scenarios").SCENARIOS[activeScenario.id] as { steps: Array<{ check: (value: unknown) => boolean }> } | undefined;
+    const scenario = scenarioRuntime.scenario;
     if (!scenario) return;
     let nextStep = activeScenario.step;
-    while (nextStep < scenario.steps.length && scenario.steps[nextStep].check(engine)) nextStep += 1;
+    const facts = collectRuntimeFacts(items, connections, authoritativeFacts, eventLog);
+    while (nextStep < scenario.steps.length && evaluateRuntimeStep(scenario.steps[nextStep], facts, engine)) nextStep += 1;
     if (nextStep === activeScenario.step) return;
     if (nextStep >= scenario.steps.length) {
       if (completedScenarioRef.current === activeScenario.id) return;
       completedScenarioRef.current = activeScenario.id;
-      const completedAcademyLevel = Object.entries(academyScenarioByLevel).find(([, scenarioId]) => scenarioId === activeScenario.id)?.[0];
-      if (completedAcademyLevel) {
-        try {
-          const previous = JSON.parse(window.localStorage.getItem("chemistry-academy-progress-v2") || "[]") as number[];
-          const next = Array.from(new Set([...previous, Number(completedAcademyLevel)])).sort((a, b) => a - b);
-          window.localStorage.setItem("chemistry-academy-progress-v2", JSON.stringify(next));
-        } catch {
-          // Progress persistence must never interrupt the experiment result.
-        }
+      if (learningAttemptId) {
+        const stateVersion = stateVersionRef.current;
+        void learningApi.sendEvent(learningAttemptId, {
+          eventId: crypto.randomUUID(),
+          type: 'SCENARIO_COMPLETED',
+          payload: { scenarioId: activeScenario.id },
+          experimentStateVersion: stateVersion,
+        }).then(() => learningApi.complete(learningAttemptId, {
+          idempotencyKey: crypto.randomUUID(),
+          stateVersion,
+        }, locale)).catch((reason) => addToast(reason instanceof Error ? reason.message : 'Прогресс уровня не сохранён', 'error'));
       }
       const vessel = items.find((item) => item.type === "beaker" && item.temperature >= 75);
       const finalTemperature = vessel?.temperature ?? selected?.temperature ?? 24.5;
-      const result: ExperimentResult =
-        activeScenario.id === "water_intro"
-          ? { scenarioId: activeScenario.id, title: resultText("result.waterIntro.title", resultFallback.title), description: resultText("result.waterIntro.description", resultFallback.description), temperatureC: undefined, volumeMl: vessel?.volumeMl ?? selected?.volumeMl ?? 0 }
-          : activeScenario.id === "measure_water"
-          ? { scenarioId: activeScenario.id, title: resultText("result.measureWater.title", resultFallback.title), description: resultText("result.measureWater.description", resultFallback.description), temperatureC: vessel?.temperature ?? selected?.temperature ?? 24.5, volumeMl: vessel?.volumeMl ?? selected?.volumeMl ?? 0 }
-          : activeScenario.id === "heat_water"
-          ? { scenarioId: activeScenario.id, title: resultText("result.heatWater.title", resultFallback.title), description: resultText("result.heatWater.description", resultFallback.description), temperatureC: finalTemperature, volumeMl: vessel?.volumeMl ?? selected?.volumeMl ?? 0 }
-          : activeScenario.id === "transfer_water"
-          ? { scenarioId: activeScenario.id, title: resultText("result.transferWater.title", resultFallback.title), description: resultText("result.transferWater.description", resultFallback.description), temperatureC: selected?.temperature ?? 24.5, volumeMl: selected?.volumeMl ?? 0 }
-          : activeScenario.id === "cuso4"
-          ? { scenarioId: activeScenario.id, title: resultText("result.cuso4.title", resultFallback.title), description: resultText("result.cuso4.description", resultFallback.description), temperatureC: selected?.temperature ?? 24.5, volumeMl: items.find((item) => item.contents.some((c) => c.materialId === "CuSO4(aq)"))?.volumeMl ?? 0 }
-          : activeScenario.id === "hcl_naoh"
-          ? { scenarioId: activeScenario.id, title: resultText("result.hclNaoh.title", resultFallback.title), description: resultText("result.hclNaoh.description", resultFallback.description), temperatureC: selected?.temperature ?? 24.5, volumeMl: selected?.volumeMl ?? 0 }
-          : activeScenario.id === "kmno4"
-          ? { scenarioId: activeScenario.id, title: resultText("result.kmno4.title", resultFallback.title), description: resultText("result.kmno4.description", resultFallback.description), temperatureC: selected?.temperature ?? 24.5, volumeMl: selected?.volumeMl ?? 0 }
-          : activeScenario.id === "zn_hcl"
-          ? { scenarioId: activeScenario.id, title: resultText("result.zinc.title", resultFallback.title), description: resultText("result.zinc.description", resultFallback.description), temperatureC: selected?.temperature ?? 24.5, volumeMl: selected?.volumeMl ?? 0 }
-          : activeScenario.id === "sulfur_heat"
-          ? { scenarioId: activeScenario.id, title: resultText("result.sulfur.title", resultFallback.title), description: resultText("result.sulfur.description", resultFallback.description), temperatureC: finalTemperature, volumeMl: vessel?.volumeMl ?? selected?.volumeMl ?? 0 }
-          : activeScenario.id === "distillation"
-          ? { scenarioId: activeScenario.id, title: resultText("result.distillation.title", resultFallback.title), description: resultText("result.distillation.description", resultFallback.description), temperatureC: finalTemperature, volumeMl: vessel?.volumeMl ?? selected?.volumeMl ?? 0 }
-          : { scenarioId: activeScenario.id, title: resultText("result.generic.title", resultFallback.title), description: resultText("result.generic.description", resultFallback.description), temperatureC: finalTemperature, volumeMl: vessel?.volumeMl ?? selected?.volumeMl ?? 0 };
+      const result: ExperimentResult = { scenarioId: activeScenario.id, title: scenario.successTitle || resultText("result.generic.title", resultFallback.title), description: scenario.successDescription || resultText("result.generic.description", resultFallback.description), temperatureC: finalTemperature, volumeMl: vessel?.volumeMl ?? selected?.volumeMl ?? 0 };
       window.setTimeout(() => {
         setExperimentResult(result);
         setRewardDismissed(false);
@@ -769,7 +772,7 @@ export function SandboxWorkspace() {
         setActiveScenario((current) => (current ? { ...current, step: nextStep } : current));
       }, 0);
     }
-  }, [activeScenario, engine, items, selected, queueWorkspaceEvent, addToast]);
+  }, [activeScenario, authoritativeFacts, connections, engine, eventLog, items, selected, queueWorkspaceEvent, addToast, scenarioRuntime.scenario]);
 
   useEffect(() => {
     const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
@@ -832,8 +835,9 @@ export function SandboxWorkspace() {
   const addItem = useCallback(
     (libraryItem: LibraryItem) => {
       const bounds = canvasRef.current?.getBoundingClientRect();
-      const id = `${libraryItem.id}-${crypto.randomUUID()}`;
-      const definition = registry.get(libraryItem.id);
+      const rendererKey = libraryItem.rendererKey ?? libraryItem.id;
+      const id = `${libraryItem.catalogId ?? libraryItem.id}-${crypto.randomUUID()}`;
+      const definition = registry.get(rendererKey);
       const width = definition?.defaultSize.width ?? libraryItem.w;
       const height = definition?.defaultSize.height ?? libraryItem.h;
       const canvasWidth = bounds?.width || 800;
@@ -871,10 +875,12 @@ export function SandboxWorkspace() {
       }
 
       if (engine) {
-        const obj = registry.create(libraryItem.id, { id });
+        const obj = registry.create(rendererKey, { id });
         obj.position.x = x;
         obj.position.y = y;
         obj.metadata.displayName = libraryItem.name;
+        obj.metadata.catalogEquipmentId = libraryItem.catalogId ?? libraryItem.id;
+        obj.metadata.rendererKey = rendererKey;
         history.execute(new AddItemCommand(engine.workspace.scene, obj));
 
         setSelectedIds(new Set([obj.id]));
@@ -898,9 +904,12 @@ export function SandboxWorkspace() {
 
   const updateItem = useCallback(
     (id: string, patch: Partial<Item>) => {
+      const normalizedPatch = snapToGrid
+        ? { ...patch, ...(typeof patch.x === "number" ? { x: Math.round(patch.x / 16) * 16 } : {}), ...(typeof patch.y === "number" ? { y: Math.round(patch.y / 16) * 16 } : {}) }
+        : patch;
       if (engine) {
         const object = engine.workspace.scene.objects.get(id);
-        if (object) history.execute(new SceneSnapshotCommand(engine.workspace.scene, `Update ${object.type}`, () => applyItemPatch(object, patch)));
+        if (object) history.execute(new SceneSnapshotCommand(engine.workspace.scene, `Update ${object.type}`, () => applyItemPatch(object, normalizedPatch)));
       }
       if (typeof patch.scale === "number" || typeof patch.scaleX === "number" || typeof patch.scaleY === "number")
         queueWorkspaceEvent("ITEM_RESIZED", { itemId: id, scale: patch.scale, scaleX: patch.scaleX, scaleY: patch.scaleY });
@@ -910,7 +919,7 @@ export function SandboxWorkspace() {
           rotation: patch.rotation,
         });
     },
-    [engine, history, queueWorkspaceEvent]
+    [engine, history, queueWorkspaceEvent, snapToGrid]
   );
 
   const emptyItem = useCallback(
@@ -930,7 +939,7 @@ export function SandboxWorkspace() {
       if (!object || !content) return;
       history.execute(new MaterialRemoveCommand(engine.workspace.scene, itemId, materialId, phase));
       engine.notifyUpdate();
-      queueWorkspaceEvent("MATERIAL_REMOVED", { itemId, materialId: backendMaterialId(materialId), phase });
+      queueWorkspaceEvent("MATERIAL_REMOVED", { itemId, materialId: canonicalizeLegacyMaterialId(materialId), phase });
       addToast(`${content.formula} removed`, "info");
     },
     [addToast, engine, history, queueWorkspaceEvent]
@@ -973,10 +982,10 @@ export function SandboxWorkspace() {
         });
       }
       engine.notifyUpdate();
-      queueWorkspaceEvent("OVERFLOW", { itemId: selected.id, materialId: backendMaterialId(material.id), amountMl: overflowAmount });
+      queueWorkspaceEvent("OVERFLOW", { itemId: selected.id, materialId: canonicalizeLegacyMaterialId(material.id), amountMl: overflowAmount });
       if (acceptedLiquidAmount <= 0) {
         addToast(`Сосуд заполнен: ${overflowAmount.toFixed(1)} мл разлито.`, "info");
-        triggerPourAnimation(selected.id, 0, overflowAmount);
+        triggerPourAnimation(selected.id, selected.id, 0, overflowAmount);
         return;
       }
     }
@@ -1005,11 +1014,11 @@ export function SandboxWorkspace() {
     });
     queueWorkspaceEvent("MATERIAL_ADDED", {
       itemId: selected.id,
-      materialId: backendMaterialId(material.id),
+      materialId: canonicalizeLegacyMaterialId(material.id),
       amountMl: acceptedLiquidAmount || 1,
       phase: material.state,
     });
-    triggerPourAnimation(selected.id, acceptedLiquidAmount || 25, overflowAmount);
+    triggerPourAnimation(selected.id, selected.id, acceptedLiquidAmount || 25, overflowAmount);
     addToast(overflowAmount > 0 ? `${material.name}: ${acceptedLiquidAmount.toFixed(1)} мл принято, ${overflowAmount.toFixed(1)} мл разлито.` : `${material.name} added · ${material.state === "liquid" ? "25 mL" : "solid sample"}`, overflowAmount > 0 ? "info" : "success");
   };
 
@@ -1108,6 +1117,13 @@ export function SandboxWorkspace() {
         })
         .then((result) => {
           stateVersionRef.current = result.newVersion;
+          const reconciled = reconcileSimulationResult(engine, result);
+          if (reconciled.reactionIds.length || reconciled.formedMaterialIds.length) {
+            setAuthoritativeFacts((current) => ({
+              reactionIds: [...new Set([...current.reactionIds, ...reconciled.reactionIds])],
+              formedMaterialIds: [...new Set([...current.formedMaterialIds, ...reconciled.formedMaterialIds])],
+            }));
+          }
         })
         .catch((error: unknown) => addToast(error instanceof Error ? error.message : "Scientific operation failed", "error"));
     }
@@ -1494,8 +1510,11 @@ export function SandboxWorkspace() {
   }, [remove, duplicate, historyAction, tool]);
 
   return (
-    <div className="sandbox-ui relative flex h-[100dvh] w-full min-h-0 overflow-hidden bg-background text-foreground">
-    {levelDefinition && levelIntroOpen && <LevelIntro level={levelDefinition} locale={(locale === "ru" || locale === "uz" ? locale : "en") as SupportedLocale} onStart={() => {
+    <ScenarioRuntimeProvider scenario={scenarioRuntime.scenario}>
+    <div data-sandbox-mode={sandboxMode} aria-busy={scenarioRuntime.loading} className={`sandbox-ui relative flex ${embedded ? 'h-full min-h-[680px]' : 'h-[100dvh]'} w-full min-h-0 overflow-hidden bg-background text-foreground ${shareMode === "viewer" ? "sandbox-viewer-mode" : ""}`}>
+    {scenarioRuntime.loading && <div role="status" className="absolute left-1/2 top-16 z-[95] -translate-x-1/2 rounded-lg border border-border bg-card/95 px-4 py-2 text-xs shadow-xl">Loading Scenario…</div>}
+    {scenarioRuntime.error && <div role="alert" className="absolute left-1/2 top-16 z-[95] max-w-md -translate-x-1/2 rounded-lg border border-amber-400/30 bg-amber-950/95 px-4 py-2 text-xs text-amber-100 shadow-xl"><strong>Could not load the current Scenario.</strong><details className="mt-1"><summary>Show details</summary>{scenarioRuntime.error}</details></div>}
+    {activeLevelIntro && levelIntroOpen && <LevelIntro level={activeLevelIntro} catalog={scenarioRuntime.scenario?.catalog} locale={(locale === "ru" || locale === "uz" ? locale : "en") as SupportedLocale} onStart={() => {
       setLevelIntroOpen(false);
       setScenarioIntro(false);
       setLibraryTab("equipment");
@@ -1505,16 +1524,16 @@ export function SandboxWorkspace() {
     }} />}
     <HelpArrows
       active={helpActive}
-      targets={getHelpTargets(activeScenario?.id, activeScenario?.step)}
+      targets={resolveGuideTargets(activeScenario?.id, activeScenario?.step)}
       locale={locale}
     />
     <GuideCursor active={guideDemoOpen} locale={locale} onFinish={() => setGuideDemoOpen(false)} />
-    {showNavbar && <header className="absolute left-0 right-0 top-0 z-[80] flex h-14 items-center gap-5 border-b border-border bg-card/95 px-4 shadow-[0_4px_18px_rgba(0,0,0,.28)] backdrop-blur-xl">
+    {showNavbar && <header className="sandbox-topbar absolute left-0 right-0 top-0 z-[80] flex h-14 items-center gap-5 border-b border-border bg-card/95 px-4 shadow-[0_4px_18px_rgba(0,0,0,.18)] backdrop-blur-xl">
         <div className="flex shrink-0 items-center gap-3">
           <Link href={`/${locale}/dashboard`} className="grid h-8 w-8 place-items-center rounded-lg bg-white/5 transition-colors hover:bg-foreground/10">
             <ArrowLeft size={16} className="text-[var(--muted-foreground)]" />
           </Link>
-          <div className="flex flex-col">
+          <div className="sandbox-workspace-title flex flex-col">
             <h1 className="text-xs font-bold uppercase tracking-widest text-foreground">{locale === "ru" ? "Лаборатория" : locale === "uz" ? "Laboratoriya" : "Laboratory"}</h1>
             <span className={`text-[10px] font-bold ${activeScenario === null ? "text-lime-400" : "text-[var(--primary)]"}`}>
               {activeScenario === null
@@ -1523,17 +1542,27 @@ export function SandboxWorkspace() {
             </span>
           </div>
         </div>
-        <SandboxMenuBar
-          canUndo={engine !== null}
-          canRedo={engine !== null}
+        {shareMode !== "viewer" && <SandboxMenuBar
+          canUndo={history.canUndo}
+          canRedo={history.canRedo}
           hasSelection={selectedId !== null}
-          hasMultipleItems={items.length > 1}
+          hasMultipleItems={selectedIds.size > 1}
           showGrid={showGrid}
           showNavbar={showNavbar}
           isRunning={runState === "Running"}
           activeScenario={activeScenario}
           onAction={(actionId) => {
-            if (actionId === "import-snapshot") {
+            if (actionId === "new-experiment") {
+              setClearWorkspaceModal(true);
+            } else if (actionId === "save-experiment") {
+              const snapshot = serializeSnapshot("Сохранённый эксперимент", engine!.workspace.scene.serialize(), activeScenario, zoom, pan);
+              window.localStorage.setItem("jasscience-sandbox-draft", JSON.stringify(snapshot));
+              addToast("Эксперимент сохранён на этом устройстве", "success");
+            } else if (actionId === "save-copy") {
+              const snapshot = serializeSnapshot("Копия эксперимента", engine!.workspace.scene.serialize(), activeScenario, zoom, pan);
+              window.localStorage.setItem(`jasscience-sandbox-copy-${Date.now()}`, JSON.stringify(snapshot));
+              addToast("Копия эксперимента сохранена", "success");
+            } else if (actionId === "import-snapshot") {
               const input = document.createElement("input");
               input.type = "file";
               input.accept = "application/json";
@@ -1566,7 +1595,7 @@ export function SandboxWorkspace() {
               input.click();
             } else if (actionId === "export-snapshot") {
               const snapshot = serializeSnapshot(
-                activeScenario ? (activeScenario.id === "cuso4" ? "Раствор CuSO₄" : "Эксперимент") : "Свободный эксперимент",
+                activeScenario ? scenarioRuntime.scenario?.title ?? "Experiment" : "Free experiment",
                 engine!.workspace.scene.serialize(),
                 activeScenario,
                 zoom,
@@ -1585,7 +1614,7 @@ export function SandboxWorkspace() {
             } else if (actionId === "share") {
               setShareSnapshot(
                 serializeSnapshot(
-                  activeScenario ? (activeScenario.id === "cuso4" ? "Раствор CuSO₄" : "Эксперимент") : "Свободный эксперимент",
+                  activeScenario ? scenarioRuntime.scenario?.title ?? "Experiment" : "Free experiment",
                   engine!.workspace.scene.serialize(),
                   activeScenario,
                   zoom,
@@ -1598,12 +1627,21 @@ export function SandboxWorkspace() {
               historyAction("redo");
             } else if (actionId === "duplicate") {
               duplicate();
+            } else if (actionId === "copy") {
+              const selectedObjects = items.filter((item) => selectedIds.has(item.id));
+              void navigator.clipboard?.writeText(JSON.stringify(selectedObjects, null, 2));
+              addToast("Выбранные объекты скопированы", "success");
             } else if (actionId === "delete") {
               remove();
             } else if (actionId === "deselect") {
               setSelectedIds(new Set());
+            } else if (actionId === "select-all") {
+              setSelectedIds(new Set(items.map((item) => item.id)));
             } else if (actionId === "toggle-grid") {
               setShowGrid(!showGrid);
+            } else if (actionId === "toggle-snap") {
+              setSnapToGrid((enabled) => !enabled);
+              addToast(snapToGrid ? "Привязка к сетке выключена" : "Привязка к сетке включена", "info");
             } else if (actionId === "zoom-in") {
               setZoom((z) => Math.min(z + 0.1, 3));
             } else if (actionId === "zoom-out") {
@@ -1620,6 +1658,9 @@ export function SandboxWorkspace() {
               setRightPanelVisible(!rightPanelVisible);
             } else if (actionId === "toggle-navbar") {
               setShowNavbar((visible) => !visible);
+            } else if (actionId === "fullscreen") {
+              if (document.fullscreenElement) void document.exitFullscreen();
+              else void document.documentElement.requestFullscreen();
             } else if (actionId === "free-mode") {
               setActiveScenario(null);
               setExperimentResult(null);
@@ -1627,24 +1668,72 @@ export function SandboxWorkspace() {
               setClearWorkspaceModal(true);
             } else if (actionId === "scenarios") {
               setLeftPanelVisible(true);
+              setLibraryTab("scenarios");
+              if (window.innerWidth < 1280) setMobilePanel("library");
             } else if (actionId === "jasscience-os") {
               setCodexTarget(undefined);
               setCodexOpen(true);
             } else if (actionId.startsWith("level-")) {
               const lvl = actionId.startsWith("level-") ? parseInt(actionId.replace("level-", ""), 10) : 1;
               setJasScienceLevel(lvl);
+            } else if (actionId.startsWith("align-") || actionId.startsWith("distribute-")) {
+              const selectedObjects = items.filter((item) => selectedIds.has(item.id));
+              if (engine && selectedObjects.length > 1) {
+                history.execute(new SceneSnapshotCommand(engine.workspace.scene, actionId, () => {
+                  const xs = selectedObjects.map((item) => item.x);
+                  const ys = selectedObjects.map((item) => item.y);
+                  const left = Math.min(...xs), right = Math.max(...xs), top = Math.min(...ys), bottom = Math.max(...ys);
+                  const sorted = [...selectedObjects].sort((a, b) => actionId === "distribute-v" ? a.y - b.y : a.x - b.x);
+                  sorted.forEach((item, index) => {
+                    const object = engine.workspace.scene.objects.get(item.id);
+                    if (!object) return;
+                    if (actionId === "align-left") object.position.x = left;
+                    if (actionId === "align-center-h") object.position.x = (left + right) / 2;
+                    if (actionId === "align-right") object.position.x = right;
+                    if (actionId === "align-top") object.position.y = top;
+                    if (actionId === "align-middle-v") object.position.y = (top + bottom) / 2;
+                    if (actionId === "align-bottom") object.position.y = bottom;
+                    if (actionId === "distribute-h") object.position.x = left + ((right - left) * index) / Math.max(1, sorted.length - 1);
+                    if (actionId === "distribute-v") object.position.y = top + ((bottom - top) * index) / Math.max(1, sorted.length - 1);
+                  });
+                }));
+              }
+            } else if (actionId === "group" || actionId === "ungroup") {
+              if (engine) history.execute(new SceneSnapshotCommand(engine.workspace.scene, actionId, () => {
+                const groupId = actionId === "group" ? `group-${crypto.randomUUID()}` : undefined;
+                for (const item of items.filter((candidate) => selectedIds.has(candidate.id))) {
+                  const object = engine.workspace.scene.objects.get(item.id);
+                  if (!object) continue;
+                  if (groupId) object.metadata.groupId = groupId;
+                  else delete object.metadata.groupId;
+                }
+              }));
+            } else if (actionId === "safety-check") {
+              const unsafe = items.filter((item) => item.unsafeConfiguration || item.broken || item.integrity === "cracked");
+              addToast(unsafe.length ? `Обнаружено небезопасных объектов: ${unsafe.length}` : "Проверка пройдена: опасности не обнаружены", unsafe.length ? "error" : "success");
+            } else if (actionId === "schema-check") {
+              const invalid = items.filter((item) => !item.id || !item.type || !Number.isFinite(item.x) || !Number.isFinite(item.y));
+              addToast(invalid.length ? `Ошибок структуры: ${invalid.length}` : "Структура сцены корректна", invalid.length ? "error" : "success");
+            } else if (actionId === "clear-states") {
+              if (engine) history.execute(new SceneSnapshotCommand(engine.workspace.scene, "Clear transient states", () => {
+                for (const object of engine.workspace.scene.objects.values()) object.state = "idle";
+              }));
+              setExperimentResult(null);
+              setRunState("Ready");
+            } else if (actionId === "debug-mode") {
+              window.dispatchEvent(new KeyboardEvent("keydown", { key: "d", shiftKey: true }));
             }
           }}
-        />
+        />}
         <div className="ml-auto flex items-center gap-3">
-          <LanguageSwitcher variant="ghost" />
+          <div className="sandbox-language"><LanguageSwitcher variant="ghost" /></div>
           <ThemeToggle />
-          <button
+          {shareMode === "viewer" ? <div className="sandbox-viewer-badge flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-1.5 text-[11px] font-semibold text-cyan-700 dark:text-cyan-200"><Eye size={14} /> Только просмотр</div> : <button
             type="button"
             onClick={() => {
               setShareSnapshot(
                 serializeSnapshot(
-                  activeScenario ? (activeScenario.id === "cuso4" ? "Раствор CuSO₄" : "Эксперимент") : "Свободный эксперимент",
+                activeScenario ? scenarioRuntime.scenario?.title ?? "Experiment" : "Free experiment",
                   engine!.workspace.scene.serialize(),
                   activeScenario,
                   zoom,
@@ -1652,7 +1741,9 @@ export function SandboxWorkspace() {
                 )
               );
             }}
-            className="flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[var(--primary)]/90"
+            aria-label={ts("menu.share")}
+            title={ts("menu.share")}
+            className="flex items-center gap-2 rounded-lg bg-[var(--primary)] px-2.5 sm:px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[var(--primary)]/90"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="18" cy="5" r="3" />
@@ -1661,8 +1752,8 @@ export function SandboxWorkspace() {
               <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
               <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
             </svg>
-            {ts("menu.share")}
-          </button>
+            <span className="hidden xl:inline">{ts("menu.share")}</span>
+          </button>}
         </div>
       </header>}
       {!showNavbar && (
@@ -1685,7 +1776,7 @@ export function SandboxWorkspace() {
         aria-label="Изменить ширину библиотеки"
         role="separator"
         onPointerDown={(event) => startPanelResize("left", event)}
-        className={`absolute bottom-0 ${showNavbar ? "top-14" : "top-0"} z-40 hidden w-2 cursor-col-resize bg-transparent transition-colors hover:bg-[var(--primary)]/50 xl:block`}
+        className={`absolute bottom-0 ${showNavbar ? "top-14" : "top-0"} z-40 hidden w-2 cursor-col-resize bg-transparent transition-colors hover:bg-[var(--primary)]/50 min-[1600px]:block`}
         style={{ left: leftPanelWidth - 1 }}
       />
 
@@ -1693,7 +1784,7 @@ export function SandboxWorkspace() {
       <aside
         style={{ width: leftPanelWidth }}
         className={`sandbox-panel sandbox-library-panel ${
-          leftPanelVisible ? "flex" : "hidden"
+          leftPanelVisible && shareMode !== "viewer" ? "is-panel-visible hidden min-[1600px]:flex" : "hidden"
         } absolute bottom-0 left-0 ${showNavbar ? "top-14" : "top-0"} z-30 flex-col overflow-hidden rounded-r-2xl border border-r-[var(--border)] border-border bg-card/95 shadow-[0_12px_40px_rgba(0,0,0,0.4),inset_0_1px_0_var(--border)] backdrop-blur-xl transition-[width]`}
       >
         <Library
@@ -1702,13 +1793,14 @@ export function SandboxWorkspace() {
           addItem={addItem}
           addMaterial={addMaterial}
           selected={selected}
-          levelMode={levelMode}
-          allowedEquipment={levelDefinition?.allowedEquipment}
-          allowedMaterials={levelDefinition?.allowedMaterials}
+          mode={scenarioRuntime.scenario?.mode ?? (levelMode ? 'LEARNING' : 'NORMAL')}
+          runtimeCatalog={scenarioRuntime.scenario?.catalog}
+          allowedEquipmentIds={scenarioRuntime.scenario?.equipmentIds ?? []}
+          allowedMaterialIds={scenarioRuntime.scenario?.materialIds ?? []}
           levelLabel={levelLabel}
           helpActive={helpActive}
           helpTab={getHelpTab(activeScenario?.id, activeScenario?.step)}
-          helpTargets={getHelpTargets(activeScenario?.id, activeScenario?.step)}
+          helpTargets={resolveGuideTargets(activeScenario?.id, activeScenario?.step)}
           onStartScenario={(id) => {
             setActiveScenario({ id, step: 0 });
             setScenarioIntro(true);
@@ -1743,8 +1835,9 @@ export function SandboxWorkspace() {
         )}
       </aside>
 
+
       {/* Main Canvas Area */}
-      <main className={`absolute left-0 right-0 bottom-0 ${showNavbar ? "top-14" : "top-0"} z-10 overflow-hidden`}>
+      <main className={`absolute left-0 right-0 bottom-0 ${showNavbar ? "top-14" : "top-0"} z-10 overflow-hidden ${shareMode === "viewer" ? "pointer-events-none" : ""}`}>
         <ParticleCanvas engine={engine} />
         <SandboxCanvas
           setSelectedId={() => setSelectedIds(new Set())}
@@ -1752,13 +1845,17 @@ export function SandboxWorkspace() {
           canvasRef={canvasRef}
           zoom={zoom}
           pan={pan}
+          setPan={setPan}
           tool={tool}
           items={items}
           connections={connections}
           selectedId={selectedId}
           onPourExecute={pour}
           setPourSource={setPourSource}
+          pourSource={pourSource}
           pourAnimation={pourAnimation}
+          pourAmount={pourAmount}
+          setPourAmount={setPourAmount}
             spillAnimation={spillAnimation}
           spills={engine?.workspace.scene.environment.spills ?? []}
           centers={centers}
@@ -1796,7 +1893,7 @@ export function SandboxWorkspace() {
           onConnectionSelect={setSelectedConnectionId}
           onConnectionDelete={disconnectConnection}
           onRoutePointMove={editRoute}
-          helpTargets={getHelpTargets(activeScenario?.id, activeScenario?.step)}
+          helpTargets={resolveGuideTargets(activeScenario?.id, activeScenario?.step)}
           onResize={(id, scaleX, scaleY) => updateItem(id, { scaleX, scaleY })}
           onNudge={(id, dx, dy) => {
             const current = items.find((item) => item.id === id);
@@ -1808,18 +1905,13 @@ export function SandboxWorkspace() {
       </main>
 
       {/* Floating Top Toolbar */}
-      <SandboxToolbar
+      {shareMode !== "viewer" && <SandboxToolbar
         tool={tool}
         setTool={setTool}
         showGrid={showGrid}
         runState={runState}
         helpActive={helpActive}
-        helpTool={helpActive && tool !== "connect" && activeScenario && (
-          (activeScenario.id === "measure_water" && activeScenario.step === 2) ||
-          (activeScenario.id === "heat_water" && activeScenario.step === 2) ||
-          (activeScenario.id === "transfer_water" && activeScenario.step === 3) ||
-          (activeScenario.id === "distillation" && activeScenario.step === 2)
-        ) ? "connect" : undefined}
+        helpTool={helpActive && tool !== "connect" && scenarioRuntime.scenario?.steps[activeScenario?.step ?? 0]?.hints[scenarioHintIndex % Math.max(1, scenarioRuntime.scenario?.steps[activeScenario?.step ?? 0]?.hints.length ?? 1)]?.type === 'CONNECT_PORTS' ? "connect" : undefined}
         onRun={runExperiment}
         onPause={pauseExperiment}
         onStop={stopExperiment}
@@ -1837,10 +1929,8 @@ export function SandboxWorkspace() {
         onRedo={redo}
         canUndo={history.canUndo}
         canRedo={history.canRedo}
-        speed={simulationSpeed}
         showNavbar={showNavbar}
-        setSpeed={(value) => { setSimulationSpeed(value); engine?.setSimulationSpeed(value); }}
-      />
+      />}
 
       {mobilePanel === "library" && (
         <MobileSheet title={ts("equipment")} onClose={() => setMobilePanel(null)}>
@@ -1853,13 +1943,14 @@ export function SandboxWorkspace() {
             }}
             addMaterial={addMaterial}
             selected={selected}
-            levelMode={levelMode}
-            allowedEquipment={levelDefinition?.allowedEquipment}
-            allowedMaterials={levelDefinition?.allowedMaterials}
+            mode={scenarioRuntime.scenario?.mode ?? (levelMode ? 'LEARNING' : 'NORMAL')}
+            runtimeCatalog={scenarioRuntime.scenario?.catalog}
+            allowedEquipmentIds={scenarioRuntime.scenario?.equipmentIds ?? []}
+            allowedMaterialIds={scenarioRuntime.scenario?.materialIds ?? []}
             levelLabel={levelLabel}
             helpActive={helpActive}
             helpTab={getHelpTab(activeScenario?.id, activeScenario?.step)}
-            helpTargets={getHelpTargets(activeScenario?.id, activeScenario?.step)}
+            helpTargets={resolveGuideTargets(activeScenario?.id, activeScenario?.step)}
             onStartScenario={(id) => {
               setActiveScenario({ id, step: 0 });
               setScenarioIntro(true);
@@ -1872,6 +1963,14 @@ export function SandboxWorkspace() {
             }}
           />
         </MobileSheet>
+      )}
+
+      {shareMode !== "viewer" && (
+        <nav className="sandbox-mobile-bottom-nav absolute inset-x-2 bottom-2 z-[70] hidden h-14 items-center justify-around rounded-2xl border border-border bg-card/95 px-2 shadow-[0_14px_40px_rgba(0,0,0,.28)] backdrop-blur-xl" aria-label="Мобильная навигация лаборатории">
+          <button type="button" onClick={() => setMobilePanel("library")} className="flex min-w-16 flex-col items-center gap-0.5 text-[10px] font-semibold text-muted-foreground"><FlaskConical size={19}/><span>Колбы</span></button>
+          <button type="button" onClick={() => { setBottomDockTab("Events"); setMobilePanel("dock"); }} className="flex min-w-16 flex-col items-center gap-0.5 text-[10px] font-semibold text-[var(--primary-bright)]"><BookOpen size={19}/><span>Журнал</span></button>
+          <button type="button" onClick={() => selected ? setMobilePanel("inspector") : addToast("Сначала выберите прибор", "info")} className="flex min-w-16 flex-col items-center gap-0.5 text-[10px] font-semibold text-muted-foreground"><Sparkles size={19}/><span>Детали</span></button>
+        </nav>
       )}
 
       {mobilePanel === "inspector" && selectedIds.size > 0 && (
@@ -1915,6 +2014,7 @@ export function SandboxWorkspace() {
         mobilePanel={mobilePanel}
         setMobilePanel={setMobilePanel}
         activeScenario={activeScenario}
+        runtimeScenario={scenarioRuntime.scenario}
         scenarioIntro={levelMode ? false : scenarioIntro}
         experimentResult={experimentResult}
         leftOffset={(leftPanelVisible ? leftPanelWidth : 0) + 40}
@@ -1924,34 +2024,41 @@ export function SandboxWorkspace() {
         helpActive={helpActive}
         onHelp={handleHelp}
         onShowHow={() => setGuideDemoOpen(true)}
+        hintIndex={scenarioHintIndex}
+        onNextHint={() => setScenarioHintIndex((current) => {
+          const count = scenarioRuntime.scenario?.steps[activeScenario?.step ?? 0]?.hints.length ?? 1;
+          return (current + 1) % Math.max(1, count);
+        })}
       />
+
+      <ScenarioGuideOverlay active={helpActive} hint={scenarioRuntime.scenario?.steps[activeScenario?.step ?? 0]?.hints[scenarioHintIndex % Math.max(1, scenarioRuntime.scenario?.steps[activeScenario?.step ?? 0]?.hints.length ?? 1)]}/>
 
       {/* Floating Inspector Panel (Right) */}
       <div
         aria-label="Изменить ширину панели инспектора"
         role="separator"
         onPointerDown={(event) => startPanelResize("right", event)}
-        className={`absolute bottom-0 ${showNavbar ? "top-14" : "top-0"} z-40 hidden w-2 cursor-col-resize bg-transparent transition-colors hover:bg-[var(--primary)]/50 xl:block`}
+        className={`absolute bottom-0 ${showNavbar ? "top-14" : "top-0"} z-40 hidden w-2 cursor-col-resize bg-transparent transition-colors hover:bg-[var(--primary)]/50 min-[1600px]:block`}
         style={{ right: rightPanelWidth - 1 }}
       />
 
       <aside
         style={{ width: rightPanelWidth }}
         className={`sandbox-panel sandbox-inspector-panel ${
-          rightPanelVisible ? "flex" : "hidden"
+          rightPanelVisible && shareMode !== "viewer" ? "is-panel-visible hidden min-[1600px]:flex" : "hidden"
         } absolute bottom-0 right-0 ${showNavbar ? "top-14" : "top-0"} z-30 flex-col overflow-hidden rounded-l-2xl border border-l-[var(--border)] border-border bg-card/95 shadow-[0_12px_40px_rgba(0,0,0,0.4),inset_0_1px_0_var(--border)] backdrop-blur-xl transition-[width]`}
       >
         <div className="border-b border-border/50 bg-muted/30 p-5">
-          <h2 className="mt-1.5 text-base font-semibold tracking-tight text-foreground">Детали оборудования</h2>
+          <h2 className="mt-1.5 text-base font-semibold tracking-tight text-foreground">{ts("dock.equipmentDetails")}</h2>
         </div>
         <section className="border-b border-border p-3">
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-[.14em] text-muted-foreground">Оборудование</h3>
+            <h3 className="text-xs font-bold uppercase tracking-[.14em] text-muted-foreground">{ts("equipment")}</h3>
             <span className="text-[10px] text-[var(--muted-foreground)]">{items.length}</span>
           </div>
           {selected && (
             <div className="sandbox-encyclopedia mb-2 rounded-lg border border-[var(--primary)]/35 bg-[var(--primary)]/[.1] p-3 shadow-inner">
-              <p className="text-[10px] font-bold uppercase tracking-[.12em] text-[var(--primary-bright)]">Описание</p>
+              <p className="text-[10px] font-bold uppercase tracking-[.12em] text-[var(--primary-bright)]">{ts("dock.description")}</p>
               <p className="mt-1 text-sm font-bold text-foreground">{ts.has(`equip.${selected.type}.name`) ? ts(`equip.${selected.type}.name`) : selected.name}</p>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{ts.has(`equip.${selected.type}.desc`) ? ts(`equip.${selected.type}.desc`) : equipmentDescription(selected)}</p>
               <button
@@ -1998,7 +2105,7 @@ export function SandboxWorkspace() {
           )}
           <div className="max-h-44 space-y-1.5 overflow-y-auto pr-1">
             {items.length === 0 ? (
-              <p className="text-[11px] text-[var(--muted-foreground)]">Добавьте оборудование слева.</p>
+              <p className="text-[11px] text-[var(--muted-foreground)]">{ts("dock.selectApparatus")}</p>
             ) : (
               items.map((equipment) => {
                 const heaterPower = Number((equipment.capabilities?.thermalOutput as { powerW?: number } | undefined)?.powerW ?? 0);
@@ -2094,11 +2201,20 @@ export function SandboxWorkspace() {
         />
       )}
 
-      {shareSnapshot && <ShareDialog snapshot={shareSnapshot} onClose={() => setShareSnapshot(null)} />}
+      {shareSnapshot && <ShareDialog snapshot={shareSnapshot} workspaceId={workspaceId} onClose={() => setShareSnapshot(null)} />}
+
+      {shareMode !== "viewer" && (
+        <>
+          <button type="button" onClick={() => setAssistantOpen((open) => !open)} className={`sandbox-assistant-trigger fixed bottom-5 right-5 z-[95] grid h-13 w-13 place-items-center rounded-full border shadow-[0_14px_36px_rgba(124,58,237,.28)] transition-all hover:-translate-y-1 active:scale-95 ${assistantOpen ? "border-[var(--primary)] bg-[var(--primary)] text-white" : "border-border bg-card text-[var(--primary)]"}`} aria-label={assistantOpen ? "Закрыть чат ассистента" : "Открыть чат ассистента"} aria-expanded={assistantOpen}>
+            <Bot size={24} strokeWidth={1.8} />
+          </button>
+          {assistantOpen && <AssistantPanel messages={assistantMessages} onSend={sendAssistantMessage} onExecuteAction={executeAssistantAction} onClose={() => setAssistantOpen(false)} isTeamChat={isTeamChat} />}
+        </>
+      )}
 
       {experimentResult && academyLevel && !rewardDismissed && (() => {
         const completedLevel = Number(academyLevel);
-        const nextLevel = Number.isFinite(completedLevel) && academyScenarioByLevel[String(completedLevel + 1)] ? completedLevel + 1 : undefined;
+        const nextLevel = Number.isFinite(completedLevel) && legacyScenarioForLevel(String(completedLevel + 1)) ? completedLevel + 1 : undefined;
         return (
           <LevelRewardOverlay
             level={completedLevel}
@@ -2191,5 +2307,6 @@ export function SandboxWorkspace() {
         router.replace(`${pathname}?${nextQuery.toString()}`);
       }} />}
     </div>
+    </ScenarioRuntimeProvider>
   );
 }

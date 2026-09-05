@@ -3,12 +3,15 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, FlaskConical, LockKeyhole, Play, X, Beaker, Flame, Gauge, Zap } from "lucide-react";
+import { ArrowLeft, Check, FlaskConical, LockKeyhole, Play, X, Beaker, Flame, Gauge, Zap, AlertCircle, Loader2 } from "lucide-react";
 import ScienceBackground, { BackgroundGlow } from "@/shared/ui/ScienceBackground";
 import Logo from "@/shared/ui/Logo";
 import dynamic from 'next/dynamic';
 const ScientificCoreModel = dynamic(() => import('@/components/scientific-core'), { ssr: false });
 import styles from "./page.module.css";
+import { learningApi } from '@/entities/learning/api/learning.api';
+import type { LearningLevelSummary } from '@/shared/api/contracts/platform';
+import { errorMessage } from '@/shared/utils/errorMessage';
 
 type Size = "normal" | "important" | "milestone" | "major";
 type LayoutNode = { id: number; x: number; y: number; size: Size; category: string };
@@ -51,7 +54,7 @@ const layoutData: LayoutNode[] = [
   { id: 30, x: 50, y: 50, size: "major", category: "system" },
 ];
 
-type Level = { id: number; title: string; skill: string; description: string; reward: string; xp: number; x: number; y: number; size: Size; category: string };
+type Level = { id: number; backendId?: string; title: string; skill: string; description: string; reward: string; xp: number; x: number; y: number; size: Size; category: string; lockedByBackend?: boolean; estimatedMinutes?: number };
 
 const ui = { 
   ru:{brand:"Лабораторная экспедиция",back:"Назад",sandbox:"Открыть песочницу",eyebrow:"ХИМИЧЕСКАЯ ЭКСПЕДИЦИЯ",levels:"30 уровней",desc:"Пройдите путь от первых измерений до сложных лабораторных систем.",available:"Доступно",current:"Текущий уровень",locked:"Заблокировано",done:"Пройдено",start:"Начать эксперимент",mission:"Этап",core:"Лабораторное ядро"}, 
@@ -173,30 +176,61 @@ export default function ChemistryLevelsPage() {
   const locale = useLocale() as keyof typeof ui;
   const copy = ui[locale] ?? ui.ru;
   const router = useRouter();
-  const [completed, setCompleted] = useState<number[]>(() => {
-    try {
-      const raw = localStorage.getItem("chemistry-academy-progress-v2");
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed.filter((id): id is number => Number.isInteger(id) && id >= 1 && id <= 30) : [];
-    } catch { return []; }
-  });
+  const [completed, setCompleted] = useState<number[]>([]);
+  const [backendLevels, setBackendLevels] = useState<LearningLevelSummary[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   
   const [selected, setSelected] = useState<Level | null>(null);
   const [hovered, setHovered] = useState<number | null>(null);
-  const levels = useMemo(() => generateLevels(locale), [locale]);
+  useEffect(() => {
+    let active = true;
+    void Promise.allSettled([learningApi.track('chemistry', locale), learningApi.progress('chemistry')]).then(([trackResult, progressResult]) => {
+      if (!active) return;
+      if (trackResult.status === 'rejected') {
+        setLoadError(errorMessage(trackResult.reason, 'Не удалось загрузить карту обучения'));
+        setLoading(false);
+        return;
+      }
+      setBackendLevels(trackResult.value.levels);
+      if (progressResult.status === 'fulfilled') {
+        const ids = Array.isArray(progressResult.value.completedLevelIds) ? progressResult.value.completedLevelIds.map(String) : [];
+        setCompleted(trackResult.value.levels.filter((level) => ids.includes(level.id)).map((level) => level.levelNumber));
+      }
+      setLoading(false);
+    });
+    return () => { active = false; };
+  }, [locale]);
+
+  const levels = useMemo(() => {
+    if (!backendLevels) return [];
+    return backendLevels.slice(0, layoutData.length).map((source, index) => {
+      const visual = layoutData[index];
+      return {
+        ...visual,
+        id: source.levelNumber,
+        backendId: source.id,
+        title: source.title,
+        skill: source.difficulty || 'Эксперимент',
+        description: source.summary || 'Исследуйте законы химии на практике.',
+        reward: '', xp: 0,
+        lockedByBackend: source.isLocked,
+        estimatedMinutes: source.estimatedMinutes,
+      } satisfies Level;
+    });
+  }, [backendLevels]);
   const current = useMemo(() => levels.find(l => !completed.includes(l.id))?.id ?? 30, [completed, levels]);
   
-  useEffect(() => {
-    localStorage.setItem("chemistry-academy-progress-v2", JSON.stringify(completed));
-  }, [completed]);
-  
-  const status = (id: number) => completed.includes(id) ? "completed" : id === current ? "current" : "locked";
+  const status = (id: number) => {
+    const level = levels.find((item) => item.id === id);
+    return completed.includes(id) ? "completed" : level?.lockedByBackend ? "locked" : id === current ? "current" : "locked";
+  };
   const progress = Math.round(completed.length / levels.length * 100);
 
   // Auto center on load
   const mapRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (mapRef.current) {
+    if (mapRef.current && levels.length > 0) {
       const currentLevel = levels.find(l => l.id === current) || levels[0];
       const viewport = mapRef.current.parentElement;
       if (viewport) {
@@ -229,6 +263,8 @@ export default function ChemistryLevelsPage() {
       </header>
       
       <section className={styles.mapViewport}>
+        {loading && <div className="absolute inset-0 z-50 grid place-items-center bg-black/45 backdrop-blur-sm"><div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/70 px-5 py-3 text-sm text-white"><Loader2 className="animate-spin" size={18}/>Загружаем реальные уровни…</div></div>}
+        {loadError && <div className="absolute left-1/2 top-6 z-50 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-red-400/30 bg-red-950/90 px-4 py-3 text-sm text-red-100"><AlertCircle size={16}/>{loadError}</div>}
         <div className={styles.map} ref={mapRef}>
           <ConnectionGraph layout={layoutData} current={current} hovered={hovered} completed={completed} />
           
@@ -274,7 +310,13 @@ export default function ChemistryLevelsPage() {
             <span>{copy.mission} {selected.id}</span>
             <h2>{selected.title}</h2>
             <p>{selected.description}</p>
-            <button className={styles.start} type="button" onClick={() => router.push(`/${locale}/workspace/sandbox?level=${selected.id}`)}>
+            <button className={styles.start} type="button" onClick={async () => {
+              if (!selected.backendId) return;
+              const attempt = await learningApi.startAttempt(selected.backendId, { locale, clientAttemptId: crypto.randomUUID() });
+              const attemptId = String(attempt.attemptId ?? '');
+              const workspaceId = String(attempt.workspaceId ?? '');
+              router.push(`/${locale}/workspace/sandbox?level=${selected.id}&levelId=${encodeURIComponent(selected.backendId)}${attemptId ? `&attempt=${encodeURIComponent(attemptId)}` : ''}${workspaceId ? `&workspace=${encodeURIComponent(workspaceId)}` : ''}`);
+            }}>
               {copy.start} <Play size={16} />
             </button>
           </aside>

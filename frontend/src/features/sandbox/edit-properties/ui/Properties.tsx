@@ -43,6 +43,7 @@ interface Props {
   }
 
 export function Properties({ item, update, onOperation, connections, onConnectionDelete, onConnectionEdit, onDeviceAction, onMaterialRemove, setPourSource, pourSource, temperatureConnected = false, levelMode = false, onQuickAction }: Props) {
+  const locale = useLocale();
   const cap = item.capabilities ?? {};
   const heater = cap.heater as { maxTemperature?: number } | undefined;
   const cooler = cap.cooler as { minTempC?: number } | undefined;
@@ -56,7 +57,11 @@ export function Properties({ item, update, onOperation, connections, onConnectio
   const vessel = isVessel(item);
 
   const allTabs = ['Details', 'Connections', 'History'];
-  const tabLabels: Record<string, string> = { Details: 'Детали', Connections: 'Связи', History: 'Журнал' };
+  const tabLabels: Record<string, string> = locale === 'ru'
+    ? { Details: 'Детали', Connections: 'Связи', History: 'Журнал' }
+    : locale === 'uz'
+      ? { Details: 'Tafsilotlar', Connections: 'Ulanishlar', History: 'Jurnal' }
+      : { Details: 'Details', Connections: 'Connections', History: 'Journal' };
 
   const [rawTab, setTab] = useState('Overview');
   const tab = allTabs.includes(rawTab) ? rawTab : 'Details';

@@ -3,7 +3,6 @@ import type { EquipmentRegistry } from '@/engine/registry/EquipmentRegistry';
 import type { Connection, ContentComponent, EquipmentType, Item, Material } from './types';
 import { isLiquidConduit } from './types';
 
-import { featuredMaterials } from '@/features/sandbox/add-item/ui/Library';
 
 export const vesselCapacities: Record<string, number> = {
   beaker: 250, beaker50: 50, beaker100: 100, beaker250: 250, beaker500: 500, testtube: 50,
@@ -27,12 +26,9 @@ export function projectSandboxItems(engine: Engine, registry: EquipmentRegistry)
         : true
     );
 
-    // Inject missing metadata (like color) from Library if available
-    const enrichedContents = contents.map(c => {
-      if (c.color) return c;
-      const libMat = featuredMaterials.find(m => m.id === c.materialId || m.formula === c.materialId);
-      return { ...c, color: libMat?.color ?? c.color, name: libMat?.name ?? c.name, formula: libMat?.formula ?? c.formula };
-    });
+    // Content metadata originates from the canonical catalog/runtime payload.
+    // Keep older workspace snapshots renderable without reintroducing a local chemistry catalog.
+    const enrichedContents = contents.map((content) => ({ ...content, color: content.color ?? '#22d3ee', name: content.name ?? content.materialId, formula: content.formula ?? content.materialId }));
 
     const primary = enrichedContents.find(c => c.phase === 'aqueous') 
                  ?? enrichedContents.find(c => c.phase === 'liquid') 
@@ -76,7 +72,7 @@ export function projectSandboxItems(engine: Engine, registry: EquipmentRegistry)
       // Funnels are pass-through equipment, including for older snapshots
       // that still stored the historical container capability.
       capabilities: liquidConduit ? { pourable: true, liquidConduit: true } : object.capabilities,
-      metadata: object.metadata,
+      metadata: { ...object.metadata, pH: object.properties.pH ?? object.properties.ph ?? object.metadata.pH },
       minScale: scaleBounds.min,
       maxScale: scaleBounds.max,
       portTypes: object.ports.map((port) => port.type),

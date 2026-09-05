@@ -49,15 +49,15 @@ export function ErlenmeyerRenderer({ width, height, size = 100, liquidLevel = 0,
         
         {/* Liquid */}
         {!broken && liquidLevel > 0 && (
-          <g>
+          <g className="sandbox-vessel-liquid">
             <g clipPath="url(#flask-body)">
-              <rect x="0" y={liquidY} width="100" height={100 - liquidY} fill={liquidColor} style={{ transition: 'all 0.3s ease-in-out' }} />
+              <rect className="sandbox-liquid-body" x="0" y={liquidY} width="100" height={100 - liquidY} fill={liquidColor} style={{ transition: 'all 0.55s cubic-bezier(.22,1,.36,1)' }} />
               <rect x="0" y={liquidY} width="100" height={100 - liquidY} fill="url(#liquidGradient)" style={{ mixBlendMode: 'multiply', transition: 'all 0.3s ease-in-out' }} />
-              <rect x="0" y={liquidY} width="100" height={100 - liquidY} fill="url(#liquidHighlight)" style={{ mixBlendMode: 'screen', transition: 'all 0.3s ease-in-out' }} />
+              <rect className="sandbox-liquid-shimmer" x="0" y={liquidY} width="100" height={100 - liquidY} fill="url(#liquidHighlight)" style={{ mixBlendMode: 'screen', transition: 'all 0.55s cubic-bezier(.22,1,.36,1)' }} />
             </g>
             
             {/* Liquid surface ellipse */}
-            <ellipse cx="50" cy={liquidY} rx={rY} ry="6" fill={liquidColor} stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" style={{ transition: 'all 0.3s ease-in-out' }} />
+            <ellipse className="sandbox-liquid-surface" cx="50" cy={liquidY} rx={rY} ry="6" fill={liquidColor} stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" style={{ transition: 'all 0.55s cubic-bezier(.22,1,.36,1)' }} />
             
             {/* Boiling Bubbles */}
             {operation === 'heating' && temperature > 80 && (

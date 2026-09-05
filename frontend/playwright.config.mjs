@@ -1,7 +1,8 @@
 import { defineConfig } from '@playwright/test';
 
 const executablePath = process.env.PLAYWRIGHT_EXECUTABLE_PATH;
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3000';
+const port = process.env.PLAYWRIGHT_PORT ?? '3000';
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${port}`;
 
 export default defineConfig({
   testDir: './tests/browser',
@@ -14,5 +15,5 @@ export default defineConfig({
   },
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
-    : { command: 'pnpm dev --port 3000', url: 'http://127.0.0.1:3000', reuseExistingServer: !process.env.CI, timeout: 120_000 },
+    : { command: `pnpm dev --port ${port}`, url: baseURL, reuseExistingServer: !process.env.CI, timeout: 120_000 },
 });

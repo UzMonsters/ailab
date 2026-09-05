@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { X, Copy, Share2, Link2, QrCode, Lock, Eye, EyeOff, Check, ShieldCheck } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { X, Share2, Link2, QrCode, Lock, Eye, EyeOff, Check, ShieldCheck, UserPlus, Trash2, Loader2 } from "lucide-react";
 import type { Item, Connection } from "@/widgets/sandbox/types";
 import type { SceneSnapshot } from "@/engine/scene/Scene";
 import { generateQrSvg } from "@/shared/lib/qrCodeGenerator";
+import { workspaceCollaborationApi } from "@/entities/workspace/api/collaboration.api";
+import type { WorkspaceInvitation, WorkspaceMember, WorkspaceShareLink } from "@/shared/api/contracts/platform";
+import { errorMessage } from "@/shared/utils/errorMessage";
 
 // ─── Snapshot schema ──────────────────────────────────────────────────────────
 
@@ -75,6 +78,12 @@ export function parseSnapshotFromHash(): SandboxSnapshot | null {
   return decodeSnapshot(match[1]);
 }
 
+export function parseShareModeFromHash(): "viewer" | "editor" | null {
+  if (typeof window === "undefined") return null;
+  const match = window.location.hash.match(/(?:^|&)role=(viewer|editor)(?:&|$)/);
+  return match?.[1] === "viewer" || match?.[1] === "editor" ? match[1] : null;
+}
+
 /** Validate and normalize a raw snapshot, returning a safe version or null. */
 export function normalizeSnapshot(raw: unknown): SandboxSnapshot | null {
   if (!raw || typeof raw !== "object") return null;
@@ -88,37 +97,107 @@ export function normalizeSnapshot(raw: unknown): SandboxSnapshot | null {
 
 interface ShareDialogProps {
   snapshot: SandboxSnapshot;
+  workspaceId?: string | null;
   onClose: () => void;
 }
 
-export function ShareDialog({ snapshot, onClose }: ShareDialogProps) {
+export function ShareDialog({ snapshot, workspaceId, onClose }: ShareDialogProps) {
   const [copied, setCopied] = useState(false);
   const [accessRole, setAccessRole] = useState<"viewer" | "editor">("viewer");
   const [password, setPassword] = useState("");
   const [showPasswordInput, setShowPasswordInput] = useState(false);
   const [showPlainPassword, setShowPlainPassword] = useState(false);
   const [showQrCode, setShowQrCode] = useState(false);
+  const [serverUrl, setServerUrl] = useState<string | null>(null);
+  const [members, setMembers] = useState<WorkspaceMember[]>([]);
+  const [invitations, setInvitations] = useState<WorkspaceInvitation[]>([]);
+  const [links, setLinks] = useState<WorkspaceShareLink[]>([]);
+  const [invitee, setInvitee] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const baseShareUrl = buildShareUrl(snapshot);
-  const shareUrl = baseShareUrl
+  const localShareUrl = baseShareUrl
     ? `${baseShareUrl}&role=${accessRole}${password.trim() ? `&pwd=${encodeURIComponent(password.trim())}` : ""}`
     : null;
+  const shareUrl = serverUrl ?? (workspaceId ? null : localShareUrl);
   const isTooLarge = shareUrl === null;
 
+  const refreshAccess = useCallback(async () => {
+    if (!workspaceId) return;
+    try {
+      const [nextMembers, nextInvitations, nextLinks] = await Promise.all([
+        workspaceCollaborationApi.members(workspaceId),
+        workspaceCollaborationApi.invitations(workspaceId),
+        workspaceCollaborationApi.shareLinks(workspaceId),
+      ]);
+      setMembers(nextMembers);
+      setInvitations(nextInvitations);
+      setLinks(nextLinks);
+      const current = nextLinks.find((link) => link.url);
+      if (current?.url) setServerUrl(current.url);
+    } catch (reason) {
+      setError(errorMessage(reason, "Не удалось загрузить настройки доступа"));
+    }
+  }, [workspaceId]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void refreshAccess(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [refreshAccess]);
+
+  const createServerLink = useCallback(async () => {
+    if (!workspaceId) return localShareUrl;
+    setBusy(true);
+    setError(null);
+    try {
+      const link = await workspaceCollaborationApi.createShareLink(workspaceId, {
+        role: accessRole.toUpperCase() as "VIEWER" | "EDITOR",
+        password: password.trim() || undefined,
+        allowChat: true,
+        allowComments: true,
+      });
+      const rawUrl = link.url ?? `/shared-workspaces/${encodeURIComponent(link.token ?? link.linkId)}`;
+      // The API returns a relative path. Copying it as-is opens a browser
+      // search instead of a workspace link, especially from the desktop app.
+      const url = new URL(rawUrl, window.location.origin).toString();
+      setServerUrl(url);
+      setLinks((current) => [link, ...current]);
+      return url;
+    } catch (reason) {
+      setError(errorMessage(reason, "Не удалось создать ссылку"));
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  }, [accessRole, localShareUrl, password, workspaceId]);
+
   const copyLink = useCallback(async () => {
-    if (!shareUrl) return;
+    const url = shareUrl ?? await createServerLink();
+    if (!url) return;
     try {
       if (navigator.clipboard) {
-        await navigator.clipboard.writeText(shareUrl);
+        await navigator.clipboard.writeText(url);
         setCopied(true);
         setTimeout(() => setCopied(false), 2500);
       } else {
-        window.prompt("Скопируйте ссылку:", shareUrl);
+        window.prompt("Скопируйте ссылку:", url);
       }
     } catch {
-      window.prompt("Скопируйте ссылку:", shareUrl);
+      window.prompt("Скопируйте ссылку:", url);
     }
-  }, [shareUrl]);
+  }, [createServerLink, shareUrl]);
+
+  const sendInvitation = async () => {
+    if (!workspaceId || !invitee.trim()) return;
+    setBusy(true); setError(null);
+    try {
+      await workspaceCollaborationApi.invite(workspaceId, { emailOrUserId: invitee.trim(), role: accessRole.toUpperCase() as "VIEWER" | "EDITOR" });
+      setInvitee("");
+      await refreshAccess();
+    } catch (reason) { setError(errorMessage(reason, "Не удалось отправить приглашение")); }
+    finally { setBusy(false); }
+  };
 
   const shareNative = useCallback(async () => {
     if (!shareUrl || !navigator.share) return;
@@ -145,7 +224,7 @@ export function ShareDialog({ snapshot, onClose }: ShareDialogProps) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="share-dialog w-full max-w-md animate-fade-in-up rounded-2xl border border-white/10 bg-[#0b0f19] p-6 shadow-[0_32px_80px_rgba(0,0,0,0.8)]">
+      <div className="share-dialog w-full max-w-md animate-fade-in-up rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-[0_32px_80px_rgba(0,0,0,0.45)]">
         {/* Header */}
         <div className="mb-4 flex items-start justify-between">
           <div>
@@ -203,6 +282,20 @@ export function ShareDialog({ snapshot, onClose }: ShareDialogProps) {
               </button>
             </div>
           </div>
+
+          {workspaceId && (
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-3">
+              <label className="text-xs font-semibold text-white/70">Пригласить участника</label>
+              <div className="flex gap-2">
+                <input value={invitee} onChange={(event) => setInvitee(event.target.value)} onKeyDown={(event) => event.key === "Enter" && void sendInvitation()} placeholder="Email или ID пользователя" className="min-w-0 flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none focus:border-[var(--primary)]" />
+                <button type="button" disabled={busy || !invitee.trim()} onClick={() => void sendInvitation()} className="grid w-10 place-items-center rounded-lg bg-white/10 text-white disabled:opacity-40" aria-label="Отправить приглашение"><UserPlus size={15}/></button>
+              </div>
+              {(members.length > 0 || invitations.length > 0) && <div className="max-h-28 space-y-1 overflow-y-auto">
+                {members.map((member) => <div key={member.userId} className="flex items-center justify-between rounded-lg bg-black/20 px-2.5 py-1.5 text-[10px]"><span className="truncate text-white/75">{member.displayName || member.emailMasked}</span><span className="text-cyan-300">{member.role}</span></div>)}
+                {invitations.map((invitation) => <div key={invitation.invitationId} className="flex items-center justify-between rounded-lg bg-orange-500/5 px-2.5 py-1.5 text-[10px]"><span className="truncate text-white/60">{invitation.invitee.email ?? invitation.invitee.userId ?? "Приглашение"}</span><button type="button" onClick={async () => { await workspaceCollaborationApi.revokeInvitation(workspaceId, invitation.invitationId); await refreshAccess(); }} className="text-orange-300" aria-label="Отозвать приглашение"><Trash2 size={12}/></button></div>)}
+              </div>}
+            </div>
+          )}
 
           {/* Password Protection */}
           <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 space-y-2">
@@ -270,13 +363,13 @@ export function ShareDialog({ snapshot, onClose }: ShareDialogProps) {
 
         {/* Main Action Buttons */}
         <div className="flex flex-col gap-2">
-          {!isTooLarge && (
+          {(!isTooLarge || workspaceId) && (
             <button
               type="button"
               onClick={copyLink}
               className="flex items-center justify-center gap-2 rounded-xl bg-[var(--primary)] py-2.5 text-xs font-bold text-white shadow-lg transition-all hover:bg-[var(--primary)]/85 active:scale-95"
             >
-              {copied ? (
+              {busy ? <><Loader2 size={16} className="animate-spin"/>Создаём защищённую ссылку…</> : copied ? (
                 <>
                   <Check size={16} className="text-emerald-300" />
                   Ссылка скопирована!
@@ -288,6 +381,13 @@ export function ShareDialog({ snapshot, onClose }: ShareDialogProps) {
                 </>
               )}
             </button>
+          )}
+
+          {shareUrl && (
+            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 p-2">
+              <input aria-label="Share link" readOnly value={shareUrl} onFocus={event => event.currentTarget.select()} className="min-w-0 flex-1 bg-transparent px-2 text-[11px] text-cyan-200 outline-none" />
+              <button type="button" onClick={copyLink} className="shrink-0 rounded-lg border border-white/10 px-2.5 py-1.5 text-[11px] font-semibold text-white">{copied ? "Скопировано" : "Копировать"}</button>
+            </div>
           )}
 
           <div className="grid grid-cols-2 gap-2">
@@ -329,11 +429,12 @@ export function ShareDialog({ snapshot, onClose }: ShareDialogProps) {
 
         {/* Footer Info */}
         <div className="mt-4 border-t border-white/[.06] pt-3">
+          {error && <p className="mb-2 rounded-lg bg-red-500/10 px-2.5 py-2 text-[10px] text-red-300">{error}</p>}
           <div className="flex justify-between text-[10px] text-white/30">
             <span>
               Приборов: {snapshot.objects.length} · Связей: {snapshot.connections.length}
             </span>
-            <span>v{snapshot.version}</span>
+            <span>{workspaceId ? `${links.length} активных ссылок` : `v${snapshot.version}`}</span>
           </div>
         </div>
       </div>

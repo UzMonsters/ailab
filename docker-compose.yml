@@ -36,6 +36,13 @@ services:
       PORT: "8080"
       REFRESH_COOKIE_SECURE: "false"
       REFRESH_COOKIE_SAME_SITE: Strict
+      SEED_ENABLED: ${SEED_ENABLED:-false}
+      SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME:-admin}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@ailab.local}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-Admin@12345}
+      SEED_USER_USERNAME: ${SEED_USER_USERNAME:-user}
+      SEED_USER_EMAIL: ${SEED_USER_EMAIL:-user@ailab.local}
+      SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-User@12345}
     depends_on:
       postgres:
         condition: service_healthy

@@ -14,6 +14,7 @@ export class EquipmentRegistry {
     beaker100: 'beaker',
     beaker250: 'beaker',
     beaker500: 'beaker',
+    beaker_standard: 'beaker',
     graduated: 'graduated_cylinder',
   };
   register(definition: EquipmentDefinition) { this.definitions.set(definition.type, definition); return this; }

@@ -19,6 +19,7 @@ body:has(.admin-theme) {
 .admin-layout {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--admin-bg);
   color: var(--admin-text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -32,6 +33,11 @@ body:has(.admin-theme) {
   flex-direction: column;
   transition: width 0.3s ease;
   z-index: 40;
+  height: 100vh;
+  height: 100dvh;
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
 }
 
 .admin-sidebar.collapsed {

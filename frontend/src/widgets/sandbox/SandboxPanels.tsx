@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { X } from 'lucide-react';
 
 export function MobileSheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
-  return <div className="fixed inset-0 z-[80] flex items-end bg-black/60 lg:hidden" onClick={onClose}><section className="max-h-[88dvh] w-full overflow-y-auto rounded-t-3xl border-t border-border bg-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl" onClick={(event) => event.stopPropagation()}><div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-bold">{title}</h2><button aria-label="Close panel" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-lg border border-border"><X size={16} /></button></div>{children}</section></div>;
+  return <div className="fixed inset-0 z-[80] flex items-end bg-black/60 min-[1600px]:hidden" onClick={onClose}><section className="max-h-[88dvh] w-full overflow-y-auto rounded-t-3xl border-t border-border bg-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl md:mx-auto md:mb-5 md:max-w-2xl md:rounded-3xl md:border" onClick={(event) => event.stopPropagation()}><div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-bold">{title}</h2><button aria-label="Close panel" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-lg border border-border"><X size={16} /></button></div>{children}</section></div>;
 }
 
 export function MeasurementCard({ label, value }: { label: string; value: string }) {

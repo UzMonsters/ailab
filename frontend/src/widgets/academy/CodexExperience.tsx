@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
-import { Atom, Beaker, BookOpen, ClipboardCheck, FlaskConical, History, Microscope, Wrench } from "lucide-react";
+import { Atom, Beaker, BookOpen, ClipboardCheck, FlaskConical, History, Microscope, RotateCw, Wrench } from "lucide-react";
 import { BookFlip } from "./BookFlip";
 import {
   Cover,
@@ -41,6 +41,9 @@ import { equipmentDefinitions } from "@/entities/codex/model/codexDefinitions";
 import { materialDefinitions } from "@/entities/material/model/materialDefinitions";
 import { scenarioDefinitions } from "@/entities/experiment/model/scenarioDefinitions";
 import "./book.css";
+import { bookApi } from '@/entities/book/api/book.api';
+import type { BookManifest, JsonObject } from '@/shared/api/contracts/platform';
+import { BookPageRenderer, hydrateBookPageBlocks } from '@/widgets/admin/book-studio/BookPageRenderer';
 
 const BOOK_WIDTH = 1120;
 const BOOK_HEIGHT = 680;
@@ -92,6 +95,7 @@ export default function CodexExperience({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
+  const [portraitPhone, setPortraitPhone] = useState(false);
 
   // ── Theme — persisted to localStorage ────────────────────────────────────
   const { theme: globalTheme, resolvedTheme, setTheme: setGlobalTheme } = useTheme();
@@ -106,23 +110,75 @@ export default function CodexExperience({
 
   // ── Current page ─────────────────────────────────────────────────────────
   const [currentPage, setCurrentPage] = useState(() => getCodexPageForEntity(initialContext));
+  const [bookManifest, setBookManifest] = useState<BookManifest | null>(null);
+  const [publishedPages, setPublishedPages] = useState<JsonObject[]>([]);
+  const [bookSyncState, setBookSyncState] = useState<'loading' | 'connected' | 'local'>('loading');
+  const [savedBookmark, setSavedBookmark] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (initialContext) return;
+    const savedPage = Number(window.localStorage.getItem(STORAGE_PAGE_KEY));
+    const timer = window.setTimeout(() => {
+      if (Number.isInteger(savedPage) && savedPage > 0) setCurrentPage(Math.min(savedPage, 46));
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [initialContext]);
+
+  useEffect(() => {
+    let active = true;
+    const locale = document.documentElement.lang || 'ru';
+    void bookApi.manifest('chemistry-lab', locale).then(async (manifest) => {
+      if (!active) return;
+      setBookManifest(manifest);
+      setBookSyncState('connected');
+      const chapterPayloads = await Promise.all(manifest.chapters.map((chapter) => bookApi.chapter(manifest.book.slug, chapter.id, locale).catch(() => chapter)));
+      if (active) setPublishedPages(chapterPayloads.flatMap((payload) => { const direct = Array.isArray(payload.pages) ? payload.pages : []; const nested = payload.chapter && typeof payload.chapter === 'object' && Array.isArray((payload.chapter as JsonObject).pages) ? (payload.chapter as JsonObject).pages as JsonObject[] : []; return ((direct.length ? direct : nested) as JsonObject[]).filter((page) => page.blocks !== undefined || page.contentBlocks !== undefined); }));
+      try {
+        const progress = await bookApi.progress(manifest.book.id);
+        const pageId = typeof progress.pageId === 'string' ? progress.pageId : null;
+        const backendPages = manifest.chapters.flatMap((chapter) => chapter.pages ?? []);
+        const pageIndex = pageId ? backendPages.findIndex((page) => page.id === pageId) : -1;
+        if (pageIndex >= 0) setCurrentPage(Math.min(pageIndex + 1, 46));
+        const rawBookmark = Array.isArray(progress.bookmarks) ? progress.bookmarks[0] : null;
+        const bookmarkPageId = rawBookmark && typeof rawBookmark === 'object' ? String((rawBookmark as JsonObject).pageId ?? '') : '';
+        const bookmarkIndex = bookmarkPageId ? backendPages.findIndex((page) => page.id === bookmarkPageId) : -1;
+        if (bookmarkIndex >= 0) setSavedBookmark(bookmarkIndex + 1);
+      } catch {
+        // The manifest is public; progress requires an authenticated account.
+      }
+    }).catch(() => { if (active) setBookSyncState('local'); });
+    return () => { active = false; };
+  }, []);
+
+  const resumeBook = () => {
+    const savedPage = Number(window.localStorage.getItem(STORAGE_PAGE_KEY));
+    navigate(Number.isInteger(savedPage) && savedPage > 0 ? savedPage : 1);
+  };
 
   const navigate = (page: number) => {
     setCurrentPage(page);
     window.localStorage.setItem(STORAGE_PAGE_KEY, String(page));
+    if (bookManifest) {
+      const backendPages = bookManifest.chapters.flatMap((chapter) => chapter.pages ?? []);
+      const pageId = backendPages[Math.max(0, page - 1)]?.id;
+      const bookmarkPageId = savedBookmark ? backendPages[Math.max(0, savedBookmark - 1)]?.id : null;
+      if (pageId) void bookApi.saveProgress(bookManifest.book.id, { pageId, scrollAnchor: null, bookmarks: bookmarkPageId ? [{ pageId: bookmarkPageId }] : [], updatedAt: new Date().toISOString() });
+    }
   };
 
   // ── Scale to viewport ─────────────────────────────────────────────────────
   useEffect(() => {
     const handleResize = () => {
-      const availableWidth = window.innerWidth - 64;
-      const availableHeight = window.innerHeight - 64;
+      const bounds = containerRef.current?.getBoundingClientRect();
+      const availableWidth = Math.max(280, (bounds?.width ?? window.innerWidth) - Math.min(64, window.innerWidth * .06));
+      const availableHeight = Math.max(280, (bounds?.height ?? window.innerHeight) - Math.min(64, window.innerHeight * .06));
       const newScale = Math.min(
         availableWidth / BOOK_WIDTH,
         availableHeight / BOOK_HEIGHT,
         1
       );
       setScale(newScale);
+      setPortraitPhone(window.innerWidth < 720 && window.innerHeight > window.innerWidth);
     };
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -181,7 +237,7 @@ export default function CodexExperience({
         id: "cover",
         render: () => (
           <Cover
-            onOpen={() => navigate(1)}
+            onOpen={resumeBook}
             theme={theme}
             onThemeChange={handleThemeChange}
           />
@@ -294,15 +350,24 @@ export default function CodexExperience({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [onOpenLab, theme]
   );
+  // The page descriptors are stable; rendering them is intentionally cached across UI-only updates.
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
+  const renderedPages = useMemo(() => pages.map((page) => page.render()), [pages]);
+  const readerPages = useMemo(() => {
+    if (!publishedPages.length) return renderedPages;
+    const locale = typeof document === 'undefined' ? 'en' : document.documentElement.lang || 'en';
+    return publishedPages.map((publishedPage) => <BookPageRenderer key={String(publishedPage.id)} blocks={hydrateBookPageBlocks(publishedPage.blocks ?? publishedPage.contentBlocks, locale)} className="h-full w-full" onInteract={(scenarioId) => onOpenLab?.({ type: 'scenario', id: scenarioId })}/>);
+  }, [onOpenLab, publishedPages, renderedPages]);
 
   return (
     <main className={`academy-page ${theme}-theme`}>
       <div className="academy-background" />
+      <div className={`academy-book-sync academy-book-sync-${bookSyncState}`} role="status">
+        {bookSyncState === 'connected' ? 'Книга синхронизирована' : bookSyncState === 'loading' ? 'Проверяем публикацию…' : 'Локальная редакция · публикация backend не найдена'}
+      </div>
       <div className="academy-container" ref={containerRef}>
-        <div
-          className="academy-book-scale-wrapper"
-          style={{ transform: `scale(${scale})`, position: 'relative' }}
-        >
+        <div className="academy-book-viewport" style={{ width: BOOK_WIDTH * scale, height: BOOK_HEIGHT * scale }}>
+        <div className="academy-book-scale-wrapper" style={{ transform: `scale(${scale})` }}>
           {onClose && (
             <div 
               style={{
@@ -336,12 +401,12 @@ export default function CodexExperience({
                 className="academy-bookmarks"
                 style={{
                   position: 'absolute',
-                  right: '-2rem',
+                  right: '-4.25rem',
                   top: '4rem',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.5rem',
-                  zIndex: 0
+                  zIndex: 35
                 }}
               >
                 {bookmarks.map((bm, i) => (
@@ -372,20 +437,29 @@ export default function CodexExperience({
 
               <BookFlip
                 currentPage={currentPage}
-                onTurn={(dir) =>
-                  navigate(
-                    dir === "next"
-                      ? Math.min(currentPage + 1, pages.length - 1)
-                      : Math.max(currentPage - 1, 1)
-                  )
-                }
-                totalPages={pages.length - 1}
-              >
-                {pages[currentPage]?.render()}
-              </BookFlip>
+                pages={readerPages}
+                onNavigate={navigate}
+                initialBookmark={savedBookmark}
+                onBookmarkChange={(nextPage) => {
+                  setSavedBookmark(nextPage);
+                  if (!bookManifest) return;
+                  const backendPages = bookManifest.chapters.flatMap((chapter) => chapter.pages ?? []);
+                  const currentPageId = backendPages[Math.max(0, currentPage - 1)]?.id;
+                  const bookmarkPageId = nextPage ? backendPages[Math.max(0, nextPage - 1)]?.id : null;
+                  if (currentPageId) void bookApi.saveProgress(bookManifest.book.id, { pageId: currentPageId, scrollAnchor: null, bookmarks: bookmarkPageId ? [{ pageId: bookmarkPageId }] : [], updatedAt: new Date().toISOString() });
+                }}
+                totalPages={readerPages.length}
+              />
             </div>
           )}
         </div>
+        </div>
+        {portraitPhone && currentPage > 0 && (
+          <div className="academy-orientation-hint" role="status">
+            <RotateCw size={20} aria-hidden="true" />
+            <span>Поверните телефон — страницы станут крупнее</span>
+          </div>
+        )}
       </div>
     </main>
   );

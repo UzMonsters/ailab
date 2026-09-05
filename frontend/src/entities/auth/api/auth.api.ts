@@ -28,7 +28,7 @@ export const authApi = {
 
   logout: async () => {
     try {
-      return await api.post<{ message: string }>('/api/v1/auth/logout');
+      return await api.post<{ success: boolean }>('/api/v1/auth/logout');
     } finally {
       setAccessToken(null);
     }

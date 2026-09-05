@@ -72,11 +72,12 @@ export class ReactionSystem implements EngineSystem {
             const productPhase = reaction.productPhases?.[productId];
             const productColor = reaction.productColors?.[productId];
             if (!productPhase) continue;
-            contentItem = { materialId: productId, formula: productId, name: productId, amount: 0, unit: 'mol', molarAmount: 0, phase: productPhase, color: productColor, metadata: { source: 'local-reaction', phaseValidated: true } };
+            contentItem = { materialId: productId, formula: productId, name: productId, amount: 0, unit: 'mol', molarAmount: 0, phase: productPhase, color: productColor, metadata: { source: 'local-reaction', phaseValidated: true, reactionId: reaction.id } };
             object.contents.push(contentItem);
           }
           contentItem.amount = contentAmount(contentItem) + (stoichiometry * actualReactionAmount);
           contentItem.molarAmount = contentAmount(contentItem);
+          contentItem.metadata = { ...(contentItem.metadata as Record<string, unknown> | undefined), source: 'local-reaction', reactionId: reaction.id };
         }
         
         object.contents = object.contents.filter((content) => contentAmount(content) > 0.001);

@@ -1,3 +1,2 @@
-import ElementEditorForm from '@/widgets/admin/ElementEditorForm';
-
-export default function ElementNewPage() { return <ElementEditorForm />; }
+import AdminCatalogCreateForm from '@/widgets/admin/AdminCatalogCreateForm';
+export default function Page(){return <AdminCatalogCreateForm kind="element"/>}

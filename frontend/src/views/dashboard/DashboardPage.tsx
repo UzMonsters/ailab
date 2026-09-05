@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { FlaskConical, Atom, Search, MoreVertical, Star, Clock, Trash2, Copy, Pencil, Loader2, Plus, AlertCircle, X, LayoutGrid, Grid2X2, List, SlidersHorizontal, ChevronDown, Check } from 'lucide-react';
+import { FlaskConical, Atom, Search, MoreVertical, Star, Clock, Trash2, Copy, Pencil, Loader2, Plus, AlertCircle, X, Grid2X2, List, SlidersHorizontal, ChevronDown, Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Workspace } from '@/types';
 import OnboardingHint from '@/shared/ui/OnboardingHint';
@@ -18,64 +18,36 @@ const menuActions = [
   { key: 'trash', label: 'moveToTrash', icon: Trash2, danger: true },
 ] as const;
 
-function WorkspacePreview({ name, thumbnail }: { name: string; thumbnail?: string }) {
+function WorkspacePreview({ name, thumbnail, preview }: Pick<Workspace, 'name' | 'thumbnail' | 'preview'>) {
+  const lightPreview = preview?.variants?.light?.url;
+  const darkPreview = preview?.variants?.dark?.url;
+  if (lightPreview || darkPreview) {
+    const fallback = lightPreview || darkPreview!;
+    return <>
+      <Image src={lightPreview || fallback} alt={`${name} workspace preview`} fill unoptimized sizes="320px" className={`object-cover ${darkPreview ? 'dark:hidden' : ''}`} />
+      {darkPreview && <Image src={darkPreview} alt="" fill unoptimized sizes="320px" className="hidden object-cover dark:block" aria-hidden="true" />}
+    </>;
+  }
   if (thumbnail) return <Image src={thumbnail} alt={`${name} workspace preview`} fill unoptimized sizes="320px" className="object-cover" />;
 
-  // Give the offline chemistry workspace a real visual preview instead of the
-  // initials placeholder. Other workspaces keep the lightweight generated
-  // fallback until they receive their own thumbnail.
-  if (name.toLowerCase().includes('sandbox')) {
-    return (
-      <>
-        <Image
-          src="/workspace-previews/cartoon-chemistry-lab-light.png"
-          alt={`${name} workspace preview`}
-          fill
-          unoptimized
-          sizes="320px"
-          className="object-cover dark:hidden"
-        />
-        <Image
-          src="/workspace-previews/cartoon-chemistry-lab.png"
-          alt=""
-          fill
-          unoptimized
-          sizes="320px"
-          className="hidden object-cover dark:block"
-          aria-hidden="true"
-        />
-      </>
-    );
-  }
-  
-  const initials = name.substring(0, 2).toUpperCase();
-  const hue = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
-
+  // Until the backend has generated preview variants, keep workspace cards
+  // visually tied to the laboratory by using the saved flask scene. A backend
+  // thumbnail or preview always wins above this fallback.
   return (
-    <div className="absolute inset-0 overflow-hidden flex items-center justify-center bg-[var(--card)]">
-      <div className="absolute inset-0 opacity-30 dark:opacity-40" style={{ background: `radial-gradient(120% 100% at 15% 0%, hsl(${hue}, 70%, 60%), transparent 55%), radial-gradient(120% 100% at 85% 100%, hsl(${(hue + 120) % 360}, 70%, 50%), transparent 55%)` }} />
-      <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(var(--foreground) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
-      
-      <div className="relative z-10 flex flex-col items-center justify-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/40 dark:bg-black/20 shadow-[0_8px_32px_rgba(0,0,0,0.05)] backdrop-blur-md border border-black/5 dark:border-white/10">
-          <span className="text-2xl font-bold tracking-widest text-[var(--foreground)] opacity-80">{initials}</span>
-        </div>
-      </div>
-      
-      <FlaskConical className="absolute top-4 left-4 text-[var(--foreground)] opacity-[0.07]" size={24} />
-      <LayoutGrid className="absolute bottom-6 right-6 text-[var(--foreground)] opacity-[0.07]" size={32} />
-      <Atom className="absolute top-8 right-8 text-[var(--foreground)] opacity-[0.04]" size={48} />
-    </div>
+    <>
+      <Image src="/workspace-previews/cartoon-chemistry-lab-light.png" alt={`${name} workspace preview`} fill unoptimized sizes="320px" className="object-cover dark:hidden" />
+      <Image src="/workspace-previews/cartoon-chemistry-lab.png" alt="" fill unoptimized sizes="320px" className="hidden object-cover dark:block" aria-hidden="true" />
+    </>
   );
 }
 
-function SortMenu({ sort, onChange, label }: { sort: 'updated' | 'name' | 'favorite'; onChange: (value: 'updated' | 'name' | 'favorite') => void; label: string }) {
+function SortMenu({ sort, onChange, label, locale }: { sort: 'updated' | 'name' | 'favorite'; onChange: (value: 'updated' | 'name' | 'favorite') => void; label: string; locale: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const options = [
-    { value: 'updated' as const, label: 'Newest' },
-    { value: 'name' as const, label: 'Name A-Z' },
-    { value: 'favorite' as const, label: 'Favorites' },
+    { value: 'updated' as const, label: locale === 'ru' ? 'Сначала новые' : locale === 'uz' ? 'Eng yangi' : 'Newest' },
+    { value: 'name' as const, label: locale === 'ru' ? 'Название А–Я' : locale === 'uz' ? 'Nomi A–Z' : 'Name A–Z' },
+    { value: 'favorite' as const, label: locale === 'ru' ? 'Избранные' : locale === 'uz' ? 'Sevimlilar' : 'Favorites' },
   ];
   useEffect(() => {
     const close = (event: MouseEvent) => { if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false); };
@@ -138,7 +110,7 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       setError(null);
-      const data = await workspacesApi.list();
+      const data = await workspacesApi.list({ includeDeleted: true, size: 100 });
       setWorkspaces(data);
     } catch (e: unknown) {
       setError(errorMessage(e, 'Failed to load workspaces'));
@@ -151,7 +123,10 @@ export default function DashboardPage() {
     return () => window.clearTimeout(timer);
   }, [loadWorkspaces]);
 
-  const filtered = workspaces.filter(w => w.name.toLowerCase().includes(search.toLowerCase())).sort((a, b) => sort === 'name' ? a.name.localeCompare(b.name) : sort === 'favorite' ? Number(b.isFavorite) - Number(a.isFavorite) : new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  const filtered = workspaces
+    .filter((workspace) => view === 'trash' ? workspace.isDeleted : !workspace.isDeleted)
+    .filter(w => w.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => sort === 'name' ? a.name.localeCompare(b.name) : sort === 'favorite' ? Number(b.isFavorite) - Number(a.isFavorite) : new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   const recent = filtered.slice(0, 4);
   const favorites = filtered.filter(w => w.isFavorite);
 
@@ -189,10 +164,14 @@ export default function DashboardPage() {
     } catch (e: unknown) { showToast(errorMessage(e, 'Error'), 'error'); }
   };
 
-  const handleTrash = async (id: string) => {
+  const handleTrash = async (workspace: Workspace) => {
     try {
-      await workspacesApi.delete(id);
-      setWorkspaces(prev => prev.filter(w => w.id !== id)); setMenuOpen(null); showToast(t('movedToTrash'));
+      const updated = workspace.isDeleted
+        ? await workspacesApi.restore(workspace.id)
+        : await workspacesApi.update(workspace.id, { isDeleted: true });
+      setWorkspaces(prev => prev.map(w => w.id === updated.id ? updated : w));
+      setMenuOpen(null);
+      showToast(workspace.isDeleted ? tc('success') : t('movedToTrash'));
     } catch (e: unknown) { showToast(errorMessage(e, 'Error'), 'error'); }
   };
 
@@ -214,7 +193,7 @@ export default function DashboardPage() {
     else if (action === 'rename') { setRenameModalOpen(ws.id); setRenameValue(ws.name); }
     else if (action === 'duplicate') handleDuplicate(ws.id);
     else if (action === 'favorite') handleFavorite(ws);
-    else if (action === 'trash') handleTrash(ws.id);
+    else if (action === 'trash') handleTrash(ws);
     setMenuOpen(null);
   };
 
@@ -226,7 +205,7 @@ export default function DashboardPage() {
       onMouseLeave={() => setHoveredCard(null)}
     >
       <div className={`${layout === 'list' ? 'h-24 w-40 shrink-0 rounded-l-[var(--radius-lg)]' : 'aspect-[16/10]'} relative overflow-hidden rounded-t-[var(--radius-lg)]`} onClick={() => handleOpen(ws.id)}>
-        <WorkspacePreview name={ws.name} thumbnail={ws.thumbnail} />
+        <WorkspacePreview {...ws} />
         {ws.isFavorite && <Star size={14} className="absolute top-3 left-3 text-[#F59E0B] fill-[#F59E0B] z-[3]" aria-label={t('favorited')} />}
         {hoveredCard === ws.id && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px] z-[2]">
@@ -255,7 +234,7 @@ export default function DashboardPage() {
               className={`min-h-11 w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors ${menuActions[menuIndex].key === action.key ? 'bg-[var(--accent)]' : ''} ${action.danger ? 'text-[#F43F5E] hover:bg-[#F43F5E]/10' : 'text-[var(--foreground)] hover:bg-[var(--accent)]'}`}
             >
               <action.icon size={12} className={action.key === 'favorite' && ws.isFavorite ? 'text-[#F59E0B]' : action.danger ? 'text-[#F43F5E]' : ''} />
-              {action.key === 'favorite' ? (ws.isFavorite ? t('removeFavorites') : t('addFavorites')) : action.key === 'trash' ? t('moveToTrash') : tc(action.label)}
+              {action.key === 'favorite' ? (ws.isFavorite ? t('removeFavorites') : t('addFavorites')) : action.key === 'trash' ? (ws.isDeleted ? t('restoreWorkspace') : t('moveToTrash')) : tc(action.label)}
             </button>
           ))}
         </div>
@@ -268,7 +247,7 @@ export default function DashboardPage() {
     </div>
   );
 
-  const sectionTitle = view === 'recent' ? tn('recent') : view === 'favorites' ? tn('favorites') : t('allWorkspaces');
+  const sectionTitle = view === 'recent' ? tn('recent') : view === 'favorites' ? tn('favorites') : view === 'trash' ? tn('trash') : t('allWorkspaces');
 
   if (loading) {
     return (
@@ -320,7 +299,7 @@ export default function DashboardPage() {
           {search && <button onClick={() => setSearch('')} aria-label="Clear search" className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"><X size={14} /></button>}
         </div>
         <div className="flex items-center gap-2">
-          <SortMenu sort={sort} onChange={setSort} label={tc('sort')} />
+          <SortMenu sort={sort} onChange={setSort} label={tc('sort')} locale={locale} />
           <div className="flex items-center gap-0.5 h-9 px-1 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--input)]">
             <button aria-label={t('gridView')} onClick={() => setLayout('grid')} className={`w-7 h-7 grid place-items-center rounded-md ${layout === 'grid' ? 'bg-[var(--primary)]/15 text-[var(--primary)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`}><Grid2X2 size={14} /></button>
             <button aria-label={t('listView')} onClick={() => setLayout('list')} className={`w-7 h-7 grid place-items-center rounded-md ${layout === 'list' ? 'bg-[var(--primary)]/15 text-[var(--primary)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--accent)]'}`}><List size={14} /></button>

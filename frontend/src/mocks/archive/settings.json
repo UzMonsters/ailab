@@ -1,0 +1,80 @@
+{
+  "general": {
+    "appName": "jasScience",
+    "adminTitle": "jasScience Admin",
+    "environment": "Development",
+    "defaultLocale": "Russian",
+    "timezone": "Asia/Tashkent",
+    "dateFormat": "DD.MM.YYYY",
+    "supportEmail": "support@jasscience.com"
+  },
+  "subjects": [
+    {
+      "id": "chem",
+      "name": "Chemistry",
+      "enabled": true,
+      "accent": "purple/cyan"
+    },
+    {
+      "id": "phys",
+      "name": "Physics",
+      "enabled": true,
+      "accent": "blue"
+    },
+    {
+      "id": "bio",
+      "name": "Biology",
+      "enabled": true,
+      "accent": "green"
+    }
+  ],
+  "languages": {
+    "available": [
+      "English",
+      "Russian",
+      "Uzbek"
+    ],
+    "default": "Russian"
+  },
+  "learning": {
+    "enableLevels": true,
+    "enableXp": true,
+    "enableBadges": true,
+    "enablePrerequisites": true,
+    "allowReplay": true,
+    "showLockedNames": true,
+    "defaultXp": 100,
+    "minPassingScore": 70,
+    "maxAttempts": 5,
+    "hintPenalty": 10
+  },
+  "laboratory": {
+    "workspaceGrid": true,
+    "objectsLimit": 50,
+    "autosave": true,
+    "sharing": true
+  },
+  "simulation": {
+    "enableEvaporation": true,
+    "fluidTransfer": true,
+    "thermalShock": true,
+    "particles": false
+  },
+  "safety": {
+    "enableWarnings": true,
+    "pauseOnCriticalFailure": true
+  },
+  "appearance": {
+    "theme": "Dark",
+    "density": "Comfortable",
+    "animations": true
+  },
+  "features": {
+    "sandboxBeta": true,
+    "achievements": true,
+    "aiAssistant": false
+  },
+  "administration": {
+    "showEntityIds": false
+  }
+}

@@ -29,12 +29,13 @@ export interface AuthLoginRequest {
 
 export interface AuthTokenResponse {
   accessToken: string;
+  refreshToken?: string | null;
   tokenType: 'Bearer';
-  expiresInSeconds: number;
+  expiresIn: number;
 }
 
 export interface AuthSuccessResponse {
-  message: string;
+  success: boolean;
 }
 
 export interface UserMeResponse {
@@ -523,6 +524,11 @@ export interface Workspace {
   name: string;
   science: 'chemistry' | 'physics' | 'biology';
   thumbnail?: string;
+  preview?: {
+    status?: string;
+    variants?: Record<string, { url?: string; width?: number; height?: number; mimeType?: string }>;
+    fallback?: { kind?: string; key?: string };
+  };
   createdAt: string;
   updatedAt: string;
   isFavorite: boolean;
@@ -581,6 +587,8 @@ export interface EquipmentSummary {
   type: string;
   condition: string;
   provenance: string;
+  rendererKey?: string;
+  category?: string;
   capabilities?: string[];
 }
 

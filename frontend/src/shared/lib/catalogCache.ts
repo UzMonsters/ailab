@@ -32,7 +32,7 @@ export const catalogCache = {
         })
         .catch(() => {
           cache.equipmentPromise = null;
-          return [];
+          throw new Error('Equipment catalog request failed');
         });
     }
     return cache.equipmentPromise;
@@ -49,7 +49,7 @@ export const catalogCache = {
         })
         .catch(() => {
           cache.materialsPromise = null;
-          return [];
+          throw new Error('Material catalog request failed');
         });
     }
     return cache.materialsPromise;

@@ -1,0 +1,5 @@
+'use client';
+import { useEffect, useRef } from 'react';
+
+const safeHtml=(content:string)=>{if(typeof document==='undefined')return'';const parsed=new DOMParser().parseFromString(`<div>${content}</div>`,'text/html');parsed.querySelectorAll('script,iframe,object,embed,style').forEach(node=>node.remove());parsed.querySelectorAll('*').forEach(node=>Array.from(node.attributes).forEach(attribute=>{if(attribute.name.startsWith('on')||/^(javascript|data):/i.test(attribute.value))node.removeAttribute(attribute.name);}));return parsed.body.firstElementChild?.innerHTML??'';};
+export function RichTextPreview({content}:{content:string}){const ref=useRef<HTMLDivElement>(null);useEffect(()=>{if(ref.current)ref.current.innerHTML=safeHtml(content);},[content]);return <div ref={ref} className="h-full overflow-hidden text-sm leading-6 [&_h1]:text-3xl [&_h1]:font-bold [&_h2]:text-2xl [&_h2]:font-bold [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-slate-300 [&_td]:p-1 [&_th]:border [&_th]:border-slate-400 [&_th]:bg-slate-100 [&_th]:p-1"/>;}

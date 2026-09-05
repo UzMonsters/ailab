@@ -383,14 +383,14 @@ export function SandboxMenuBar({
         {
           id: "group",
           label: "Group",
-          disabled: true,
-          disabledReason: "Будет доступно позже",
+          disabled: !hasMultipleItems,
+          disabledReason: "Выберите несколько объектов",
         },
         {
           id: "ungroup",
           label: "Ungroup",
-          disabled: true,
-          disabledReason: "Будет доступно позже",
+          disabled: !hasSelection,
+          disabledReason: "Выберите объект",
         },
       ],
     },
@@ -437,7 +437,10 @@ export function SandboxMenuBar({
   const handleAction = useCallback(
     (actionId: string) => {
       if (actionId === "toggle-theme") {
-        setTheme(theme === "dark" ? "light" : "dark");
+        const nextTheme = theme === "dark" ? "light" : "dark";
+        setTheme(nextTheme);
+        window.localStorage.setItem("chemistry-theme-preference", nextTheme);
+        window.localStorage.setItem("ai-lab-theme", nextTheme);
       } else {
         onAction(actionId);
       }

@@ -31,7 +31,7 @@ export default function ThemeToggle() {
       }}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 bg-black/20 text-[var(--muted-foreground)] hover:text-white transition-all backdrop-blur-sm"
+      className="w-9 h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--muted)]/70 text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)] transition-all backdrop-blur-sm"
     >
       {isDark ? <Sun size={16} /> : <Moon size={16} />}
     </button>
