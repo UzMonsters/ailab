@@ -4,23 +4,60 @@ import type { ScenarioScene } from '@/widgets/admin/scenario/scenario.types';
 export type RuntimeLocale = 'en' | 'ru' | 'uz';
 export type RuntimeLocalizedText = Record<RuntimeLocale, string>;
 export type RuntimeMode = 'NORMAL' | 'LEARNING' | 'ADMIN_AUTHORING' | 'ADMIN_PREVIEW';
+export type RuntimeCatalogPolicy = 'OPEN' | 'RESTRICTED';
+
+export type RuntimeHintType =
+  | 'TEXT'
+  | 'HIGHLIGHT'
+  | 'ARROW'
+  | 'GHOST_PLACEMENT'
+  | 'CONNECT_PORTS'
+  | 'VIDEO'
+  | 'IMAGE'
+  | 'OPEN_TAB'
+  | 'HIGHLIGHT_TAB'
+  | 'HIGHLIGHT_EQUIPMENT'
+  | 'HIGHLIGHT_MATERIAL'
+  | 'HIGHLIGHT_OBJECT'
+  | 'HIGHLIGHT_PORT'
+  | 'SHOW_ARROW'
+  | 'GHOST_PLACE_OBJECT'
+  | 'FOCUS_CAMERA';
+
+export type RuntimeHintTargetMode = 'ALIAS' | 'CAPABILITY' | 'KIND';
+
+export type RuntimeHintTarget = {
+  mode: RuntimeHintTargetMode;
+  alias?: string;
+  capability?: string;
+  kind?: string;
+};
 
 export type RuntimeHint = {
   id: string;
-  type: 'TEXT' | 'HIGHLIGHT' | 'ARROW' | 'GHOST_PLACEMENT' | 'CONNECT_PORTS';
+  type: RuntimeHintType;
   text: string;
+  caption?: string;
   targetAlias?: string;
   targetPortId?: string;
   fromAlias?: string;
   fromPortId?: string;
   toAlias?: string;
   toPortId?: string;
+  assetId?: string;
+  assetUrl?: string;
+  targetTab?: string;
+  target?: RuntimeHintTarget;
+  materialId?: string;
+  equipmentId?: string;
 };
 
 export type RuntimeCondition = {
   id: string;
   type: 'OBJECT_EXISTS' | 'MATERIAL_PRESENT' | 'MATERIAL_AMOUNT' | 'MATERIAL_PHASE_IS' | 'CONNECTION_EXISTS' | 'VALUE_COMPARE' | 'TEMPERATURE_IN_RANGE' | 'PH_IN_RANGE' | 'HEATING_STARTED' | 'COOLING_STARTED' | 'MIXING_STARTED' | 'TRANSFER_COMPLETED' | 'REACTION_OBSERVED' | 'PRODUCT_FORMED';
   targetAlias?: string;
+  targetCapability?: string;
+  target?: RuntimeHintTarget;
   materialId?: string;
   portId?: string;
   fromAlias?: string;
@@ -64,6 +101,7 @@ export type RuntimeScenario = {
   equipmentIds: string[];
   materialIds: string[];
   catalog: RuntimeCatalog;
+  catalogPolicy: RuntimeCatalogPolicy;
   steps: RuntimeStep[];
   raw?: JsonObject;
 };

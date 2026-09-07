@@ -250,21 +250,21 @@ export function SandboxMenuBar({
           label: ts("menu.copy"),
           shortcut: "Ctrl+C",
           disabled: !hasSelection,
-          disabledReason: "Выберите объект",
+          disabledReason: ts("menu.selectObject"),
         },
         {
           id: "duplicate",
           label: ts("menu.copy"),
           shortcut: "Ctrl+D",
           disabled: !hasSelection,
-          disabledReason: "Выберите объект",
+          disabledReason: ts("menu.selectObject"),
         },
         {
           id: "delete",
           label: ts("menu.delete_selected"),
           shortcut: "Del",
           disabled: !hasSelection,
-          disabledReason: "Выберите объект",
+          disabledReason: ts("menu.selectObject"),
         },
         { id: "separator-edit-2", label: "", separator: true },
         { id: "select-all", label: ts("menu.select_all"), shortcut: "Ctrl+A" },
@@ -304,7 +304,7 @@ export function SandboxMenuBar({
         { id: "zoom-in", label: ts("menu.zoom_in"), shortcut: "+" },
         { id: "zoom-out", label: ts("menu.zoom_out"), shortcut: "-" },
         { id: "zoom-100", label: "100%", shortcut: "Ctrl+0" },
-        { id: "zoom-fit", label: "Подогнать сцену", shortcut: "F" },
+        { id: "zoom-fit", label: ts("menu.zoomFit"), shortcut: "F" },
         { id: "center-scene", label: ts("menu.center_scene"), shortcut: "Shift+F" },
         { id: "separator-view-2", label: "", separator: true },
         {
@@ -333,64 +333,64 @@ export function SandboxMenuBar({
           id: "align-left",
           label: ts("menu.align_left"),
           disabled: !hasMultipleItems,
-          disabledReason: "Выберите несколько объектов",
+          disabledReason: ts("menu.selectMultiple"),
         },
         {
           id: "align-center-h",
           label: ts("menu.align_center_h"),
           disabled: !hasMultipleItems,
-          disabledReason: "Выберите несколько объектов",
+          disabledReason: ts("menu.selectMultiple"),
         },
         {
           id: "align-right",
           label: ts("menu.align_right"),
           disabled: !hasMultipleItems,
-          disabledReason: "Выберите несколько объектов",
+          disabledReason: ts("menu.selectMultiple"),
         },
         { id: "separator-arr-1", label: "", separator: true },
         {
           id: "align-top",
           label: ts("menu.align_top"),
           disabled: !hasMultipleItems,
-          disabledReason: "Выберите несколько объектов",
+          disabledReason: ts("menu.selectMultiple"),
         },
         {
           id: "align-middle-v",
-          label: "По середине (верт.)",
+          label: ts("menu.align_middle_v"),
           disabled: !hasMultipleItems,
-          disabledReason: "Выберите несколько объектов",
+          disabledReason: ts("menu.selectMultiple"),
         },
         {
           id: "align-bottom",
           label: ts("menu.align_bottom"),
           disabled: !hasMultipleItems,
-          disabledReason: "Выберите несколько объектов",
+          disabledReason: ts("menu.selectMultiple"),
         },
         { id: "separator-arr-2", label: "", separator: true },
         {
           id: "distribute-h",
           label: ts("menu.distribute_h"),
           disabled: !hasMultipleItems,
-          disabledReason: "Выберите несколько объектов",
+          disabledReason: ts("menu.selectMultiple"),
         },
         {
           id: "distribute-v",
           label: ts("menu.distribute_v"),
           disabled: !hasMultipleItems,
-          disabledReason: "Выберите несколько объектов",
+          disabledReason: ts("menu.selectMultiple"),
         },
         { id: "separator-arr-3", label: "", separator: true },
         {
           id: "group",
-          label: "Group",
+          label: ts("menu.group"),
           disabled: !hasMultipleItems,
-          disabledReason: "Выберите несколько объектов",
+          disabledReason: ts("menu.selectMultiple"),
         },
         {
           id: "ungroup",
-          label: "Ungroup",
+          label: ts("menu.ungroup"),
           disabled: !hasSelection,
-          disabledReason: "Выберите объект",
+          disabledReason: ts("menu.selectObject"),
         },
       ],
     },
@@ -402,23 +402,23 @@ export function SandboxMenuBar({
           id: "free-mode",
           label:
             activeScenario === null
-              ? "✓ Свободный режим"
-              : "Перейти в свободный режим",
+              ? `✓ ${ts("menu.freeModeActive")}`
+              : ts("menu.freeMode"),
         },
         {
           id: "scenarios",
-          label: "Сценарии…",
+          label: ts("menu.scenarios"),
         },
         { id: "separator-more-1", label: "", separator: true },
         {
           id: "safety-check",
-          label: "Проверка безопасности",
+          label: ts("menu.safetyCheck"),
           disabled: isRunning,
-          disabledReason: "Остановите симуляцию",
+          disabledReason: ts("menu.stopSimulation"),
         },
-        { id: "schema-check", label: "Schema check" },
+        { id: "schema-check", label: ts("menu.schemaCheck") },
         { id: "separator-more-2", label: "", separator: true },
-        { id: "clear-states", label: "Очистить временные состояния" },
+        { id: "clear-states", label: ts("menu.clearStates") },
         ...(process.env.NODE_ENV === "development"
           ? [
               { id: "separator-more-3", label: "", separator: true } as MenuAction,
@@ -451,7 +451,7 @@ export function SandboxMenuBar({
 
   return (
     <nav
-      aria-label="Главное меню лаборатории"
+      aria-label={ts("menu.mainMenuAria")}
       className="sandbox-menu-bar hidden items-center gap-0.5 md:flex"
     >
       {menus.map((menu) => (

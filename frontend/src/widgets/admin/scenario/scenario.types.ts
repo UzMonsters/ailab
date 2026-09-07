@@ -7,7 +7,7 @@ export type ScenarioContent = { materialId: string; amount: number; unit: 'µL'|
 export type ScenarioSceneObject = { id: string; alias: string; equipmentId: string; x: number; y: number; width: number; height: number; rotation: number; temperatureC: number; contents: ScenarioContent[] };
 export type ScenarioConnection = { id: string; fromAlias: string; fromPortId: string; toAlias: string; toPortId: string };
 export type ScenarioScene = { objects: ScenarioSceneObject[]; connections: ScenarioConnection[] };
-export type ScenarioCondition = { id: string; type: ScenarioFactType; targetAlias: string; materialId: string; portId: string; fromAlias: string; fromPortId: string; toAlias: string; toPortId: string; operator: 'EQ'|'GTE'|'LTE'; value: number|null; maxValue?: number|null; unit: string };
+export type ScenarioCondition = { id: string; type: ScenarioFactType; targetAlias: string; targetCapability?: string; materialId: string; portId: string; fromAlias: string; fromPortId: string; toAlias: string; toPortId: string; operator: 'EQ'|'GTE'|'LTE'; value: number|null; maxValue?: number|null; unit: string };
 export type ScenarioRuleGroup = { id: string; operator: ScenarioRuleOperator; conditions: ScenarioRuleNode[] };
 export type ScenarioRuleNode = ScenarioCondition | ScenarioRuleGroup;
 export type ScenarioCompletionRule = ScenarioRuleGroup;
@@ -21,7 +21,7 @@ export const mapScenarioRuleConditions = (rule: ScenarioRuleGroup, map: (conditi
     return nodes;
   }, []),
 });
-export type ScenarioHint = { id: string; type: ScenarioHintType; translations: Record<Locale,{text:string}>; targetAlias: string; targetPortId: string; fromAlias: string; fromPortId: string; toAlias: string; toPortId: string };
+export type ScenarioHint = { id: string; type: ScenarioHintType; translations: Record<Locale,{text:string}>; targetAlias: string; targetPortId: string; fromAlias: string; fromPortId: string; toAlias: string; toPortId: string; assetId?: string; assetUrl?: string; targetTab?: string; target?: { mode: 'ALIAS'|'CAPABILITY'|'KIND'; alias?: string; capability?: string; kind?: string }; materialId?: string; equipmentId?: string };
 export type ScenarioStepTranslation = { title: string; instruction: string };
 export type ScenarioStep = { id:string; order:number; translations:Record<Locale,ScenarioStepTranslation>; expectedReactionId:string; completionRule:ScenarioCompletionRule; hints:ScenarioHint[] };
 export type ScenarioDraft = { id?:string; code:string; status:string; version?:number; translations:Record<Locale,ScenarioTranslation>; resources:ScenarioResourceSet; initialScene:ScenarioScene; steps:ScenarioStep[]; raw:JsonObject };

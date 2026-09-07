@@ -16,5 +16,5 @@ export const adminApi = {
   unblockUser: (id: string, reason = 'Разблокировано администратором') => api.post<JsonObject>(`/api/v1/admin/users/${id}/unblock`, { reason }),
   activity: (id: string, filters: Record<string, string | number | undefined> = {}) => api.get<PageEnvelope<JsonObject>>(`/api/v1/admin/users/${id}/activity${apiQuery(filters)}`),
   learningProgress: (id: string, track = 'chemistry') => api.get<JsonObject>(`/api/v1/admin/users/${id}/learning-progress${apiQuery({ track })}`),
-  deleteUser: (id: string, reason = 'Удалено администратором') => api.delete<JsonObject>(`/api/v1/admin/users/${id}`),
+  deleteUser: (id: string, reason = 'Удалено администратором') => api.delete<JsonObject>(`/api/v1/admin/users/${id}`, { reason, mode: 'SOFT_DELETE' }),
 };

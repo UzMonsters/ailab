@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { useToast } from "@/shared/ui/ToastContainer";
 import type { Engine as LabEngine } from '@/engine/core/Engine';
 import type { Item } from '@/widgets/sandbox/types';
@@ -12,6 +13,7 @@ export function usePour(engine: LabEngine | null, items: Item[], queueWorkspaceE
   const [spillAnimation, setSpillAnimation] = useState<string | null>(null); // For overflow visuals
   
   const { addToast } = useToast();
+  const ts = useTranslations("sandbox");
   const pourAnimationTimer = useRef<number | null>(null);
   const spillAnimationTimer = useRef<number | null>(null);
 
@@ -43,7 +45,7 @@ export function usePour(engine: LabEngine | null, items: Item[], queueWorkspaceE
     const source = items.find((item) => item.id === sourceId);
     const target = items.find((item) => item.id === targetId);
     if (!source?.material || (source.material.state !== "liquid" && source.material.state !== "aqueous") || !target || (!isVessel(target) && !isLiquidConduit(target))) {
-      addToast("Only liquids can be poured between open vessels.", "error");
+      addToast(ts("pour.onlyLiquids"), "error");
       return;
     }
     
@@ -51,7 +53,7 @@ export function usePour(engine: LabEngine | null, items: Item[], queueWorkspaceE
     const availableAmount = Math.min(customAmount, source.volumeMl);
     
     if (availableAmount <= 0) {
-      addToast("The source vessel is empty.", "error");
+      addToast(ts("pour.sourceEmpty"), "error");
       return;
     }
 
@@ -67,12 +69,12 @@ export function usePour(engine: LabEngine | null, items: Item[], queueWorkspaceE
       setPourSource(null);
       
       if (overflowAmount > 0) {
-        addToast(`Сосуд переполнен: ${overflowAmount.toFixed(1)} мл разлито.`, "info");
+        addToast(ts("pour.overflow", { amount: overflowAmount.toFixed(1) }), "info");
       } else {
-        addToast(`Poured ${acceptedAmount} mL to ${target.name}`, "success");
+        addToast(ts("pour.success", { amount: acceptedAmount, name: target.name }), "success");
       }
     }
-  }, [items, engine, queueWorkspaceEvent, triggerPourAnimation, addToast]);
+  }, [items, engine, queueWorkspaceEvent, triggerPourAnimation, addToast, ts]);
 
   return {
     pourSource, setPourSource,

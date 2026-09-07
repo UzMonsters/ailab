@@ -23,9 +23,9 @@ export function useScenarioRuntime({ attemptId, levelId, legacyLevelNumber, loca
       const resolvedLevelId = attempt ? String(attempt.levelId ?? (attempt.level as JsonObject | undefined)?.id ?? '') : String(levelId ?? '');
       if (!scenario && resolvedLevelId) { level = await learningApi.level(resolvedLevelId, locale); scenario = normalizeScenarioRuntime({ ...level, level, scenario: level.scenario }, locale); }
       if (!active) return;
-      setState({ scenario: scenario ?? fallback, level, attempt, loading: false, error: scenario || fallback ? null : 'The selected Level does not contain a published Scenario.' });
+      setState({ scenario, level, attempt, loading: false, error: scenario ? null : 'The selected Level does not contain a published Scenario.' });
     };
-    void load().catch((reason) => { if (active) setState({ scenario: fallback, level: null, attempt: null, loading: false, error: reason instanceof Error ? reason.message : 'Scenario could not be loaded.' }); });
+    void load().catch((reason) => { if (active) setState({ scenario: null, level: null, attempt: null, loading: false, error: reason instanceof Error ? reason.message : 'Scenario could not be loaded.' }); });
     return () => { active = false; };
   }, [attemptId, fallback, levelId, locale]);
 

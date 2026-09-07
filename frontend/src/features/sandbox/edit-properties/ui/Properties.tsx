@@ -1,29 +1,29 @@
 'use client';
 import { useState, type ReactNode } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   Flame, Snowflake, Sparkles, RotateCcw,
   Thermometer, Scale, Link2, Pencil, Trash2, History, Zap, } from 'lucide-react';
 import type { Connection, Item } from '@/widgets/sandbox/types';
 import { isVessel } from '@/widgets/sandbox/types';
 
-export const equipmentDescription = (item: Item) => ({
-  beaker: 'Сосуд для смешивания, переливания и нагрева жидкостей.',
-  erlenmeyer: 'Коническая колба для смешивания веществ и проведения реакций.',
-  roundflask: 'Круглодонная колба для нагревания и проведения реакций.',
-  funnel: 'Воронка для аккуратного переливания жидкости в сосуд.',
-  separatory_funnel: 'Делительная воронка для разделения несмешивающихся жидкостей.',
-  thermometer: 'Измеряет температуру только после соединения с сосудом.',
-  hotplate: 'Нагревает сосуд, установленный сверху или прикреплённый к нагревателю.',
-  burner: 'Источник направленного нагрева. Включается после установки под сосудом.',
-  testtube: 'Небольшой сосуд для проб и малых объёмов веществ.',
-  graduated_cylinder: 'Мерный цилиндр для точного измерения объёма жидкости.',
-  volumetric_flask: 'Мерная колба для приготовления растворов заданной концентрации.',
-  burette: 'Точный дозатор жидкости с краном и градуированной шкалой.',
-  pipette: 'Инструмент для переноса небольших объёмов жидкости.',
-  condenser: 'Холодильник для конденсации паров и охлаждения потока.',
-  phmeter: 'Измеряет кислотность раствора после погружения датчика.',
-}[item.type] ?? 'Лабораторное оборудование для химического эксперимента.');
+export const equipmentDescription = (item: Item, t: (key: string) => string) => ({
+  beaker: t("equipDesc.beaker"),
+  erlenmeyer: t("equipDesc.erlenmeyer"),
+  roundflask: t("equipDesc.roundflask"),
+  funnel: t("equipDesc.funnel"),
+  separatory_funnel: t("equipDesc.separatory_funnel"),
+  thermometer: t("equipDesc.thermometer"),
+  hotplate: t("equipDesc.hotplate"),
+  burner: t("equipDesc.burner"),
+  testtube: t("equipDesc.testtube"),
+  graduated_cylinder: t("equipDesc.graduated_cylinder"),
+  volumetric_flask: t("equipDesc.volumetric_flask"),
+  burette: t("equipDesc.burette"),
+  pipette: t("equipDesc.pipette"),
+  condenser: t("equipDesc.condenser"),
+  phmeter: t("equipDesc.phmeter"),
+}[item.type] ?? t("equipDesc.default"));
 
 interface Props {
   item: Item;
@@ -44,6 +44,7 @@ interface Props {
 
 export function Properties({ item, update, onOperation, connections, onConnectionDelete, onConnectionEdit, onDeviceAction, onMaterialRemove, setPourSource, pourSource, temperatureConnected = false, levelMode = false, onQuickAction }: Props) {
   const locale = useLocale();
+  const ts = useTranslations("sandbox");
   const cap = item.capabilities ?? {};
   const heater = cap.heater as { maxTemperature?: number } | undefined;
   const cooler = cap.cooler as { minTempC?: number } | undefined;
@@ -74,9 +75,9 @@ export function Properties({ item, update, onOperation, connections, onConnectio
       <div className="mb-3 flex items-start gap-2 border-b border-foreground/[.06] pb-2">
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-bold text-foreground">{item.name}</p>
-          <p className="text-[11px] text-[var(--muted-foreground)]">{equipmentDescription(item)}</p>
+          <p className="text-[11px] text-[var(--muted-foreground)]">{equipmentDescription(item, ts)}</p>
         </div>
-        {item.broken && <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-400">РАЗБИТ</span>}
+        {item.broken && <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-400">{ts("properties.broken")}</span>}
       </div>
 
       {/* Tabs */}
@@ -99,36 +100,36 @@ export function Properties({ item, update, onOperation, connections, onConnectio
               <div className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-red-200">
                 <div className="flex items-center gap-2 font-bold text-xs">
                   <span className="h-2 w-2 rounded-full bg-red-500 animate-ping" />
-                  ⚠️ СОСУД РАЗБИТ (SHATTERED)
+                  {ts("properties.vesselBroken")}
                 </div>
                 <p className="mt-1 text-[11px] opacity-80">
-                  Соединения разорваны, содержимое разлито. Переливание и нагрев заблокированы.
+                  {ts("properties.vesselBrokenDesc")}
                 </p>
               </div>
             )}
             {item.unsafeConfiguration && !item.broken && (
               <div className="mb-4 rounded-xl border border-red-400/50 bg-red-500/10 p-3 text-red-200">
-                <div className="font-bold text-xs">⚠ Небезопасная конфигурация</div>
-                <p className="mt-1 text-[11px] opacity-80">В закрытом сосуде растёт давление. Откройте систему или остановите симуляцию.</p>
+                <div className="font-bold text-xs">{ts("properties.unsafeConfig")}</div>
+                <p className="mt-1 text-[11px] opacity-80">{ts("properties.unsafeConfigDesc")}</p>
               </div>
             )}
 
             {isPhMeter && (
               <div className="mb-4 rounded-xl border border-foreground/10 bg-black/40 p-3.5 space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400">Измерение pH</span>
-                <p className="text-xs text-orange-300">Погрузите зонд в раствор: без контакта показание не отображается.</p>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400">{ts("properties.pHMeasurement")}</span>
+                <p className="text-xs text-orange-300">{ts("properties.pHMeasurementDesc")}</p>
               </div>
             )}
 
             {vessel && !isHeater && item.type !== 'hotplate' && (
               <div className="mb-4 flex items-center justify-between rounded-xl border border-foreground/[.08] bg-foreground/[.02] p-4 shadow-sm">
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Объем</span>
-                  <span className="text-sm font-semibold text-foreground">{item.volumeMl?.toFixed(1) ?? '0.0'} <span className="text-xs text-foreground/40">/ {item.capacityMl ?? '-'} мл</span></span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">{ts("properties.volume")}</span>
+                  <span className="text-sm font-semibold text-foreground">{item.volumeMl?.toFixed(1) ?? '0.0'} <span className="text-xs text-foreground/40">/ {item.capacityMl ?? '-'} {ts("properties.ml")}</span></span>
                 </div>
                 {temperatureConnected && (
                   <div className="flex flex-col text-right">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Темп.</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">{ts("properties.tempShort")}</span>
                     <span className="text-sm font-semibold text-foreground">{item.measuredTemperatureC?.toFixed(1) ?? '—'} <span className="text-xs text-foreground/40">°C</span></span>
                   </div>
                 )}
@@ -227,10 +228,11 @@ export function Properties({ item, update, onOperation, connections, onConnectio
 
 function ContentsPanel({ item, onRemove }: { item: Item; onRemove?: (itemId: string, materialId: string, phase: string) => void }) {
   const locale = useLocale();
-  if (item.contents.length === 0) return <Empty text="Сосуд пуст. Добавьте вещество из библиотеки." />;
+  const ts = useTranslations("sandbox");
+  if (item.contents.length === 0) return <Empty text={ts("properties.emptyVessel")} />;
   return (
     <section className="space-y-2">
-      <p className="text-[11px] font-bold uppercase text-[var(--muted-foreground)] tracking-wider">Содержимое</p>
+      <p className="text-[11px] font-bold uppercase text-[var(--muted-foreground)] tracking-wider">{ts("properties.contents")}</p>
       {item.contents.map((c, i) => {
         const total = item.contents.reduce((sum, content) => sum + Math.max(0, content.amount), 0);
         const share = total > 0 ? c.amount / total * 100 : 0;

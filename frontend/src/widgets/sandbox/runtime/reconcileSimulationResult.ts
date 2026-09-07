@@ -11,10 +11,19 @@ export type ReconciledSimulationFacts = { reactionIds: string[]; formedMaterialI
 
 /** Applies backend-authoritative scientific fields without replacing the visual scene graph. */
 export function reconcileSimulationResult(engine: Engine, result: SimulationExecutionResult): ReconciledSimulationFacts {
-  const delta = record(result.stateDelta);
+  const payload = record(result.payload);
+  const legacyDelta = record(result.stateDelta);
+  const delta = Object.keys(legacyDelta).length ? legacyDelta : record(payload.stateDelta);
   const reactionIds = new Set(strings(delta.reactionIds));
   const formedMaterialIds = new Set(strings(delta.formedMaterialIds));
-  const objects = [...rows(delta.objects), ...rows(delta.items), ...rows(delta.containers), ...rows(delta.apparatus)];
+  const vesselDeltas: RecordValue[] = rows(delta.vesselDeltas).map((vessel) => ({
+    ...vessel,
+    id: vessel.vesselId,
+    temperatureC: number(vessel.finalTemperatureKelvin) !== undefined ? number(vessel.finalTemperatureKelvin)! - 273.15 : undefined,
+    pressureBar: number(vessel.finalPressureKpa) !== undefined ? number(vessel.finalPressureKpa)! / 100 : undefined,
+    volumeMl: vessel.finalVolumeMl,
+  } as RecordValue));
+  const objects = [...rows(delta.objects), ...rows(delta.items), ...rows(delta.containers), ...rows(delta.apparatus), ...vesselDeltas];
   let changed = false;
   objects.forEach((change) => {
     const id = String(change.id ?? change.objectId ?? change.vesselId ?? '');
@@ -40,8 +49,31 @@ export function reconcileSimulationResult(engine: Engine, result: SimulationExec
       });
       changed = true;
     }
+    const materialDeltas = rows(change.materialDeltas);
+    if (materialDeltas.length) {
+      const nextContents = [...object.contents];
+      materialDeltas.forEach((materialDelta) => {
+        const materialId = String(materialDelta.compoundCode ?? materialDelta.materialId ?? '');
+        const unit = String(materialDelta.unit ?? 'mL');
+        const phase = String(materialDelta.physicalState ?? 'liquid').toLowerCase();
+        const quantityDelta = number(materialDelta.quantityDelta) ?? 0;
+        const existingIndex = nextContents.findIndex((content) => content.materialId === materialId && content.unit === unit && content.phase === phase);
+        const existing = existingIndex >= 0 ? nextContents[existingIndex] : null;
+        const nextAmount = Math.max(0, Number(existing?.amount ?? 0) + quantityDelta);
+        if (nextAmount === 0 && existingIndex >= 0) nextContents.splice(existingIndex, 1);
+        else if (existingIndex >= 0) nextContents[existingIndex] = { ...existing!, amount: nextAmount };
+        else if (nextAmount > 0) nextContents.push({ materialId, amount: nextAmount, unit, phase, metadata: { source: 'backend-operation' } });
+        if (quantityDelta > 0) formedMaterialIds.add(materialId);
+      });
+      object.contents = nextContents;
+      changed = true;
+    }
   });
-  const reactionId = typeof delta.reactionId === 'string' ? delta.reactionId : '';
+  const reactionId = typeof delta.reactionId === 'string'
+    ? delta.reactionId
+    : typeof payload.reactionOrProfileIdentifier === 'string' && payload.reactionOrProfileIdentifier !== 'workspace-sandbox'
+      ? payload.reactionOrProfileIdentifier
+      : '';
   if (reactionId) reactionIds.add(reactionId);
   if (changed) engine.notifyUpdate();
   return { reactionIds: [...reactionIds], formedMaterialIds: [...formedMaterialIds] };

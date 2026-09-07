@@ -26,6 +26,8 @@ class ApiErrorImpl extends Error {
   status: number;
   message: string;
   errors?: Record<string, string>;
+  code?: string;
+  correlationId?: string;
 
   constructor(error: ApiError) {
     super(error.message);
@@ -33,6 +35,8 @@ class ApiErrorImpl extends Error {
     this.status = error.status;
     this.message = error.message;
     this.errors = error.errors;
+    this.code = error.code;
+    this.correlationId = error.correlationId || error.traceId;
     if (Array.isArray(error.fieldViolations) && error.fieldViolations.length > 0) {
       this.errors = error.fieldViolations.reduce<Record<string, string>>((acc, v) => {
         acc[v.field] = v.message;
@@ -114,9 +118,13 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     } catch {
       errorData = { message: res.statusText };
     }
+    const message = errorData.message || errorData.detail || errorData.error || errorData.title || res.statusText || 'Unknown error';
     throw new ApiErrorImpl({
       status: res.status,
-      message: errorData.message || 'Unknown error',
+      message,
+      code: errorData.code,
+      correlationId: errorData.correlationId,
+      traceId: errorData.traceId,
       errors: errorData.errors,
       fieldViolations: errorData.fieldViolations,
     });
@@ -150,8 +158,11 @@ export const api = {
       body: body !== undefined ? JSON.stringify(body) : undefined,
     }),
 
-  delete: <T>(endpoint: string) =>
-    request<T>(endpoint, { method: 'DELETE' }),
+  delete: <T>(endpoint: string, body?: unknown) =>
+    request<T>(endpoint, {
+      method: 'DELETE',
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
 };
 
 export { ApiErrorImpl as ApiError };

@@ -1,4 +1,5 @@
 import { Send, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { type AssistantMessage } from "./hooks/useAssistant";
 import { useState } from "react";
 
@@ -15,6 +16,7 @@ export function AssistantPanel({
   onClose: () => void;
   isTeamChat?: boolean;
 }) {
+  const ts = useTranslations("sandbox");
   const [input, setInput] = useState("");
 
   const handleSend = () => {
@@ -31,9 +33,9 @@ export function AssistantPanel({
     >
       <header className="flex items-center justify-between border-b border-[var(--border)] p-4">
         <div>
-          <p className="font-semibold">{isTeamChat ? 'Командный чат' : 'Лабораторный ассистент'}</p>
+          <p className="font-semibold">{isTeamChat ? ts("assistant.teamChat") : ts("assistant.title")}</p>
           <p className="text-xs text-[var(--muted-foreground)]">
-            {isTeamChat ? 'Сообщения сохраняются в workspace' : 'Подсказки и проверка установки'}
+            {isTeamChat ? ts("assistant.teamChatDesc") : ts("assistant.description")}
           </p>
         </div>
         <button
@@ -75,7 +77,7 @@ export function AssistantPanel({
           onChange={(event) => setInput(event.target.value)}
           onKeyDown={(event) => event.key === "Enter" && handleSend()}
           className="min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-transparent px-3 outline-none"
-          placeholder="Спросите об эксперименте…"
+          placeholder={ts("assistant.placeholder")}
         />
         <button
           className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white hover:bg-blue-700"

@@ -105,6 +105,7 @@ const registry = createDefaultEquipmentRegistry();
 const runtimePortType = (value: unknown): PortType => ({ FLUID: 'Liquid', LIQUID: 'Liquid', GAS: 'Gas', POWER: 'Electric', ELECTRICAL: 'Electric', THERMAL: 'Thermal', SENSOR: 'Sensor', GLASS: 'Glass' }[String(value).toUpperCase()] ?? 'Glass') as PortType;
 const runtimePortDirection = (value: unknown): PortDirection => ({ INPUT: 'in', IN: 'in', OUTPUT: 'out', OUT: 'out', BIDIRECTIONAL: 'bidirectional' }[String(value).toUpperCase()] ?? 'bidirectional') as PortDirection;
 const runtimePort = (raw: JsonObject): PortDefinition => { const position = raw.position && typeof raw.position === 'object' && !Array.isArray(raw.position) ? raw.position as JsonObject : {}; const connector = String(raw.connector ?? raw.requiredConnector ?? ''); return { id: String(raw.id), name: String(raw.name ?? raw.id), role: typeof raw.role === 'string' ? raw.role : undefined, type: runtimePortType(raw.type ?? raw.medium), position: { x: Number(position.x ?? .5), y: Number(position.y ?? .5) }, direction: runtimePortDirection(raw.direction), capacity: raw.allowMultiple ? undefined : 1, requiredConnector: ['glass-tube', 'rubber-hose', 'wire', 'direct'].includes(connector) ? connector as PortDefinition['requiredConnector'] : undefined, isOpen: true }; };
+const jsonRecord = (value: unknown): JsonObject => value && typeof value === 'object' && !Array.isArray(value) ? value as JsonObject : {};
 
 function HelpArrows({ targets, active, locale }: { targets?: string[]; active: boolean; locale: string }) {
   const [points, setPoints] = useState<Array<{ id: string; x: number; y: number; label: string }>>([]);
@@ -113,6 +114,7 @@ function HelpArrows({ targets, active, locale }: { targets?: string[]; active: b
     : locale === "uz"
       ? { target: "Shu qadamni bajaring" }
       : { target: "Do this step" };
+  const targetKey = (targets ?? []).join('|');
 
   useEffect(() => {
     if (!active) {
@@ -122,7 +124,7 @@ function HelpArrows({ targets, active, locale }: { targets?: string[]; active: b
     const update = () => {
       const next: Array<{ id: string; x: number; y: number; label: string }> = [];
       const seen = new Set<string>();
-      for (const target of targets ?? []) {
+      for (const target of targetKey ? targetKey.split('|') : []) {
         if (seen.has(target)) continue;
         const nodes = Array.from(document.querySelectorAll<HTMLElement>(`[data-help-target="${target}"]`));
         const node = nodes.find((candidate) => {
@@ -146,7 +148,7 @@ function HelpArrows({ targets, active, locale }: { targets?: string[]; active: b
       window.removeEventListener("resize", update);
       window.removeEventListener("scroll", update, true);
     };
-  }, [active, targets?.join("|"), locale]);
+  }, [active, copy.target, targetKey]);
 
   if (!active || points.length === 0) return null;
   return (
@@ -238,8 +240,14 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
   const materialId = query.get("materialId");
   const { isAuthenticated, isLoading: authLoading, fetchUser } = useAuthStore();
   const canvasRef = useRef<HTMLDivElement>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const { engine } = useLabEngine(workspaceId ?? undefined, sessionId ?? undefined);
+  const [accessSessionToken] = useState<string | null>(() => {
+    if (typeof window !== "undefined" && workspaceId) {
+      return sessionStorage.getItem(`workspace-share:${workspaceId}`);
+    }
+    return null;
+  });
+  const [experimentSessionId, setExperimentSessionId] = useState<string | null>(() => query.get("experimentSessionId"));
+  const { engine } = useLabEngine(workspaceId ?? undefined, accessSessionToken ?? undefined, experimentSessionId ?? undefined);
   const { messages: assistantMessages, sendMessage: sendAssistantMessage, executeAction: executeAssistantAction, isTeamChat } = useAssistant(engine, registry, workspaceId);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [history] = useState(() => new CommandHistory());
@@ -443,7 +451,8 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
   }, [academyLevel, activeScenario?.id, scenarioRuntime.attempt, scenarioRuntime.scenario?.id]);
 
   useEffect(() => {
-    setAuthoritativeFacts({ reactionIds: [], formedMaterialIds: [] });
+    const timer = window.setTimeout(() => setAuthoritativeFacts({ reactionIds: [], formedMaterialIds: [] }), 0);
+    return () => window.clearTimeout(timer);
   }, [scenarioRuntime.scenario?.id]);
 
   useEffect(() => {
@@ -462,8 +471,15 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
 
   useEffect(() => {
     if (!helpActive || !activeScenario) return;
-    setLibraryTab(getHelpTab(activeScenario.id, activeScenario.step));
-  }, [activeScenario?.id, activeScenario?.step, helpActive]);
+    const runtime = scenarioRuntime.scenario;
+    const step = activeScenario.step;
+    const nextTab = !runtime || runtime.source === 'legacy'
+      ? legacyHelpTab(activeScenario.id, step)
+      : runtime.steps[step] && flattenRuntimeConditions(runtime.steps[step].completionRule).some((condition) => condition.type === 'MATERIAL_PRESENT')
+        ? 'materials'
+        : 'equipment';
+    setLibraryTab(nextTab);
+  }, [activeScenario, helpActive, scenarioRuntime.scenario]);
 
   useEffect(() => {
     const runtime = scenarioRuntime.scenario;
@@ -493,7 +509,7 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
     }
     engine.notifyUpdate();
     if (skipped) addToast(`${skipped} Scenario resource${skipped === 1 ? '' : 's'} could not be resolved in the Sandbox registry.`, 'error');
-  }, [addToast, engine, scenarioRuntime.scenario, template, workspaceId]);
+  }, [addToast, engine, locale, scenarioRuntime.scenario, template, workspaceId]);
 
   useEffect(() => {
     if (!engine || templateLoaded.current) return;
@@ -579,7 +595,7 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
     sample();
     const timer = window.setInterval(sample, 1000);
     return () => window.clearInterval(timer);
-  }, [selected?.id, temperatureReading]);
+  }, [selected, temperatureReading]);
 
   const handleQuickAction = (action: QuickActionState) => {
     if (action.action === "material") {
@@ -668,13 +684,13 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
       } as any,
       updatedAt: new Date().toISOString(),
     } as any;
-  }, [engine, pan.x, pan.y, zoom]);
+  }, [engine, pan, zoom]);
 
   const { syncStatus, eventLog, queueWorkspaceEvent, historyAction, stateVersionRef } = useSandboxSync({
     engine,
     workspaceId,
-    sessionId,
-    setSessionId,
+    accessSessionToken,
+    setExperimentSessionId,
     history,
     isAuthenticated,
     authChecked,
@@ -772,7 +788,7 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
         setActiveScenario((current) => (current ? { ...current, step: nextStep } : current));
       }, 0);
     }
-  }, [activeScenario, authoritativeFacts, connections, engine, eventLog, items, selected, queueWorkspaceEvent, addToast, scenarioRuntime.scenario]);
+  }, [activeScenario, addToast, authoritativeFacts, connections, engine, eventLog, items, learningAttemptId, locale, queueWorkspaceEvent, resultFallback.description, resultFallback.title, resultText, scenarioRuntime.scenario, selected, stateVersionRef]);
 
   useEffect(() => {
     const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
@@ -804,7 +820,7 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
       document.removeEventListener("keydown", onKeyDown);
       previous?.focus();
     };
-  }, [connectionDraft, pourSource]);
+  }, [connectionDraft, pourSource, setConnectionDraft, setPourSource]);
 
   useEffect(() => {
     if (template !== "acid-base" || templateLoaded.current || !engine) return;
@@ -1089,9 +1105,9 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
       });
       history.execute(operationCommand);
     }
-    if (sessionId) {
+    if (experimentSessionId) {
       void engine?.simulation
-        ?.executeOperation?.(sessionId, {
+        ?.executeOperation?.(experimentSessionId, {
           expectedStateVersion: stateVersionRef.current,
           idempotencyKey: crypto.randomUUID(),
           command: {
@@ -1116,7 +1132,9 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
           },
         })
         .then((result) => {
-          stateVersionRef.current = result.newVersion;
+          const stateVersion = jsonRecord(jsonRecord(result.state).version);
+          const nextVersion = Number(result.newVersion ?? stateVersion.value ?? jsonRecord(result.state).version);
+          if (Number.isFinite(nextVersion)) stateVersionRef.current = nextVersion;
           const reconciled = reconcileSimulationResult(engine, result);
           if (reconciled.reactionIds.length || reconciled.formedMaterialIds.length) {
             setAuthoritativeFacts((current) => ({
@@ -1366,7 +1384,7 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
       updateItem(id, patch);
     });
     engine.notifyUpdate();
-  }, [engine, selectedIds]);
+  }, [engine, selectedIds, updateItem]);
 
   const remove = useCallback(() => {
     if (!engine) return;
@@ -1389,7 +1407,7 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
       engine.notifyUpdate();
       queueWorkspaceEvent("REMOVE_ITEM", { itemId: "multiple" });
     }
-  }, [selectedConnectionId, selectedIds, engine, connectSource, history, queueWorkspaceEvent, disconnectConnection, cancelConnection]);
+  }, [cancelConnection, connectSource, disconnectConnection, engine, history, queueWorkspaceEvent, selectedConnectionId, selectedIds, setSelectedConnectionId, setSelectedIds]);
 
   const undo = useCallback(() => {
     if (!engine) return;
@@ -1437,7 +1455,7 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedIds, selectedConnectionId, remove, tool, connectSource, undo, redo]);
+  }, [cancelConnection, connectSource, redo, remove, selectedConnectionId, selectedId, selectedIds, setSelectedConnectionId, tool, undo]);
 
   const duplicate = useCallback(() => {
     if (!selected) return;
@@ -1507,7 +1525,7 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [remove, duplicate, historyAction, tool]);
+  }, [duplicate, historyAction, remove, setConnectSource, setConnectSourcePort, setConnectionPointer, setConnectionSnap, setSelectedConnectionId, tool]);
 
   return (
     <ScenarioRuntimeProvider scenario={scenarioRuntime.scenario}>
@@ -2060,7 +2078,7 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
             <div className="sandbox-encyclopedia mb-2 rounded-lg border border-[var(--primary)]/35 bg-[var(--primary)]/[.1] p-3 shadow-inner">
               <p className="text-[10px] font-bold uppercase tracking-[.12em] text-[var(--primary-bright)]">{ts("dock.description")}</p>
               <p className="mt-1 text-sm font-bold text-foreground">{ts.has(`equip.${selected.type}.name`) ? ts(`equip.${selected.type}.name`) : selected.name}</p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{ts.has(`equip.${selected.type}.desc`) ? ts(`equip.${selected.type}.desc`) : equipmentDescription(selected)}</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{ts.has(`equip.${selected.type}.desc`) ? ts(`equip.${selected.type}.desc`) : equipmentDescription(selected, ts)}</p>
               <button
                 type="button"
                 onClick={() => {

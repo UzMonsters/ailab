@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 import ThemeToggle from "@/shared/ui/ThemeToggle";
 import LanguageSwitcher from "@/shared/ui/LanguageSwitcher";
 
@@ -9,6 +10,7 @@ interface SandboxHeaderProps {
 }
 
 export function SandboxHeader({ locale, workspaceId }: SandboxHeaderProps) {
+  const ts = useTranslations("sandbox");
   return (
     <header className="sandbox-header flex flex-col gap-2 border-b border-[var(--border)] bg-[var(--card)] p-5">
       <div className="flex items-center justify-between">
@@ -21,7 +23,7 @@ export function SandboxHeader({ locale, workspaceId }: SandboxHeaderProps) {
         </div>
       </div>
       <span className="text-sm font-semibold tracking-wide text-[var(--primary-bright)]">
-        {workspaceId ? "ЛАБОРАТОРНЫЙ ЭКСПЕРИМЕНТ" : "НОВЫЙ ЭКСПЕРИМЕНТ"}
+        {workspaceId ? ts("header.labExperiment") : ts("header.newExperiment")}
       </span>
     </header>
   );

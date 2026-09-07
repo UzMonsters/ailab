@@ -1,8 +1,8 @@
 import type { Connection, Item } from '../types';
-import type { RuntimeCondition, RuntimeRuleGroup, RuntimeRuleNode, RuntimeStep } from './runtime.types';
+import type { RuntimeCondition, RuntimeRuleGroup, RuntimeRuleNode, RuntimeStep, RuntimeCatalog } from './runtime.types';
 import { areRuntimeUnitsCompatible, convertRuntimeUnit } from './unitConversion';
 
-export type RuntimeFacts = { items: Item[]; connections: Connection[]; reactionIds?: string[]; formedMaterialIds?: string[]; aliases?: Record<string, string>; events?: RuntimeEventFact[] };
+export type RuntimeFacts = { items: Item[]; connections: Connection[]; reactionIds?: string[]; formedMaterialIds?: string[]; aliases?: Record<string, string>; events?: RuntimeEventFact[]; catalog?: RuntimeCatalog; };
 export type RuntimeEventFact = { event: string; payload?: Record<string, unknown> };
 
 const matchesAlias = (item: Item, alias: string | undefined, aliases: Record<string, string>) => !alias || item.id === alias || item.id === aliases[alias] || item.metadata?.scenarioAlias === alias;
@@ -58,9 +58,33 @@ const exactConnection = (condition: RuntimeCondition, facts: RuntimeFacts) => {
   });
 };
 
+function resolveConditionTargets(condition: RuntimeCondition, facts: RuntimeFacts): Item[] {
+  const aliases = facts.aliases ?? {};
+
+  if (condition.targetCapability && facts.catalog) {
+    const equipmentWithCapability = new Set<string>();
+    for (const eq of facts.catalog.equipment) {
+      if (eq.capabilities.includes(condition.targetCapability)) {
+        equipmentWithCapability.add(eq.id);
+      }
+    }
+    return facts.items.filter((item) => {
+      const catalogId = String(item.metadata?.catalogId ?? item.metadata?.equipmentId ?? '');
+      if (catalogId && equipmentWithCapability.has(catalogId)) return true;
+      if (item.type && facts.catalog) {
+        const eq = facts.catalog.equipmentById[item.type] || facts.catalog.equipmentById[String(item.type)];
+        if (eq && eq.capabilities.includes(condition.targetCapability!)) return true;
+      }
+      return false;
+    });
+  }
+
+  return facts.items.filter((item) => matchesAlias(item, condition.targetAlias, aliases));
+}
+
 export function evaluateRuntimeCondition(condition: RuntimeCondition, facts: RuntimeFacts) {
   const aliases = facts.aliases ?? {};
-  const targets = facts.items.filter((item) => matchesAlias(item, condition.targetAlias, aliases));
+  const targets = resolveConditionTargets(condition, facts);
   if (condition.type === 'OBJECT_EXISTS') return targets.length > 0;
   if (condition.type === 'MATERIAL_PRESENT') return targets.some((item) => item.contents.some((raw) => contentIdentity(contentRecord(raw)).includes(condition.materialId ?? '') && Number(contentRecord(raw).amount ?? 0) > 0));
   if (condition.type === 'MATERIAL_PHASE_IS') return targets.some((item) => item.contents.some((raw) => {

@@ -37,7 +37,8 @@ function parseFrame(raw: string): { command: string; headers: Record<string, str
 export function connectWorkspaceRealtime(workspaceId: string, sessionId: string | null, handlers: WorkspaceRealtimeHandlers): WorkspaceRealtimeConnection {
   const noop: WorkspaceRealtimeConnection = { sendWorkspaceEvent: () => undefined, sendExperimentCommand: () => undefined, close: () => undefined };
   if (typeof window === 'undefined') return noop;
-  const token = getAccessToken();
+  let token = getAccessToken();
+  if (sessionId && sessionId.startsWith('guest_sess_')) token = sessionId;
   if (!token) return noop;
 
   const apiUrl = getApiBaseUrl();
