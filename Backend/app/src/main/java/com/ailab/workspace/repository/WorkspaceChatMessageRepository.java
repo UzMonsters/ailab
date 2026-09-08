@@ -25,4 +25,6 @@ public interface WorkspaceChatMessageRepository extends JpaRepository<WorkspaceC
     long countUnreadMessages(String workspaceId, Instant afterTimestamp);
 
     Optional<WorkspaceChatMessageEntity> findByIdAndWorkspaceId(String id, String workspaceId);
+
+    void deleteByWorkspaceId(String workspaceId);
 }

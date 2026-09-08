@@ -117,8 +117,8 @@ class WorkspaceMeasurementsAndPreviewsIntegrationTest {
     void testVersionedPreviewPipelineAndStaleCheck() throws Exception {
         // 1. Request Upload URLs at version 1
         PreviewUploadUrlsRequest req = new PreviewUploadUrlsRequest(1L, List.of(
-                new PreviewUploadUrlsRequest.VariantRequest("DARK", "image/webp", 960, 540, "sha256_dark"),
-                new PreviewUploadUrlsRequest.VariantRequest("LIGHT", "image/webp", 960, 540, "sha256_light")
+                new PreviewUploadUrlsRequest.VariantRequest("DARK", "image/webp", 960, 540, null),
+                new PreviewUploadUrlsRequest.VariantRequest("LIGHT", "image/webp", 960, 540, null)
         ));
         MvcResult res = mockMvc.perform(post("/api/v1/workspaces/" + wsId + "/preview-upload-urls")
                         .header("Authorization", token)
@@ -131,13 +131,29 @@ class WorkspaceMeasurementsAndPreviewsIntegrationTest {
 
         PreviewUploadUrlsResponse uploadResp = objectMapper.readValue(res.getResponse().getContentAsString(), PreviewUploadUrlsResponse.class);
         String prevId = uploadResp.previewId();
+        String darkAssetId = uploadResp.uploads().stream().filter(u -> "DARK".equals(u.theme())).findFirst().orElseThrow().assetId();
+        String lightAssetId = uploadResp.uploads().stream().filter(u -> "LIGHT".equals(u.theme())).findFirst().orElseThrow().assetId();
+
+        mockMvc.perform(put("/api/v1/workspaces/" + wsId + "/previews/" + prevId + "/assets/" + darkAssetId + "/upload")
+                        .header("Authorization", token)
+                        .contentType("image/webp")
+                        .content("dark-preview-bytes"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assetId").value(darkAssetId));
+
+        mockMvc.perform(put("/api/v1/workspaces/" + wsId + "/previews/" + prevId + "/assets/" + lightAssetId + "/upload")
+                        .header("Authorization", token)
+                        .contentType("image/webp")
+                        .content("light-preview-bytes"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assetId").value(lightAssetId));
 
         // 2. Complete preview successfully
         CompletePreviewRequest completeReq = new CompletePreviewRequest(
                 1L,
                 List.of(
-                        new CompletePreviewRequest.AssetResult("DARK", "asset-dark", "/storage/previews/" + wsId + "_dark.webp", "sha256_dark"),
-                        new CompletePreviewRequest.AssetResult("LIGHT", "asset-light", "/storage/previews/" + wsId + "_light.webp", "sha256_light")
+                        new CompletePreviewRequest.AssetResult("DARK", darkAssetId, "https://malicious.example/ignored.webp", null),
+                        new CompletePreviewRequest.AssetResult("LIGHT", lightAssetId, "https://malicious.example/ignored.webp", null)
                 ),
                 "chemistry-default-01"
         );
@@ -146,8 +162,8 @@ class WorkspaceMeasurementsAndPreviewsIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(completeReq)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.variants.dark.url").value("/storage/previews/" + wsId + "_dark.webp"))
-                .andExpect(jsonPath("$.variants.light.url").value("/storage/previews/" + wsId + "_light.webp"));
+                .andExpect(jsonPath("$.variants.dark.url").value("/api/v1/workspaces/" + wsId + "/previews/" + prevId + "/assets/" + darkAssetId))
+                .andExpect(jsonPath("$.variants.light.url").value("/api/v1/workspaces/" + wsId + "/previews/" + prevId + "/assets/" + lightAssetId));
 
         // 3. Mutate workspace state to advance version to 2
         mockMvc.perform(post("/api/v1/workspaces/" + wsId + "/events")
@@ -161,7 +177,7 @@ class WorkspaceMeasurementsAndPreviewsIntegrationTest {
         // 4. Stale completion (completing with old version 1 when workspace is at version 2) -> 409 STALE_PREVIEW
         CompletePreviewRequest staleReq = new CompletePreviewRequest(
                 1L,
-                List.of(new CompletePreviewRequest.AssetResult("DARK", "asset-dark", "/storage/previews/stale.webp", "sha")),
+                List.of(new CompletePreviewRequest.AssetResult("DARK", darkAssetId, "/storage/previews/stale.webp", null)),
                 "chemistry-default-01"
         );
         mockMvc.perform(post("/api/v1/workspaces/" + wsId + "/previews/prev_stale/complete")

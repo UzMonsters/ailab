@@ -29,7 +29,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (header != null && header.startsWith("Bearer ")) {
+        String shareSessionToken = null;
+        if (header != null && header.startsWith("ShareSession ")) {
+            shareSessionToken = header.substring("ShareSession ".length()).trim();
+        } else if (header != null && header.startsWith("Bearer guest_sess_")) {
+            shareSessionToken = header.substring("Bearer ".length()).trim();
+        } else {
+            String queryToken = request.getParameter("sessionToken");
+            if (queryToken != null && queryToken.startsWith("guest_sess_")) {
+                shareSessionToken = queryToken;
+            }
+        }
+
+        if (shareSessionToken != null && shareSessionToken.startsWith("guest_sess_")) {
+            SecurityContextHolder.getContext().setAuthentication(
+                    new UsernamePasswordAuthenticationToken("share_session:" + shareSessionToken, null,
+                            List.of(new SimpleGrantedAuthority("ROLE_GUEST"))));
+        } else if (header != null && header.startsWith("Bearer ")) {
             try {
                 Claims claims = jwtService.parse(header.substring(7));
                 String role = claims.get("role", String.class);

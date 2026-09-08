@@ -17,4 +17,6 @@ public interface WorkspaceInvitationRepository extends JpaRepository<WorkspaceIn
     Optional<WorkspaceInvitationEntity> findByTokenHash(String tokenHash);
 
     Optional<WorkspaceInvitationEntity> findByIdAndWorkspaceId(String id, String workspaceId);
+
+    void deleteByWorkspaceId(String workspaceId);
 }

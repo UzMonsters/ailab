@@ -28,7 +28,7 @@ public class LaboratoryExceptionHandler {
 
     @ExceptionHandler(VersionConflictException.class)
     ResponseEntity<ApiError> workspaceVersionConflict(VersionConflictException ex, HttpServletRequest req) {
-        return problem(HttpStatus.CONFLICT, "STATE_VERSION_CONFLICT", "State Version Conflict", ex.getMessage(), req, Map.of(
+        return problem(HttpStatus.CONFLICT, "VERSION_CONFLICT", "Version Conflict", ex.getMessage(), req, Map.of(
                 "expectedVersion", Long.toString(ex.getExpectedVersion()),
                 "actualVersion", Long.toString(ex.getActualVersion())));
     }
@@ -40,7 +40,9 @@ public class LaboratoryExceptionHandler {
         String reason = ex.getReason() != null ? ex.getReason() : status.getReasonPhrase();
         String code = status.name();
         if (reason.startsWith("PORT_") || reason.startsWith("INVALID_") || reason.startsWith("THERMAL_")
-                || reason.startsWith("LAST_OWNER") || reason.startsWith("STALE_") || reason.startsWith("SHARE_")) {
+                || reason.startsWith("LAST_OWNER") || reason.startsWith("STALE_") || reason.startsWith("SHARE_")
+                || reason.startsWith("CAPABILITY_REQUIRED") || reason.startsWith("PREVIEW_")
+                || reason.startsWith("CHECKSUM_") || reason.startsWith("CONFIRMATION_REQUIRED")) {
             int colon = reason.indexOf(':');
             code = colon > 0 ? reason.substring(0, colon).trim() : reason;
         }
@@ -49,7 +51,7 @@ public class LaboratoryExceptionHandler {
 
     @ExceptionHandler(SafetyException.class)
     ResponseEntity<ApiError> unsafeScientificOperation(SafetyException ex, HttpServletRequest req) {
-        return problem(HttpStatus.UNPROCESSABLE_ENTITY, "SAFETY_VIOLATION_" + ex.getErrorCode().name(), "Laboratory Safety Violation", ex.getMessage(), req, Map.of(
+        return problem(HttpStatus.UNPROCESSABLE_ENTITY, "SAFETY_VIOLATION", "Laboratory Safety Violation", ex.getMessage(), req, Map.of(
                 "code", ex.getErrorCode().name()));
     }
 
@@ -59,7 +61,10 @@ public class LaboratoryExceptionHandler {
                 || ex.getErrorCode() == SimulationExecutionErrorCode.IDEMPOTENCY_CONFLICT
                 ? HttpStatus.CONFLICT
                 : HttpStatus.BAD_REQUEST;
-        return problem(status, "SIMULATION_" + ex.getErrorCode().name(), "Simulation Execution Error", ex.getMessage(), req, Map.of("code", ex.getErrorCode().name()));
+        String code = ex.getErrorCode() == SimulationExecutionErrorCode.STALE_STATE_VERSION
+                ? "VERSION_CONFLICT"
+                : "SIMULATION_" + ex.getErrorCode().name();
+        return problem(status, code, "Simulation Execution Error", ex.getMessage(), req, Map.of("code", ex.getErrorCode().name()));
     }
 
     @ExceptionHandler(SimulationStateException.class)
@@ -68,7 +73,10 @@ public class LaboratoryExceptionHandler {
                 || ex.errorCode() == SimulationStateErrorCode.IDEMPOTENCY_CONFLICT
                 ? HttpStatus.CONFLICT
                 : HttpStatus.UNPROCESSABLE_ENTITY;
-        return problem(status, "STATE_" + ex.errorCode().name(), "Simulation State Error", ex.getMessage(), req, Map.of("code", ex.errorCode().name()));
+        String code = ex.errorCode() == SimulationStateErrorCode.STALE_STATE_VERSION
+                ? "VERSION_CONFLICT"
+                : "STATE_" + ex.errorCode().name();
+        return problem(status, code, "Simulation State Error", ex.getMessage(), req, Map.of("code", ex.errorCode().name()));
     }
 
     @ExceptionHandler(com.ailab.learning.exception.LevelNotFoundException.class)

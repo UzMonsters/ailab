@@ -89,7 +89,7 @@ class WorkspaceCanonicalScienceIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(staleCmd)))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("STATE_VERSION_CONFLICT"));
+                .andExpect(jsonPath("$.code").value("VERSION_CONFLICT"));
 
         // 3. Duplicate clientEventId -> Idempotent replay
         mockMvc.perform(post("/api/v1/workspaces/" + wsId + "/events")

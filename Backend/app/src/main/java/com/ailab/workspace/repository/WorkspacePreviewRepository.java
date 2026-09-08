@@ -15,4 +15,6 @@ public interface WorkspacePreviewRepository extends JpaRepository<WorkspacePrevi
     Optional<WorkspacePreviewEntity> findByIdAndWorkspaceId(String id, String workspaceId);
 
     List<WorkspacePreviewEntity> findByWorkspaceId(String workspaceId);
+
+    void deleteByWorkspaceId(String workspaceId);
 }

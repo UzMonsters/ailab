@@ -13,4 +13,6 @@ public interface WorkspaceEventRepository extends JpaRepository<WorkspaceEventEn
     List<WorkspaceEventEntity> findByWorkspaceIdAndVersionGreaterThanOrderByVersionAsc(String workspaceId, long version);
 
     List<WorkspaceEventEntity> findByWorkspaceIdOrderByVersionAsc(String workspaceId);
+
+    void deleteByWorkspaceId(String workspaceId);
 }
