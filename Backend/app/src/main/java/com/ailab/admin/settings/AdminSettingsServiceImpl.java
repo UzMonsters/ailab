@@ -64,7 +64,27 @@ public class AdminSettingsServiceImpl implements AdminSettingsService {
         AdminSettingsEntity entity = getEntity();
         validateIfMatch(entity.getVersion(), ifMatch);
 
-        Map<String, Object> current = new LinkedHashMap<>(entity.getSettingsData());
+        Map<String, Object> beforeState = new LinkedHashMap<>();
+        if (entity.getSettingsData() != null) {
+            for (Map.Entry<String, Object> entry : entity.getSettingsData().entrySet()) {
+                if (entry.getValue() instanceof Map<?, ?> subMap) {
+                    beforeState.put(entry.getKey(), new LinkedHashMap<>(subMap));
+                } else {
+                    beforeState.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+
+        Map<String, Object> current = new LinkedHashMap<>();
+        if (entity.getSettingsData() != null) {
+            for (Map.Entry<String, Object> entry : entity.getSettingsData().entrySet()) {
+                if (entry.getValue() instanceof Map<?, ?> subMap) {
+                    current.put(entry.getKey(), new LinkedHashMap<>(subMap));
+                } else {
+                    current.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
         List<String> changedKeys = new ArrayList<>();
 
         for (Map.Entry<String, Object> entry : patch.entrySet()) {
@@ -107,7 +127,7 @@ public class AdminSettingsServiceImpl implements AdminSettingsService {
                 safeActorId, safeActorName, "ADMIN",
                 "setting.changed", "SYSTEM_SETTINGS", "global", "System settings",
                 "SETTINGS", "ADMIN_WEB", "SUCCESS", "MEDIUM",
-                entity.getSettingsData(), current, changedKeys,
+                beforeState, current, changedKeys,
                 null, null, null, Map.of("version", newVersion)
         );
 

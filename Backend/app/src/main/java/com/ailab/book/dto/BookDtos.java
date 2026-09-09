@@ -24,8 +24,16 @@ public final class BookDtos {
     public record PatchBookRequest(
             String slug,
             String defaultLocale,
-            Map<String, Object> translations
+            Map<String, Object> translations,
+            Long expectedVersion,
+            Long version
     ) {
+        public PatchBookRequest(String slug, String defaultLocale, Map<String, Object> translations) {
+            this(slug, defaultLocale, translations, null, null);
+        }
+        public Long getEffectiveExpectedVersion() {
+            return expectedVersion != null ? expectedVersion : version;
+        }
     }
 
     public record BookSummary(

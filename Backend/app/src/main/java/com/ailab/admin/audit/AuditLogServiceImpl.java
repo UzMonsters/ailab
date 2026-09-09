@@ -169,12 +169,19 @@ public class AuditLogServiceImpl implements AuditLogService {
         );
     }
 
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+            "occurredAt", "action", "entityType", "entityId", "severity", "result", "source", "actorName"
+    );
+
     private Sort parseSort(String sort) {
         if (sort == null || sort.isBlank()) {
             return Sort.by(Sort.Direction.DESC, "occurredAt");
         }
         String[] parts = sort.split(",");
         String field = parts[0].trim();
+        if (!ALLOWED_SORT_FIELDS.contains(field)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "INVALID_QUERY: Invalid sort field: " + field);
+        }
         Sort.Direction direction = parts.length > 1 && "asc".equalsIgnoreCase(parts[1].trim()) ? Sort.Direction.ASC : Sort.Direction.DESC;
         return Sort.by(direction, field);
     }

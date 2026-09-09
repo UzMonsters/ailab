@@ -100,14 +100,14 @@ class LearningControllersTest {
                 attemptRepository, levelRepository, progressRepository, levelService, objectMapper
         );
         LearningProgressService progressService = new LearningProgressService(
-                progressRepository, trackRepository, objectMapper
+                progressRepository, trackRepository, levelRepository, attemptRepository, objectMapper
         );
+        AdminLearningValidationService validationService = new AdminLearningValidationService(levelRepository, objectMapper);
         AdminLearningService adminLearningService = new AdminLearningService(
                 trackRepository, levelRepository, snapshotRepository, chapterRepository,
                 taskRepository, rewardRepository, progressRepository, attemptRepository,
-                resetAuditRepository, levelService, workspaceRepository, workspaceStateRepository, objectMapper
+                resetAuditRepository, levelService, validationService, workspaceRepository, workspaceStateRepository, objectMapper
         );
-        AdminLearningValidationService validationService = new AdminLearningValidationService(levelRepository, objectMapper);
         AdminLearningAnalyticsService analyticsService = new AdminLearningAnalyticsService(
                 levelRepository, attemptRepository, objectMapper
         );
@@ -138,6 +138,7 @@ class LearningControllersTest {
         level2.setStatus(LearningStatus.DRAFT);
         level2.setPublishedVersion(null);
         level2.setTranslationsJson("{\"ru\":{\"title\":\"Уровень 2\",\"summary\":\"Второй\"}}");
+        level2.setStepsJson("[{\"id\":\"step-2\",\"order\":1,\"type\":\"CONTAINER_SETUP\"}]");
     }
 
     @Test

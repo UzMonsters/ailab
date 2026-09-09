@@ -63,8 +63,7 @@ public class LearningAttemptService {
             String userId,
             boolean isPreview
     ) {
-        LearningLevelEntity level = levelRepository.findById(levelId)
-                .orElseThrow(() -> new LevelNotFoundException("Level not found: " + levelId));
+        LearningLevelEntity level = levelService.findLevelOrThrow(levelId);
 
         if (!isPreview && level.getStatus() != LearningStatus.PUBLISHED && level.getPublishedVersion() == null) {
             throw new LevelNotFoundException("Level is not published yet: " + levelId);
@@ -209,6 +208,7 @@ public class LearningAttemptService {
 
         return new AttemptStateDto(
                 att.getId(),
+                att.getId(),
                 att.getLevelId(),
                 att.getLevelVersion(),
                 att.getExperimentId(),
@@ -219,6 +219,7 @@ public class LearningAttemptService {
                 att.getCurrentStepId(),
                 completedSteps,
                 hintUsage,
+                att.getScore() != null ? att.getScore() : 100,
                 att.getStartedAt(),
                 att.getCompletedAt(),
                 att.getUpdatedAt()

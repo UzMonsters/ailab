@@ -28,13 +28,22 @@ public class AdminAssetServiceImpl implements AdminAssetService {
     private static final long MAX_IMAGE_BYTES = 5242880L;
 
     private final BookAssetRepository assetRepository;
+    private final AssetStorageService storageService;
 
     public AdminAssetServiceImpl() {
         this.assetRepository = null;
+        this.storageService = new AssetStorageService();
     }
 
     public AdminAssetServiceImpl(BookAssetRepository assetRepository) {
         this.assetRepository = assetRepository;
+        this.storageService = new AssetStorageService();
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public AdminAssetServiceImpl(BookAssetRepository assetRepository, AssetStorageService storageService) {
+        this.assetRepository = assetRepository;
+        this.storageService = storageService != null ? storageService : new AssetStorageService();
     }
 
     @Override
@@ -60,17 +69,17 @@ public class AdminAssetServiceImpl implements AdminAssetService {
             String checksum = file.get("checksum") != null ? String.valueOf(file.get("checksum")) : null;
 
             if (!ALLOWED_MIME_TYPES.contains(contentType)) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "VALIDATION_ERROR: MIME type not allowed: " + contentType);
+                throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "UNSUPPORTED_MEDIA_TYPE: MIME type not allowed: " + contentType);
             }
 
             if (sizeBytes > MAX_IMAGE_BYTES) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "VALIDATION_ERROR: File size exceeds maximum limit of " + MAX_IMAGE_BYTES + " bytes");
+                throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "ASSET_TOO_LARGE: File size exceeds maximum limit of " + MAX_IMAGE_BYTES + " bytes");
             }
 
             String fileId = "ast_" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
             Instant expiresAt = Instant.now().plus(1, ChronoUnit.HOURS);
-            String uploadUrl = "https://storage.jasscience.dev/uploads/" + fileId + "/" + filename;
-            String downloadUrl = "https://storage.jasscience.dev/assets/" + fileId + "/" + filename;
+            String uploadUrl = "/api/v1/assets/upload/" + fileId;
+            String downloadUrl = "/api/v1/assets/raw/" + fileId + "/" + filename;
 
             if (assetRepository != null) {
                 AssetKind kind = "SVG".equalsIgnoreCase(kindStr) || contentType.contains("svg") ? AssetKind.SVG : AssetKind.IMAGE;
@@ -100,27 +109,41 @@ public class AdminAssetServiceImpl implements AdminAssetService {
     @Transactional
     public Map<String, Object> completeAsset(String assetId, Map<String, Object> request) {
         if (assetRepository == null) {
-            return Map.of("id", assetId, "status", "READY");
+            return Map.of("id", assetId, "assetId", assetId, "status", "READY");
         }
 
         BookAsset asset = assetRepository.findById(assetId)
-                .orElseGet(() -> {
-                    BookAsset newAsset = new BookAsset(
-                            assetId,
-                            AssetKind.IMAGE,
-                            "image/png",
-                            0L,
-                            null,
-                            "https://storage.jasscience.dev/uploads/" + assetId,
-                            "https://storage.jasscience.dev/assets/" + assetId
-                    );
-                    return assetRepository.save(newAsset);
-                });
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND: Asset not found with id " + assetId));
+
+        if (asset.getStatus() == AssetStatus.READY) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "ASSET_ALREADY_COMPLETED: Asset is already completed");
+        }
+
+        AssetStorageService.StoredAssetMeta meta = storageService.getMeta(assetId);
+        if (meta == null) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "VALIDATION_ERROR: Asset raw binary has not been uploaded to object storage");
+        }
+
+        if (meta.sizeBytes() > MAX_IMAGE_BYTES) {
+            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "ASSET_TOO_LARGE: File size exceeds maximum limit of " + MAX_IMAGE_BYTES + " bytes");
+        }
+
+        if (!ALLOWED_MIME_TYPES.contains(meta.contentType().toLowerCase())) {
+            throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "UNSUPPORTED_MEDIA_TYPE: MIME type not allowed: " + meta.contentType());
+        }
+
+        String reqChecksum = request != null && request.get("checksum") != null ? String.valueOf(request.get("checksum")) : asset.getChecksum();
+        if (reqChecksum != null && !reqChecksum.isBlank()) {
+            String cleanExpected = reqChecksum.replace("sha256:", "").trim().toLowerCase();
+            if (!cleanExpected.equalsIgnoreCase(meta.sha256Hex())) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "CHECKSUM_MISMATCH: Checksum mismatch. Expected " + cleanExpected + " but got " + meta.sha256Hex());
+            }
+        }
+
+        asset.setSizeBytes(meta.sizeBytes());
+        asset.setChecksum("sha256:" + meta.sha256Hex());
 
         if (request != null) {
-            if (request.get("checksum") != null) {
-                asset.setChecksum(String.valueOf(request.get("checksum")));
-            }
             if (request.get("alt") instanceof Map<?, ?> altMap) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> castAlt = (Map<String, Object>) altMap;
@@ -147,8 +170,9 @@ public class AdminAssetServiceImpl implements AdminAssetService {
         asset.setStatus(AssetStatus.READY);
         BookAsset saved = assetRepository.save(asset);
 
-        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> result = new LinkedHashMap<>();
         result.put("id", saved.getId());
+        result.put("assetId", saved.getId());
         result.put("kind", saved.getKind().name());
         result.put("mimeType", saved.getMimeType());
         result.put("sizeBytes", saved.getSizeBytes());
@@ -175,10 +199,11 @@ public class AdminAssetServiceImpl implements AdminAssetService {
         }
 
         BookAsset asset = assetRepository.findById(assetId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ASSET_NOT_FOUND: Asset not found with id " + assetId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND: Asset not found with id " + assetId));
 
-        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> result = new LinkedHashMap<>();
         result.put("id", asset.getId());
+        result.put("assetId", asset.getId());
         result.put("kind", asset.getKind().name());
         result.put("mimeType", asset.getMimeType());
         result.put("sizeBytes", asset.getSizeBytes());

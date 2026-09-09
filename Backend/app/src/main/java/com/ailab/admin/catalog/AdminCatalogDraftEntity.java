@@ -35,7 +35,7 @@ public class AdminCatalogDraftEntity {
     private Map<String, Object> data;
 
     @Column(nullable = false)
-    private Long version;
+    private Long version = 1L;
 
     @Column(name = "idempotency_key", length = 100)
     private String idempotencyKey;
@@ -80,7 +80,7 @@ public class AdminCatalogDraftEntity {
 
     public void updateData(Map<String, Object> data) {
         this.data = data;
-        this.version++;
+        this.version = (this.version != null ? this.version : 0L) + 1L;
     }
 
     public void setStatus(String status) {

@@ -55,6 +55,14 @@ public class AdminChemistryCatalogController {
         return catalogService.patchDraft("ELEMENT", id, patch, ifMatch, actorId, "Admin User");
     }
 
+    @PostMapping("/elements/{id}/validate")
+    public Map<String, Object> validateElement(
+            @PathVariable String id,
+            @RequestBody(required = false) Map<String, Object> request) {
+        Long version = request != null && request.get("version") != null ? ((Number) request.get("version")).longValue() : null;
+        return catalogService.validateDraft("ELEMENT", id, version);
+    }
+
     @PostMapping("/elements/{id}/publish")
     public ResponseEntity<Map<String, Object>> publishElement(
             @PathVariable String id,
@@ -99,6 +107,14 @@ public class AdminChemistryCatalogController {
             Authentication authentication) {
         String actorId = authentication != null ? authentication.getName() : "usr_admin";
         return catalogService.patchDraft("SUBSTANCE", id, patch, ifMatch, actorId, "Admin User");
+    }
+
+    @PostMapping("/substances/{id}/validate")
+    public Map<String, Object> validateSubstance(
+            @PathVariable String id,
+            @RequestBody(required = false) Map<String, Object> request) {
+        Long version = request != null && request.get("version") != null ? ((Number) request.get("version")).longValue() : null;
+        return catalogService.validateDraft("SUBSTANCE", id, version);
     }
 
     @PostMapping("/substances/{id}/publish")

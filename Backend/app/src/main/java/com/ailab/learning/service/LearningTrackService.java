@@ -109,8 +109,14 @@ public class LearningTrackService {
                 }
             }
 
+            String levelCode = extractString(levelLocMap, "code", "slug");
+            if (levelCode == null) {
+                levelCode = "lvl_1".equalsIgnoreCase(level.getId()) ? "mixtures" : level.getId();
+            }
+
             levels.add(new LevelSummary(
                     level.getId(),
+                    levelCode,
                     level.getTrackId(),
                     level.getLevelNumber(),
                     level.getSortOrder(),

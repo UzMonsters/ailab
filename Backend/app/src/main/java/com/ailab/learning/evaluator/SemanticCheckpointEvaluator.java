@@ -56,7 +56,7 @@ public class SemanticCheckpointEvaluator {
                     evaluateMeasurement(checkpoint, workspaceId, items, nextStepId);
             case "REACTION_COMPLETED", "STATE_REACHED" ->
                     evaluateReactionCompleted(checkpoint, items, nextStepId);
-            case "SAFETY_CLEAR" ->
+            case "SAFETY_CLEAR", "AUTO" ->
                     new EvaluateCheckpointResponse(true, null, nextStepId);
             default ->
                     evaluateGenericFact(checkpoint, items, connections, nextStepId);

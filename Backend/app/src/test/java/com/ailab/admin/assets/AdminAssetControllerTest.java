@@ -51,13 +51,13 @@ class AdminAssetControllerTest {
         );
         assertThatThrownBy(() -> assetService.generateUploadUrls(invalidMime))
                 .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("VALIDATION_ERROR");
+                .hasMessageContaining("UNSUPPORTED_MEDIA_TYPE");
 
         List<Map<String, Object>> tooLarge = List.of(
                 Map.of("filename", "large.png", "contentType", "image/png", "sizeBytes", 10000000L)
         );
         assertThatThrownBy(() -> assetService.generateUploadUrls(tooLarge))
                 .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("VALIDATION_ERROR");
+                .hasMessageContaining("ASSET_TOO_LARGE");
     }
 }

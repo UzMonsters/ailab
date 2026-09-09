@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping({"/api/v1/admin/learning/levels", "/api/v1/admin/scenarios"})
+@RequestMapping("/api/v1/admin/scenarios")
 @PreAuthorize("hasRole('ADMIN')")
 @SecurityRequirement(name = "bearerAuth")
 public class AdminLearningScenariosController {

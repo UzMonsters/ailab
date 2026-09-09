@@ -34,6 +34,7 @@ public class AdminLearningService {
     private final LearningUserAttemptRepository attemptRepository;
     private final LearningProgressResetAuditRepository resetAuditRepository;
     private final LearningLevelService levelService;
+    private final AdminLearningValidationService validationService;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceStateRepository workspaceStateRepository;
     private final ObjectMapper objectMapper;
@@ -49,6 +50,7 @@ public class AdminLearningService {
             LearningUserAttemptRepository attemptRepository,
             LearningProgressResetAuditRepository resetAuditRepository,
             LearningLevelService levelService,
+            AdminLearningValidationService validationService,
             WorkspaceRepository workspaceRepository,
             WorkspaceStateRepository workspaceStateRepository,
             ObjectMapper objectMapper
@@ -63,6 +65,7 @@ public class AdminLearningService {
         this.attemptRepository = attemptRepository;
         this.resetAuditRepository = resetAuditRepository;
         this.levelService = levelService;
+        this.validationService = validationService;
         this.workspaceRepository = workspaceRepository;
         this.workspaceStateRepository = workspaceStateRepository;
         this.objectMapper = objectMapper;
@@ -113,13 +116,28 @@ public class AdminLearningService {
         );
     }
 
+    private static final Set<String> ALLOWED_LEVEL_SORT_FIELDS = Set.of(
+            "sortOrder", "levelNumber", "difficulty", "estimatedMinutes", "status", "createdAt", "updatedAt"
+    );
+
     @Transactional(readOnly = true)
-    public LevelPageResponse listLevels(String trackId, LearningStatus status, String q, int page, int size, String sort) {
+    public LevelPageResponse listLevels(
+            String trackId,
+            LearningStatus status,
+            String q,
+            int page,
+            int size,
+            String sort
+    ) {
         Sort sortObj = Sort.by(Sort.Direction.ASC, "sortOrder");
         if (sort != null && !sort.isBlank()) {
             String[] parts = sort.split(",");
+            String field = parts[0].trim();
+            if (!ALLOWED_LEVEL_SORT_FIELDS.contains(field)) {
+                throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "INVALID_QUERY: Invalid sort field: " + field);
+            }
             Sort.Direction dir = parts.length > 1 && parts[1].trim().equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-            sortObj = Sort.by(dir, parts[0].trim());
+            sortObj = Sort.by(dir, field);
         }
 
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size), sortObj);
@@ -406,6 +424,10 @@ public class AdminLearningService {
         LearningLevelEntity level = levelRepository.findById(levelId)
                 .orElseThrow(() -> new LevelNotFoundException("Level not found: " + levelId));
 
+        if (request != null && request.version() > 0 && request.version() != level.getDraftVersion()) {
+            throw new VersionConflictException(level.getDraftVersion(), request.version());
+        }
+
         String previewId = "prev-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
         String sandboxUrl = "/sandbox?previewAttemptId=" + previewId + "&levelId=" + levelId;
         Instant expiresAt = Instant.now().plus(java.time.Duration.ofHours(2));
@@ -434,13 +456,24 @@ public class AdminLearningService {
         att.setUpdatedAt(Instant.now());
         attemptRepository.save(att);
 
-        return new PreviewAttemptResponse(previewId, sandboxUrl, expiresAt);
+        return new PreviewAttemptResponse(previewId, att.getExperimentId(), att.getCurrentStepId(), 1L, true, previewId, sandboxUrl, expiresAt);
     }
 
     @Transactional
     public PublishResultDto publishLevel(String levelId, PublishLevelRequest request, String actorId, String actorName) {
         LearningLevelEntity level = levelRepository.findById(levelId)
                 .orElseThrow(() -> new LevelNotFoundException("Level not found: " + levelId));
+
+        if (request != null && request.version() > 0 && request.version() != level.getDraftVersion()) {
+            throw new VersionConflictException(level.getDraftVersion(), request.version());
+        }
+
+        ValidationReportDto report = validationService.validateLevel(levelId, request != null ? request.version() : null);
+        if (!report.valid()) {
+            String firstError = !report.errors().isEmpty() ? report.errors().get(0).message() : "Level validation failed";
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "PUBLISH_VALIDATION_FAILED: " + firstError);
+        }
 
         String idempotencyKey = request != null ? request.idempotencyKey() : null;
         if (idempotencyKey != null && !idempotencyKey.isBlank()) {

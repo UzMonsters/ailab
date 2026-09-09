@@ -20,4 +20,6 @@ public interface AdminDashboardService {
     Map<String, Object> createReport(Map<String, Object> request);
 
     Map<String, Object> getReportJob(String jobId);
+
+    byte[] downloadReport(String jobId);
 }

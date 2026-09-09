@@ -184,7 +184,7 @@ public class LearningCompletionService {
         );
 
         Instant completedAt = att.getCompletedAt() != null ? att.getCompletedAt() : Instant.now();
-        return new CompleteAttemptResponse(completedAt, nextLevel, rewardDto);
+        return new CompleteAttemptResponse("COMPLETED", att.getScore() != null ? att.getScore() : 100, rewardDto, completedAt, nextLevel, rewardDto);
     }
 
     @SuppressWarnings("unchecked")

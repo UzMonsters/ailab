@@ -3,6 +3,7 @@ package com.ailab.auth.config;
 import com.ailab.auth.security.JwtAuthenticationFilter;
 import com.ailab.auth.security.DatabaseUserDetailsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
@@ -67,8 +68,12 @@ public class SecurityConfig {
             configuration.setAllowCredentials(true);
         }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
-        configuration.setExposedHeaders(List.of("Set-Cookie", "Authorization"));
+        configuration.setAllowedHeaders(List.of(
+                "Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin",
+                "Access-Control-Request-Method", "Access-Control-Request-Headers",
+                "If-Match", "Idempotency-Key", "X-Correlation-Id"
+        ));
+        configuration.setExposedHeaders(List.of("Set-Cookie", "Authorization", "ETag", "Location", "X-Correlation-Id"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -86,20 +91,42 @@ public class SecurityConfig {
                 .formLogin(formLogin -> formLogin.disable())
                 .authenticationProvider(authenticationProvider)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**", "/api/v1/books/**", "/api/v1/learning/**", "/api/v1/shared-workspaces/**", "/ws/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/health").permitAll()
+                        .requestMatchers("/api/v1/auth/**", "/api/v1/books/**", "/api/v1/assets/**", "/api/v1/shared-workspaces/**", "/ws/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/health").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/learning/tracks/**", "/api/v1/learning/levels/*").permitAll()
+                        .requestMatchers("/api/v1/learning/levels/*/attempts", "/api/v1/learning/attempts/**").authenticated()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/users/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((req, res, e) -> write(res, mapper, 401, "Unauthorized"))
-                        .accessDeniedHandler((req, res, e) -> write(res, mapper, 403, "Forbidden")))
+                        .authenticationEntryPoint((req, res, e) -> write(req, res, mapper, 401, "AUTH_REQUIRED", "Unauthorized", "Authentication required"))
+                        .accessDeniedHandler((req, res, e) -> write(req, res, mapper, 403, "FORBIDDEN", "Forbidden", "Access is forbidden")))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
-    private static void write(HttpServletResponse response, ObjectMapper mapper, int status, String message) throws java.io.IOException {
+    private static void write(HttpServletRequest request, HttpServletResponse response, ObjectMapper mapper, int status, String code, String title, String detail) throws java.io.IOException {
         response.setStatus(status);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        mapper.writeValue(response.getOutputStream(), Map.of("timestamp", Instant.now(), "status", status, "error", message));
+        String correlationId = request != null ? request.getHeader("X-Correlation-Id") : null;
+        String instance = request != null ? request.getRequestURI() : "";
+        com.ailab.common.api.ApiError err = new com.ailab.common.api.ApiError(
+                Instant.now(),
+                status,
+                title,
+                detail,
+                instance,
+                instance,
+                List.of(),
+                List.of(),
+                Map.of(),
+                correlationId,
+                "https://api.aichemistry.local/problems/" + code.toLowerCase().replace('_', '-'),
+                title,
+                code,
+                detail,
+                List.of(),
+                correlationId
+        );
+        mapper.writeValue(response.getOutputStream(), err);
     }
 }
