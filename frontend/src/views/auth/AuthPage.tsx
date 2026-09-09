@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Atom, FlaskConical, Brain, Users, Mail, Lock, User, Eye, EyeOff, ArrowRight, Loader2, AlertCircle, XCircle } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import ScienceBackground, { BackgroundGlow } from '@/shared/ui/ScienceBackground';
@@ -20,7 +20,7 @@ export default function AuthPage() {
   const pathname = usePathname();
   const router = useRouter();
   const locale = pathname.split('/')[1] || 'en';
-  const { isLoading, error, clearError } = useAuthStore();
+  const { isLoading, error, clearError, login, register, isAuthenticated } = useAuthStore();
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [showPassword, setShowPassword] = useState(false);
@@ -51,12 +51,16 @@ export default function AuthPage() {
     clearError();
     if (mode === 'login') {
       if (!validateLogin()) return;
-      router.push(`/${locale}/dashboard`);
+      await login(form.email.trim(), form.password);
     } else {
       if (!validateRegister()) return;
-      router.push(`/${locale}/dashboard`);
+      await register(form.username.trim(), form.email.trim(), form.password);
     }
   };
+
+  useEffect(() => {
+    if (isAuthenticated) router.replace(`/${locale}/dashboard`);
+  }, [isAuthenticated, locale, router]);
 
   const updateField = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((p) => ({ ...p, [field]: e.target.value }));

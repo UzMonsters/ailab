@@ -42,8 +42,10 @@ class WorkspaceSharingCollaborationIntegrationTest {
 
     private User owner;
     private User collaborator;
+    private User admin;
     private String ownerToken;
     private String collabToken;
+    private String adminToken;
     private String wsId;
 
     @BeforeEach
@@ -52,9 +54,12 @@ class WorkspaceSharingCollaborationIntegrationTest {
         userRepository.save(owner);
         collaborator = new User("share_collab_" + System.currentTimeMillis(), "collab" + System.currentTimeMillis() + "@jasscience.dev", "hashed_pwd", Role.USER);
         userRepository.save(collaborator);
+        admin = new User("share_admin_" + System.currentTimeMillis(), "admin" + System.currentTimeMillis() + "@jasscience.dev", "hashed_pwd", Role.ADMIN);
+        userRepository.save(admin);
 
         ownerToken = "Bearer " + jwtService.issue(owner);
         collabToken = "Bearer " + jwtService.issue(collaborator);
+        adminToken = "Bearer " + jwtService.issue(admin);
 
         CreateWorkspaceRequest req = new CreateWorkspaceRequest("Shared Lab Collaboration", "chemistry");
         MvcResult res = mockMvc.perform(post("/api/v1/workspaces")
@@ -136,21 +141,61 @@ class WorkspaceSharingCollaborationIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("SHARE_PASSWORD_REQUIRED"));
 
-        // 2. Resolve with wrong password -> 403 SHARE_PASSWORD_INVALID
+        // 2. Resolve with wrong password -> 401 SHARE_PASSWORD_INVALID
         mockMvc.perform(post("/api/v1/shared-workspaces/resolve")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new ResolveShareLinkRequest(rawToken, "wrong_pwd"))))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("SHARE_PASSWORD_INVALID"));
 
         // 3. Resolve with correct password -> Success and returns temporary share session token
-        mockMvc.perform(post("/api/v1/shared-workspaces/resolve")
+        MvcResult resolveRes = mockMvc.perform(post("/api/v1/shared-workspaces/resolve")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new ResolveShareLinkRequest(rawToken, "secret123"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.workspaceId").value(wsId))
                 .andExpect(jsonPath("$.role").value("VIEWER"))
-                .andExpect(jsonPath("$.shareSessionToken").isNotEmpty());
+                .andExpect(jsonPath("$.shareSessionToken").isNotEmpty())
+                .andReturn();
+
+        String guestToken = objectMapper.readTree(resolveRes.getResponse().getContentAsString()).get("shareSessionToken").asText();
+
+        // 4. Resolved guest session can read REST workspace state
+        mockMvc.perform(get("/api/v1/workspaces/" + wsId + "/state")
+                        .header("Authorization", "ShareSession " + guestToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.workspaceId").value(wsId));
+
+        // 5. Viewer guest cannot mutate workspace state
+        mockMvc.perform(post("/api/v1/workspaces/" + wsId + "/events")
+                        .header("Authorization", "ShareSession " + guestToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new SandboxEventCommand(
+                                "guest-viewer-move",
+                                1L,
+                                "ITEM_MOVED",
+                                Map.of("itemId", "missing", "x", 1)
+                        ))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testAdminWorkspaceListSeesGlobalSharingAggregates() throws Exception {
+        CreateShareLinkRequest linkReq = new CreateShareLinkRequest("VIEWER", Instant.now().plusSeconds(3600), null, 5, true, true);
+        mockMvc.perform(post("/api/v1/workspaces/" + wsId + "/share-links")
+                        .header("Authorization", ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(linkReq)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/admin/workspaces")
+                        .header("Authorization", adminToken)
+                        .param("q", "Shared Lab Collaboration"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value(wsId))
+                .andExpect(jsonPath("$.items[0].owner.id").value(owner.getId()))
+                .andExpect(jsonPath("$.items[0].memberCount").value(greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.items[0].activeShareLinkCount").value(greaterThanOrEqualTo(1)));
     }
 
     @Test

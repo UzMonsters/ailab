@@ -9,51 +9,16 @@ import type {
 } from '@/types';
 
 export const experimentApi = {
-  createExperiment: async (data: CreateExperimentRequest) => {
-    try {
-      return await api.post<SimulationState>('/api/v1/chemistry/experiments', data);
-    } catch {
-      return { sessionId: 'mock-session', status: 'active', stateVersion: 1 } as unknown as SimulationState;
-    }
-  },
+  createExperiment: (data: CreateExperimentRequest) => api.post<SimulationState>('/api/v1/chemistry/experiments', data),
 
-  getExperiment: async (sessionId: string) => {
-    try {
-      return await api.get<SimulationState>(`/api/v1/chemistry/experiments/${sessionId}`);
-    } catch {
-      return { sessionId, status: 'active', stateVersion: 1 } as unknown as SimulationState;
-    }
-  },
+  getExperiment: (sessionId: string) => api.get<SimulationState>(`/api/v1/chemistry/experiments/${sessionId}`),
 
-  executeOperation: async (sessionId: string, data: ExecuteOperationRequest) => {
-    try {
-      return await api.post<SimulationExecutionResult>(`/api/v1/chemistry/experiments/${sessionId}/operations`, data);
-    } catch {
-      return { newVersion: data.expectedStateVersion ? data.expectedStateVersion + 1 : 1, state: { sessionId, status: 'active', stateVersion: 1 } as unknown as SimulationState } as unknown as SimulationExecutionResult;
-    }
-  },
+  executeOperation: (sessionId: string, data: ExecuteOperationRequest) => api.post<SimulationExecutionResult>(`/api/v1/chemistry/experiments/${sessionId}/operations`, data),
 
-  appendEvent: async (sessionId: string, data: AppendEventRequest) => {
-    try {
-      return await api.post<SimulationState>(`/api/v1/chemistry/experiments/${sessionId}/events`, data);
-    } catch {
-      return { sessionId, status: 'active', stateVersion: 1 } as unknown as SimulationState;
-    }
-  },
+  appendEvent: (sessionId: string, data: AppendEventRequest) => api.post<SimulationState>(`/api/v1/chemistry/experiments/${sessionId}/events`, data),
 
-  replayExperiment: async (sessionId: string) => {
-    try {
-      return await api.post<SimulationState>(`/api/v1/chemistry/experiments/${sessionId}/replay`);
-    } catch {
-      return { sessionId, status: 'active', stateVersion: 1 } as unknown as SimulationState;
-    }
-  },
+  replayExperiment: (sessionId: string) => api.post<SimulationState>(`/api/v1/chemistry/experiments/${sessionId}/replay`),
 
-  getAudit: async (sessionId: string, eventId: string) => {
-    try {
-      return await api.get<SimulationCalculationAudit>(`/api/v1/chemistry/experiments/${sessionId}/audit/${eventId}`);
-    } catch {
-      return {} as SimulationCalculationAudit;
-    }
-  },
+  getAudit: (sessionId: string, eventId: string) => api.get<SimulationCalculationAudit>(`/api/v1/chemistry/experiments/${sessionId}/audit/${eventId}`),
+  measurements: (sessionId: string, kind?: string) => api.get<Array<Record<string, unknown>>>(`/api/v1/chemistry/experiments/${sessionId}/measurements${kind ? `?kind=${encodeURIComponent(kind)}` : ''}`),
 };

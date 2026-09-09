@@ -1,4 +1,5 @@
 import { Send, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { type AssistantMessage } from "./hooks/useAssistant";
 import { useState } from "react";
 
@@ -7,12 +8,15 @@ export function AssistantPanel({
   onSend,
   onExecuteAction,
   onClose,
+  isTeamChat = false,
 }: {
   messages: AssistantMessage[];
   onSend: (text: string) => void;
   onExecuteAction: (action: string, payload: Record<string, unknown>) => void;
   onClose: () => void;
+  isTeamChat?: boolean;
 }) {
+  const ts = useTranslations("sandbox");
   const [input, setInput] = useState("");
 
   const handleSend = () => {
@@ -24,14 +28,14 @@ export function AssistantPanel({
 
   return (
     <section
-      className="fixed bottom-20 right-5 z-[80] flex h-[min(520px,70vh)] w-[min(360px,calc(100vw-2rem))] flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-2xl"
+      className="sandbox-assistant-panel fixed bottom-20 right-5 z-[80] flex h-[min(520px,70vh)] w-[min(360px,calc(100vw-2rem))] flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-2xl"
       aria-label="AI assistant"
     >
       <header className="flex items-center justify-between border-b border-[var(--border)] p-4">
         <div>
-          <p className="font-semibold">AI Lab Assistant</p>
+          <p className="font-semibold">{isTeamChat ? ts("assistant.teamChat") : ts("assistant.title")}</p>
           <p className="text-xs text-[var(--muted-foreground)]">
-            Safety-aware help
+            {isTeamChat ? ts("assistant.teamChatDesc") : ts("assistant.description")}
           </p>
         </div>
         <button
@@ -73,7 +77,7 @@ export function AssistantPanel({
           onChange={(event) => setInput(event.target.value)}
           onKeyDown={(event) => event.key === "Enter" && handleSend()}
           className="min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-transparent px-3 outline-none"
-          placeholder="Ask assistant…"
+          placeholder={ts("assistant.placeholder")}
         />
         <button
           className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white hover:bg-blue-700"

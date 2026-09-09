@@ -12,29 +12,31 @@ export interface WorkspaceRepository {
 }
 
 export class ApiWorkspaceRepository implements WorkspaceRepository {
+  constructor(private readonly sessionId?: string) {}
+
   async getState(workspaceId: string): Promise<WorkspaceState> {
-    return await workspacesApi.getState(workspaceId);
+    return await workspacesApi.getState(workspaceId, this.sessionId);
   }
 
   async saveState(workspaceId: string, snapshot: WorkspaceSnapshot): Promise<WorkspaceState> {
     const state: WorkspaceState = this.mapToState(workspaceId, snapshot);
-    return await workspacesApi.saveState(workspaceId, state);
+    return await workspacesApi.saveState(workspaceId, state, undefined, this.sessionId);
   }
 
   async appendEvent(workspaceId: string, event: SandboxEventCommand): Promise<WorkspaceEventAck> {
-    return workspacesApi.appendEvent(workspaceId, event);
+    return workspacesApi.appendEvent(workspaceId, event, this.sessionId);
   }
 
   async autosave(workspaceId: string, data: AutosaveRequest): Promise<{ stateVersion: number; savedAt: string }> {
-    return await workspacesApi.autosave(workspaceId, data);
+    return await workspacesApi.autosave(workspaceId, data, this.sessionId);
   }
 
   async undo(workspaceId: string, expectedVersion?: number): Promise<WorkspaceState> {
-    return workspacesApi.undo(workspaceId, expectedVersion);
+    return workspacesApi.undo(workspaceId, expectedVersion, this.sessionId);
   }
 
   async redo(workspaceId: string, expectedVersion?: number): Promise<WorkspaceState> {
-    return workspacesApi.redo(workspaceId, expectedVersion);
+    return workspacesApi.redo(workspaceId, expectedVersion, this.sessionId);
   }
 
   mapToState(workspaceId: string, snapshot: WorkspaceSnapshot, stateVersion = 1): WorkspaceState {

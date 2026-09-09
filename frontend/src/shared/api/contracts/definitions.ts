@@ -5,6 +5,12 @@ export interface ApiError {
   status: number;
   error?: string;
   message: string;
+  code?: string;
+  title?: string;
+  detail?: string;
+  type?: string;
+  correlationId?: string;
+  traceId?: string;
   path?: string;
   fieldViolations?: Array<{ field: string; message: string }>;
   errors?: Record<string, string>;
@@ -29,12 +35,13 @@ export interface AuthLoginRequest {
 
 export interface AuthTokenResponse {
   accessToken: string;
+  refreshToken?: string | null;
   tokenType: 'Bearer';
-  expiresInSeconds: number;
+  expiresIn: number;
 }
 
 export interface AuthSuccessResponse {
-  message: string;
+  success: boolean;
 }
 
 export interface UserMeResponse {
@@ -465,27 +472,37 @@ export interface SafetyWarning {
 }
 
 export interface SimulationState {
-  sessionId: string;
-  processCode: string;
-  processVersion: number;
-  version: number;
+  sessionId: string | { value: string };
+  version: number | { value: number };
   status: string;
-  temperature: Record<string, unknown>;
-  pressure: Record<string, unknown>;
-  containers: Record<string, unknown>[];
-  apparatus: Record<string, unknown>[];
-  createdAt: string;
-  updatedAt: string;
+  clock?: Record<string, unknown>;
+  processExecution?: Record<string, unknown>;
+  vessels?: Record<string, unknown>[] | Record<string, Record<string, unknown>>;
+  equipmentAllocations?: Record<string, unknown>[] | Record<string, Record<string, unknown>>;
+  environment?: Record<string, unknown>;
+  processCode?: string;
+  processVersion?: number;
+  temperature?: Record<string, unknown>;
+  pressure?: Record<string, unknown>;
+  containers?: Record<string, unknown>[];
+  apparatus?: Record<string, unknown>[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SimulationExecutionResult {
-  sessionId: string;
-  commandId: string;
-  previousVersion: number;
-  newVersion: number;
-  stateDelta: Record<string, unknown>;
-  executionLog: string[];
-  timestamp: string;
+  status?: string;
+  eventId?: string | { value: string };
+  payload?: Record<string, unknown>;
+  state?: Record<string, unknown>;
+  audit?: Record<string, unknown>;
+  sessionId?: string;
+  commandId?: string;
+  previousVersion?: number;
+  newVersion?: number;
+  stateDelta?: Record<string, unknown>;
+  executionLog?: string[];
+  timestamp?: string;
 }
 
 export interface SimulationCalculationAudit {
@@ -500,7 +517,7 @@ export interface SimulationCalculationAudit {
 }
 
 export interface CreateExperimentRequest {
-  sessionId: string;
+  sessionId: { value: string };
   processCode: string;
   processVersion: number;
   requestedAt: string;
@@ -523,6 +540,11 @@ export interface Workspace {
   name: string;
   science: 'chemistry' | 'physics' | 'biology';
   thumbnail?: string;
+  preview?: {
+    status?: string;
+    variants?: Record<string, { url?: string; width?: number; height?: number; mimeType?: string }>;
+    fallback?: { kind?: string; key?: string };
+  };
   createdAt: string;
   updatedAt: string;
   isFavorite: boolean;
@@ -581,6 +603,8 @@ export interface EquipmentSummary {
   type: string;
   condition: string;
   provenance: string;
+  rendererKey?: string;
+  category?: string;
   capabilities?: string[];
 }
 

@@ -10,6 +10,8 @@ import com.ailab.workspace.dto.*;
 import com.ailab.workspace.repository.WorkspaceInvitationRepository;
 import com.ailab.workspace.repository.WorkspaceMemberRepository;
 import com.ailab.workspace.repository.WorkspaceRepository;
+import com.ailab.workspace.security.ShareSessionPrincipal;
+import com.ailab.workspace.security.WorkspaceShareSessionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,17 +33,20 @@ public class WorkspaceMemberService {
     private final WorkspaceRepository workspaceRepository;
     private final UserRepository userRepository;
     private final SecureRandom secureRandom = new SecureRandom();
+    private final WorkspaceShareSessionService shareSessionService;
 
     public WorkspaceMemberService(
             WorkspaceMemberRepository memberRepository,
             WorkspaceInvitationRepository invitationRepository,
             WorkspaceRepository workspaceRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            WorkspaceShareSessionService shareSessionService
     ) {
         this.memberRepository = memberRepository;
         this.invitationRepository = invitationRepository;
         this.workspaceRepository = workspaceRepository;
         this.userRepository = userRepository;
+        this.shareSessionService = shareSessionService;
     }
 
     public List<WorkspaceMemberDto> listMembers(String workspaceId, String actorUserId) {
@@ -80,6 +85,12 @@ public class WorkspaceMemberService {
     public WorkspacePermissionsDto getPermissions(String workspaceId, String userId) {
         WorkspaceEntity ws = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Workspace not found: " + workspaceId));
+
+        Optional<ShareSessionPrincipal> sharePrincipal = shareSessionService.currentSharePrincipal(userId);
+        if (sharePrincipal.isPresent() && sharePrincipal.get().workspaceId().equals(workspaceId)) {
+            ShareSessionPrincipal principal = sharePrincipal.get();
+            return WorkspacePermissionsDto.of(principal.role(), principal.capabilities());
+        }
 
         if (ws.getOwnerId().equals(userId)) {
             return WorkspacePermissionsDto.of("OWNER", getOwnerCapabilities());
@@ -229,33 +240,16 @@ public class WorkspaceMemberService {
             throw new com.ailab.workspace.exception.WorkspaceNotFoundException(workspaceId);
         }
         if (!perms.capabilities().contains(requiredCapability)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Permission denied. Required capability: " + requiredCapability);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "CAPABILITY_REQUIRED: Required capability: " + requiredCapability);
         }
     }
 
     public static List<String> getOwnerCapabilities() {
-        return List.of(
-                "READ_WORKSPACE", "EDIT_SCENE", "RUN_EXPERIMENT", "USE_MEASUREMENTS",
-                "CHAT", "COMMENT", "MANAGE_ACCESS", "MANAGE_WORKSPACE"
-        );
+        return WorkspaceShareSessionService.ownerCapabilities();
     }
 
     public static List<String> getCapabilitiesForRole(String role) {
-        if ("OWNER".equalsIgnoreCase(role)) {
-            return getOwnerCapabilities();
-        }
-        if ("EDITOR".equalsIgnoreCase(role)) {
-            return List.of(
-                    "READ_WORKSPACE", "EDIT_SCENE", "RUN_EXPERIMENT", "USE_MEASUREMENTS",
-                    "CHAT", "COMMENT"
-            );
-        }
-        if ("VIEWER".equalsIgnoreCase(role)) {
-            return List.of(
-                    "READ_WORKSPACE", "USE_MEASUREMENTS", "CHAT", "COMMENT"
-            );
-        }
-        return List.of();
+        return WorkspaceShareSessionService.memberCapabilities(role);
     }
 
     public static String sha256(String raw) {

@@ -1,7 +1,7 @@
 'use client';
 
-import { createContext, useContext, useEffect, useMemo, useState, useCallback, type ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
+import { createContext, useContext, useMemo, useState, useCallback, type ReactNode } from 'react';
+import { useTheme } from 'next-themes';
 
 interface UIState {
   sidebarOpen: boolean;
@@ -14,36 +14,14 @@ interface UIState {
 const UIContext = createContext<UIState | null>(null);
 
 export function UIProvider({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const themeSwitchEnabled = pathname.includes('/dashboard') || pathname.includes('/workspace');
+  const { theme: activeTheme, setTheme: setActiveTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [theme, setTheme] = useState<'dark' | 'light' | 'system'>(() => {
-    if (typeof window === 'undefined') return 'system';
-    const saved = window.localStorage.getItem('ai-lab-theme');
-    return saved === 'dark' || saved === 'light' || saved === 'system' ? saved : 'system';
-  });
-
-  useEffect(() => {
-    if (!themeSwitchEnabled) {
-      document.documentElement.removeAttribute('data-theme');
-      return;
-    }
-    const media = window.matchMedia('(prefers-color-scheme: light)');
-    const apply = () => {
-      const light = theme === 'light' || (theme === 'system' && media.matches);
-      document.documentElement.toggleAttribute('data-theme', light);
-      if (light) document.documentElement.dataset.theme = 'light';
-    };
-    apply();
-    const onChange = () => { if (theme === 'system') apply(); };
-    media.addEventListener?.('change', onChange);
-    return () => media.removeEventListener?.('change', onChange);
-  }, [theme, themeSwitchEnabled]);
+  const theme: UIState['theme'] = activeTheme === 'light' || activeTheme === 'dark' || activeTheme === 'system' ? activeTheme : 'system';
 
   const updateTheme = useCallback((next: 'dark' | 'light' | 'system') => {
-    setTheme(next);
+    setActiveTheme(next);
     window.localStorage.setItem('ai-lab-theme', next);
-  }, []);
+  }, [setActiveTheme]);
 
   const toggleSidebar = useCallback(() => setSidebarOpen((p) => !p), []);
   const contextValue = useMemo(() => ({

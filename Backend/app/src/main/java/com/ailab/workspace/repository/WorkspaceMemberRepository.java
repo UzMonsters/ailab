@@ -22,4 +22,6 @@ public interface WorkspaceMemberRepository extends JpaRepository<WorkspaceMember
     long countOwnersByWorkspaceId(String workspaceId);
 
     void deleteByWorkspaceIdAndUserId(String workspaceId, String userId);
+
+    void deleteByWorkspaceId(String workspaceId);
 }

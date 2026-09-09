@@ -66,6 +66,9 @@
   transition: color 300ms ease;
 }
 
+.academy-book-sync{position:absolute;left:1rem;bottom:1rem;z-index:50;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(7,10,18,.78);padding:.45rem .75rem;color:rgba(255,255,255,.68);font:600 10px/1.2 system-ui;letter-spacing:.04em;backdrop-filter:blur(12px)}
+.academy-book-sync-connected{border-color:rgba(20,241,149,.28);color:#8df6c5}.academy-book-sync-local{border-color:rgba(245,158,11,.28);color:#f7c66b}
+
 .academy-background {
   position: absolute;
   inset: 0;
@@ -81,14 +84,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: clamp(.5rem, 3vw, 2rem);
+}
+
+.academy-book-viewport {
+  position: relative;
+  flex: none;
+  overflow: visible;
 }
 
 .academy-book-scale-wrapper {
-  position: relative;
+  position: absolute;
+  inset: 0 auto auto 0;
   width: 1120px;
   height: 680px;
-  transform-origin: center center;
+  transform-origin: left top;
 }
 
 /* ============================================================
@@ -540,8 +550,8 @@
 .academy-nav.next { right: -72px; }
 @media (max-width: 767px) {
   .academy-nav { width: 54px; height: 54px; margin-top: -27px; font-size: 36px; background: rgba(8,12,25,.86); }
-  .academy-nav.prev { left: 8px; }
-  .academy-nav.next { right: 8px; }
+  .academy-nav.prev { left: -64px; }
+  .academy-nav.next { right: -64px; }
 }
 
 /* ============================================================
@@ -555,7 +565,38 @@
   pointer-events: none;
   z-index: 20;
 }
-.academy-spread-turn{transform-origin:center;backface-visibility:hidden;animation:journal-page-next 620ms cubic-bezier(.22,.7,.2,1)}.academy-spread-turn-prev{animation-name:journal-page-prev}@keyframes journal-page-next{0%{opacity:.4;transform:perspective(1800px) rotateY(-4deg) translateX(7px);filter:brightness(.72)}55%{box-shadow:inset 45px 0 45px rgba(0,0,0,.16)}100%{opacity:1;transform:none;filter:none}}@keyframes journal-page-prev{0%{opacity:.4;transform:perspective(1800px) rotateY(4deg) translateX(-7px);filter:brightness(.72)}55%{box-shadow:inset -45px 0 45px rgba(0,0,0,.16)}100%{opacity:1;transform:none;filter:none}}
+
+/* react-pageflip owns the sheet stack and the turning/shadow interpolation.
+   Each existing two-page spread is treated as one physical landscape sheet. */
+.academy-pageflip-book{position:absolute;inset:0;z-index:2;overflow:visible!important}
+.academy-pageflip-book .stf__parent,.academy-pageflip-book .stf__wrapper{overflow:visible!important}
+.academy-pageflip-sheet{width:1120px;height:680px;background:var(--book-bg);overflow:hidden}
+.academy-pageflip-sheet__content{position:relative;width:1120px;height:680px;overflow:hidden}
+.academy-pageflip-sheet .academy-spread{height:100%}
+.academy-spread-current{overflow:hidden;backface-visibility:hidden}
+.academy-turn-overlay{position:absolute;inset:0;z-index:96;overflow:hidden;pointer-events:none;transform-style:preserve-3d;backface-visibility:hidden;will-change:transform,clip-path;animation:journal-leaf-next 820ms cubic-bezier(.22,.74,.16,1) both}
+.academy-turn-overlay-prev{animation-name:journal-leaf-prev}
+.academy-turn-snapshot{position:absolute;inset:0;display:flex}
+.academy-turn-shade{position:absolute;inset:0;background:linear-gradient(90deg,transparent 36%,rgba(0,0,0,.08) 48%,rgba(0,0,0,.52) 50%,rgba(255,255,255,.13) 55%,transparent 78%);mix-blend-mode:multiply;animation:journal-shade 820ms ease both}
+.academy-page-curl{position:absolute;inset:0;z-index:90;pointer-events:none;opacity:0;background:linear-gradient(90deg,transparent 34%,rgba(255,255,255,.09) 47%,rgba(0,0,0,.38) 50%,rgba(255,255,255,.12) 53%,transparent 68%);mix-blend-mode:soft-light;animation:journal-curl-next 760ms cubic-bezier(.2,.72,.16,1)}
+.academy-spread-turn-prev .academy-page-curl{animation-name:journal-curl-prev}
+.academy-turning-sheet{position:absolute;right:0;top:0;bottom:0;width:50%;z-index:95;pointer-events:none;transform-origin:left center;transform-style:preserve-3d;background:var(--book-page);background-image:var(--book-texture);box-shadow:inset 18px 0 34px rgba(0,0,0,.16),-8px 0 24px rgba(0,0,0,.22);animation:journal-sheet-next 820ms cubic-bezier(.22,.66,.18,1) both}
+.academy-turning-sheet i{position:absolute;inset:0;display:block;backface-visibility:hidden;background:linear-gradient(90deg,rgba(0,0,0,.22),transparent 18%,rgba(255,255,255,.05) 82%,rgba(0,0,0,.12));}
+.academy-spread-turn-prev .academy-turning-sheet{left:0;right:auto;transform-origin:right center;animation-name:journal-sheet-prev}
+@keyframes journal-sheet-next{0%{opacity:1;transform:perspective(2200px) rotateY(0)}49%{opacity:1}50%{opacity:.96}100%{opacity:0;transform:perspective(2200px) rotateY(-178deg)}}
+@keyframes journal-sheet-prev{0%{opacity:1;transform:perspective(2200px) rotateY(0)}49%{opacity:1}50%{opacity:.96}100%{opacity:0;transform:perspective(2200px) rotateY(178deg)}}
+@keyframes journal-page-next{0%{opacity:.18;transform:perspective(2200px) rotateY(-13deg) translateX(34px) scaleX(.94);filter:brightness(.58) saturate(.8)}48%{opacity:.92;transform:perspective(2200px) rotateY(3deg) translateX(-7px) scaleX(.99);filter:brightness(.82)}100%{opacity:1;transform:none;filter:none}}
+@keyframes journal-page-prev{0%{opacity:.18;transform:perspective(2200px) rotateY(13deg) translateX(-34px) scaleX(.94);filter:brightness(.58) saturate(.8)}48%{opacity:.92;transform:perspective(2200px) rotateY(-3deg) translateX(7px) scaleX(.99);filter:brightness(.82)}100%{opacity:1;transform:none;filter:none}}
+@keyframes journal-curl-next{0%{opacity:.85;transform:translateX(56%) skewX(-8deg)}55%{opacity:.68;transform:translateX(-5%) skewX(3deg)}100%{opacity:0;transform:translateX(-58%)}}
+@keyframes journal-curl-prev{0%{opacity:.85;transform:translateX(-56%) skewX(8deg)}55%{opacity:.68;transform:translateX(5%) skewX(-3deg)}100%{opacity:0;transform:translateX(58%)}}
+@keyframes journal-leaf-next{0%{clip-path:inset(0 0 0 50%);transform:perspective(2400px) rotateY(0);transform-origin:50% 50%;filter:brightness(1)}48%{clip-path:inset(0 49% 0 49%);transform:perspective(2400px) rotateY(-88deg);filter:brightness(.72)}100%{clip-path:inset(0 50% 0 0);transform:perspective(2400px) rotateY(-178deg);transform-origin:50% 50%;filter:brightness(.92)}}
+@keyframes journal-leaf-prev{0%{clip-path:inset(0 50% 0 0);transform:perspective(2400px) rotateY(0);transform-origin:50% 50%;filter:brightness(1)}48%{clip-path:inset(0 49% 0 49%);transform:perspective(2400px) rotateY(88deg);filter:brightness(.72)}100%{clip-path:inset(0 0 0 50%);transform:perspective(2400px) rotateY(178deg);transform-origin:50% 50%;filter:brightness(.92)}}
+@keyframes journal-shade{0%,100%{opacity:.15}45%,58%{opacity:.85}}
+
+.academy-orientation-hint{position:fixed;left:50%;bottom:max(12px,env(safe-area-inset-bottom));z-index:320;display:flex;align-items:center;gap:.55rem;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 24px);padding:.65rem .9rem;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(8,13,24,.88);color:#eef4ff;font:600 11px/1.2 var(--font-sans);box-shadow:0 12px 36px rgba(0,0,0,.38);backdrop-filter:blur(14px);animation:orientation-hint-in .5s cubic-bezier(.22,1,.36,1) both}
+.academy-orientation-hint svg{color:#67e8f9;animation:orientation-turn 2.2s ease-in-out infinite}
+@keyframes orientation-hint-in{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes orientation-turn{0%,35%,100%{transform:rotate(0)}60%,80%{transform:rotate(90deg)}}
 .academy-flipper {
   position: absolute;
   top: 0;
@@ -591,8 +632,7 @@
 .academy-ribbon {
   position: absolute;
   top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: -32px;
   width: 12px;
   height: 82px;
   background-color: var(--book-ribbon);
@@ -620,7 +660,7 @@
 .academy-ribbon.ch-equipment { background-color: #5B3E8A; }
 .academy-ribbon.ch-substances{ background-color: #3A6B3A; }
 .academy-ribbon.ch-practices { background-color: #7A2020; }
-.academy-ribbon.is-saved{filter:saturate(1.35) brightness(1.12);transform:translateY(7px)}.academy-bookmark-slip{position:absolute;right:24px;top:48px;z-index:25;background:var(--book-page);color:var(--book-text);border:1px solid var(--book-border);padding:.45rem .8rem;box-shadow:0 8px 18px rgba(0,0,0,.2);transform:rotate(2deg);font-size:.82rem}
+.academy-ribbon.is-saved{filter:saturate(1.35) brightness(1.12);transform:translateY(7px)}.academy-bookmark-slip{position:absolute;right:-86px;top:48px;z-index:45;background:var(--book-page);color:var(--book-text);border:1px solid var(--book-border);padding:.4rem .65rem;box-shadow:0 8px 18px rgba(0,0,0,.2);transform:rotate(2deg);font-size:.72rem;white-space:nowrap}
 
 /* ============================================================
    7. TYPOGRAPHY
@@ -1518,7 +1558,7 @@
 .boyle-lab{width:190px;padding:.55rem;border:1px solid var(--book-border)}.boyle-values{display:flex;justify-content:space-between;margin:.4rem 0;font:.58rem var(--font-mono)}.boyle-lab input{width:100%;accent-color:var(--book-accent)}.boyle-graph{display:flex;height:55px;align-items:flex-end;gap:4px;border-left:1px solid var(--book-border);border-bottom:1px solid var(--book-border);padding:4px}.boyle-graph i{flex:1;max-height:100%;background:var(--book-accent);opacity:.55}.boyle-lab small,.mendeleev-compare small{display:block;margin-top:.4rem;font:.52rem/1.35 var(--font-mono);opacity:.5}
 .mendeleev-compare{width:220px;border:1px solid var(--book-border);padding:.55rem}.comparison-tabs{display:flex;gap:.3rem;margin-bottom:.5rem}.comparison-tabs button.active{border-color:var(--book-accent);color:var(--book-accent)}.historical-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;transition:.35s}.historical-grid.modern{grid-template-columns:repeat(9,1fr)}.historical-grid span{display:grid;place-items:center;min-height:26px;border:1px solid var(--book-border);font:.6rem var(--font-mono);animation:element-reveal .25s ease both}.historical-grid span.unknown{border-style:dashed;color:var(--book-annotation)}@keyframes element-reveal{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 
-@media (prefers-reduced-motion:reduce){.periodic-foldout,.historical-grid span,.particle-vessel.state-gas i,.academy-spread-turn{animation:none!important}.element-cell{transition:none}}
+@media (prefers-reduced-motion:reduce){.periodic-foldout,.historical-grid span,.particle-vessel.state-gas i,.academy-spread-turn,.academy-page-curl,.academy-turning-sheet,.academy-orientation-hint,.academy-orientation-hint svg{animation:none!important}.element-cell{transition:none}}
 
 /* Step sorter */
 .practice-step-list {

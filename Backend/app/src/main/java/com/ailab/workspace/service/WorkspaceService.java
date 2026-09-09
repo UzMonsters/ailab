@@ -35,6 +35,7 @@ import java.util.*;
 
 @Service
 public class WorkspaceService {
+    private static final Set<String> WORKSPACE_SORT_FIELDS = Set.of("updatedAt", "createdAt", "name", "stateVersion");
 
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceStateRepository stateRepository;
@@ -78,6 +79,9 @@ public class WorkspaceService {
             String[] parts = sortStr.split(",");
             if (parts.length > 0) {
                 String field = parts[0].trim();
+                if (!WORKSPACE_SORT_FIELDS.contains(field)) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "INVALID_SORT: Unsupported workspace sort field: " + field);
+                }
                 Sort.Direction direction = parts.length > 1 && parts[1].trim().equalsIgnoreCase("asc")
                         ? Sort.Direction.ASC
                         : Sort.Direction.DESC;
@@ -223,6 +227,10 @@ public class WorkspaceService {
 
     @Transactional
     public WorkspaceDetails duplicateWorkspace(String sourceWorkspaceId, String ownerId, DuplicateWorkspaceRequest request) {
+        if (ownerId != null && ownerId.startsWith("guest_")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "CAPABILITY_REQUIRED: Shared guests cannot duplicate workspaces");
+        }
+        memberService.requirePermission(sourceWorkspaceId, ownerId, "READ_WORKSPACE");
         WorkspaceEntity source = workspaceRepository.findById(sourceWorkspaceId)
                 .orElseThrow(() -> new WorkspaceNotFoundException(sourceWorkspaceId));
 
@@ -265,7 +273,9 @@ public class WorkspaceService {
         memberService.requirePermission(workspaceId, userId, "MANAGE_WORKSPACE");
         WorkspaceEntity entity = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new WorkspaceNotFoundException(workspaceId));
-        workspaceRepository.delete(entity);
+        entity.setDeleted(true);
+        entity.setUpdatedAt(Instant.now());
+        workspaceRepository.save(entity);
     }
 
     @Transactional
@@ -708,6 +718,7 @@ public class WorkspaceService {
 
         return new WorkspaceStateDto(
                 entity.getId(),
+                entity.getExperimentSessionId(),
                 entity.getExperimentSessionId(),
                 entity.getStateVersion(),
                 vp != null ? vp : Map.of("x", 0, "y", 0, "zoom", 1),

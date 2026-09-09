@@ -43,12 +43,13 @@ export function BeakerRenderer({ width, height, size = 100, liquidLevel = 0, liq
         
         {/* Liquid */}
         {!broken && liquidLevel > 0 && (
-          <g>
+          <g className="sandbox-vessel-liquid">
             {/* Liquid body */}
             <path 
               d={`M ${beakerX} ${liquidY} L ${beakerX} ${maxY} A 28 6 0 0 0 ${beakerX + beakerWidth} ${maxY} L ${beakerX + beakerWidth} ${liquidY} Z`} 
               fill={liquidColor} 
-              style={{ transition: 'all 0.3s ease-in-out' }}
+              className="sandbox-liquid-body"
+              style={{ transition: 'all 0.55s cubic-bezier(.22,1,.36,1)' }}
             />
             {/* Liquid surface ellipse */}
             <ellipse 
@@ -59,7 +60,8 @@ export function BeakerRenderer({ width, height, size = 100, liquidLevel = 0, liq
               fill={liquidColor} 
               stroke="rgba(255,255,255,0.4)" 
               strokeWidth="0.5" 
-              style={{ transition: 'all 0.3s ease-in-out' }}
+              className="sandbox-liquid-surface"
+              style={{ transition: 'all 0.55s cubic-bezier(.22,1,.36,1)' }}
             />
             {/* Inner liquid depth gradient to make it look volumetric */}
             <path 
@@ -70,7 +72,8 @@ export function BeakerRenderer({ width, height, size = 100, liquidLevel = 0, liq
             <path 
               d={`M ${beakerX} ${liquidY} L ${beakerX} ${maxY} A 28 6 0 0 0 ${beakerX + beakerWidth} ${maxY} L ${beakerX + beakerWidth} ${liquidY} Z`} 
               fill="url(#liquidHighlight)" 
-              style={{ mixBlendMode: 'screen', transition: 'all 0.3s ease-in-out' }}
+              className="sandbox-liquid-shimmer"
+              style={{ mixBlendMode: 'screen', transition: 'all 0.55s cubic-bezier(.22,1,.36,1)' }}
             />
             {/* Boiling Bubbles */}
             {temperature >= 95 && (

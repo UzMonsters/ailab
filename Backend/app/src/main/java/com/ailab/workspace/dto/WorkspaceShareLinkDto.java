@@ -15,7 +15,9 @@ public record WorkspaceShareLinkDto(
         Boolean allowComments,
         List<String> capabilities,
         Instant lastUsedAt,
-        Instant createdAt
+        Instant createdAt,
+        String status,
+        Instant revokedAt
 ) {
     public WorkspaceShareLinkDto(
             String id,
@@ -28,8 +30,10 @@ public record WorkspaceShareLinkDto(
             Boolean allowComments,
             List<String> capabilities,
             Instant lastUsedAt,
-            Instant createdAt
+            Instant createdAt,
+            String status,
+            Instant revokedAt
     ) {
-        this(id, id, url, role, expiresAt, maxUses, useCount, allowChat, allowComments, capabilities, lastUsedAt, createdAt);
+        this(id, id, url, role, expiresAt, maxUses, useCount, allowChat, allowComments, capabilities, lastUsedAt, createdAt, status, revokedAt);
     }
 }

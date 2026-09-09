@@ -33,7 +33,11 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   const td = useTranslations('dashboard');
   const locale = pathname.split('/')[1] || 'en';
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { user, logout } = useAuthStore();
+  const { user, logout, fetchUser } = useAuthStore();
+
+  useEffect(() => {
+    void fetchUser();
+  }, [fetchUser]);
 
   useEffect(() => {
     if (!drawerOpen) return;

@@ -1,72 +1,97 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { forwardRef, useEffect, useRef, useState, type ReactNode } from "react";
+import HTMLFlipBook from "react-pageflip";
 
 type BookFlipProps = {
-  children: ReactNode;
+  pages: ReactNode[];
   currentPage: number;
   totalPages: number;
-  onTurn: (direction: "next" | "prev") => void;
+  onNavigate: (page: number) => void;
+  initialBookmark?: number | null;
+  onBookmarkChange?: (page: number | null) => void;
 };
 
-export function BookFlip({ children, currentPage, totalPages, onTurn }: BookFlipProps) {
-  const pointerStartX = useRef<number | null>(null);
-  const [turnDirection, setTurnDirection] = useState<'next' | 'prev'>('next');
-  const [bookmarked, setBookmarked] = useState(false);
-  const turn = useCallback((direction: 'next' | 'prev') => { setTurnDirection(direction); onTurn(direction); }, [onTurn]);
+const FlipSheet = forwardRef<HTMLDivElement, { children: ReactNode }>(({ children }, ref) => (
+  <div ref={ref} className="academy-pageflip-sheet" data-density="soft">
+    <div className="academy-pageflip-sheet__content">{children}</div>
+  </div>
+));
+FlipSheet.displayName = "FlipSheet";
 
-  // Handle Keyboard
+export function BookFlip({ pages, currentPage, totalPages, onNavigate, initialBookmark, onBookmarkChange }: BookFlipProps) {
+  const bookRef = useRef<{ pageFlip: () => { getCurrentPageIndex: () => number; turnToPage: (page: number) => void; flipNext: (corner: "top" | "bottom") => void; flipPrev: (corner: "top" | "bottom") => void; flip: (page: number, corner: "top" | "bottom") => void } } | null>(null);
+  const [savedPage, setSavedPage] = useState<number | null>(() => {
+    if (initialBookmark && initialBookmark > 0) return initialBookmark;
+    if (typeof window === 'undefined') return null;
+    const fallback = Number(window.localStorage.getItem("jasscience-book-bookmark"));
+    return Number.isInteger(fallback) && fallback > 0 ? fallback : null;
+  });
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" && currentPage < totalPages) {
-        turn("next");
-      } else if (e.key === "ArrowLeft" && currentPage > 1) {
-        turn("prev");
-      }
+    if (initialBookmark == null) return;
+    const timer = window.setTimeout(() => setSavedPage(current => current === initialBookmark ? current : initialBookmark > 0 ? initialBookmark : null), 0);
+    return () => window.clearTimeout(timer);
+  }, [initialBookmark]);
+  useEffect(() => {
+    const book = bookRef.current?.pageFlip();
+    if (book && book.getCurrentPageIndex() !== currentPage - 1) book.turnToPage(Math.max(0, currentPage - 1));
+  }, [currentPage]);
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowRight" && currentPage < totalPages) bookRef.current?.pageFlip().flipNext("bottom");
+      if (event.key === "ArrowLeft" && currentPage > 1) bookRef.current?.pageFlip().flipPrev("bottom");
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentPage, totalPages, turn]);
-  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === "mouse" && event.button !== 0) return;
-    pointerStartX.current = event.clientX;
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
-    const startX = pointerStartX.current;
-    pointerStartX.current = null;
-    if (startX === null) return;
-    const delta = event.clientX - startX;
-    if (Math.abs(delta) < 55) return;
-    if (delta < 0 && currentPage < totalPages) turn("next");
-    if (delta > 0 && currentPage > 1) turn("prev");
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [currentPage, totalPages]);
+  const bookmarked = savedPage === currentPage;
+  const toggleBookmark = () => {
+    if (savedPage !== null && savedPage !== currentPage) {
+      bookRef.current?.pageFlip().flip(savedPage - 1, "bottom");
+      return;
+    }
+    const next = bookmarked ? null : currentPage;
+    setSavedPage(next); onBookmarkChange?.(next);
+    if (next === null) window.localStorage.removeItem("jasscience-book-bookmark");
+    else window.localStorage.setItem("jasscience-book-bookmark", String(next));
   };
 
   return (
     <>
-      {/* Outer Navs */}
-      {currentPage > 1 && (
-        <button aria-label="Previous page" className="academy-nav prev" onClick={() => turn("prev")}>
-          ‹
-        </button>
-      )}
-      {currentPage < totalPages && (
-        <button aria-label="Next page" className="academy-nav next" onClick={() => turn("next")}>
-          ›
-        </button>
-      )}
-
-      <button type="button" aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark this spread'} aria-pressed={bookmarked} className={`academy-ribbon ${bookmarked ? 'is-saved' : ''}`} onClick={() => setBookmarked(value => !value)} />
-      {bookmarked && <div className="academy-bookmark-slip codex-handwriting">saved · {String(currentPage).padStart(3,'0')}</div>}
-      <div className="academy-spine-shadow" />
-
-      {/* Current Spread Container */}
-      <div className="academy-page-surface left" />
-      <div className="academy-page-surface right" />
-
-      <div key={currentPage} className={`academy-spread-turn academy-spread-turn-${turnDirection}`} style={{ position: "absolute", inset: 0, zIndex: 1, display: 'flex', touchAction: 'none' }} onPointerDown={handlePointerDown} onPointerUp={handlePointerUp} onPointerCancel={() => { pointerStartX.current = null; }}>
-        {children}
-      </div>
+      {currentPage > 1 && <button type="button" aria-label="Previous page" className="academy-nav prev" onClick={() => bookRef.current?.pageFlip().flipPrev("bottom")}>‹</button>}
+      {currentPage < totalPages && <button type="button" aria-label="Next page" className="academy-nav next" onClick={() => bookRef.current?.pageFlip().flipNext("bottom")}>›</button>}
+      <button type="button" aria-label={bookmarked ? "Remove bookmark" : "Bookmark this spread"} aria-pressed={bookmarked} className={`academy-ribbon ${bookmarked ? "is-saved" : ""}`} onClick={toggleBookmark} />
+      {bookmarked && <div className="academy-bookmark-slip codex-handwriting">стр. {String(currentPage).padStart(3, "0")}</div>}
+      <HTMLFlipBook
+        ref={bookRef}
+        className="academy-pageflip-book"
+        style={{ width: "1120px", height: "680px" }}
+        width={1120}
+        height={680}
+        size="fixed"
+        minWidth={1120}
+        maxWidth={1120}
+        minHeight={680}
+        maxHeight={680}
+        startPage={Math.max(0, currentPage - 1)}
+        drawShadow
+        flippingTime={720}
+        usePortrait
+        startZIndex={10}
+        autoSize={false}
+        maxShadowOpacity={0.55}
+        showCover={false}
+        mobileScrollSupport
+        clickEventForward
+        useMouseEvents
+        swipeDistance={24}
+        showPageCorners
+        disableFlipByClick={false}
+        renderOnlyPageLengthChange
+        onFlip={(event) => onNavigate(Number(event.data) + 1)}
+      >
+        {pages.map((page, index) => <FlipSheet key={index}>{page}</FlipSheet>)}
+      </HTMLFlipBook>
     </>
   );
 }

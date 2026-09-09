@@ -1,0 +1,43 @@
+{
+  "purpose": "Archived Sandbox catalog fixtures. Production Library must never render these as available backend records.",
+  "materials": [
+    {"id":"H2O","name":"Water","formula":"H₂O","color":"rgba(34,211,238,0.5)","state":"liquid","density":1,"molarMass":18.015,"meltingPointC":0,"boilingPointC":100,"description":"Colorless liquid","safetyFlags":[],"compatibleOperations":["heating","mixing","cooling"]},
+    {"id":"H2SO4","name":"Sulfuric acid","formula":"H₂SO₄","color":"#F59E0B","state":"liquid","density":1.84,"molarMass":98.079,"description":"Concentrated sulfuric acid","safetyFlags":["corrosive"]},
+    {"id":"ethanol","name":"Ethanol","formula":"C₂H₅OH","color":"#60A5FA","state":"liquid","density":0.789,"molarMass":46.07,"description":"Flammable alcohol","safetyFlags":["flammable"]},
+    {"id":"HCl","name":"Hydrochloric acid","formula":"HCl","color":"#A7F3D0","state":"liquid","density":1.18,"molarMass":36.46,"description":"Aqueous hydrogen chloride","safetyFlags":["corrosive","toxic"]},
+    {"id":"H2O2","name":"Hydrogen peroxide","formula":"H₂O₂","color":"#BAE6FD","state":"liquid","density":1.11,"molarMass":34.014,"description":"Strong oxidizer","safetyFlags":["oxidizer"]},
+    {"id":"CuSO4","name":"Copper sulfate","formula":"CuSO₄","color":"#3B82F6","state":"solid","density":2.28,"molarMass":159.6,"description":"Blue crystals","safetyFlags":["toxic","irritant"]},
+    {"id":"CuSO4(aq)","name":"Copper sulfate solution","formula":"CuSO₄(aq)","color":"#3B82F6","state":"aqueous","density":1.05,"molarMass":159.6,"description":"Blue solution","safetyFlags":["toxic"]},
+    {"id":"NaOH","name":"Sodium hydroxide","formula":"NaOH","color":"#E2E8F0","state":"solid","density":2.13,"molarMass":39.997,"description":"Caustic soda pellets","safetyFlags":["corrosive"]},
+    {"id":"NaCl","name":"Sodium chloride","formula":"NaCl","color":"#CBD5E1","state":"solid","density":2.16,"molarMass":58.44,"description":"Common salt","safetyFlags":[]},
+    {"id":"KMnO4","name":"Potassium permanganate","formula":"KMnO₄","color":"#331046","state":"solid","density":2.7,"molarMass":158.03,"description":"Purple crystals","safetyFlags":["oxidizer","harmful"]},
+    {"id":"KMnO4(aq)","name":"Potassium permanganate (aq)","formula":"KMnO₄(aq)","color":"#D946EF","state":"aqueous","density":1.02,"molarMass":158.03,"description":"Purple solution","safetyFlags":["oxidizer"]},
+    {"id":"Na2CO3","name":"Sodium carbonate","formula":"Na₂CO₃","color":"#F8FAFC","state":"solid","density":2.54,"molarMass":105.9888,"description":"Soda ash","safetyFlags":["irritant"]},
+    {"id":"ph_indicator","name":"pH indicator","formula":"pH","color":"#A855F7","state":"aqueous","density":1,"molarMass":100,"description":"Universal pH indicator","safetyFlags":[]},
+    {"id":"Zn","name":"Zinc","formula":"Zn","color":"#94A3B8","state":"solid","density":7.14,"molarMass":65.38,"description":"Zinc metal","safetyFlags":[]},
+    {"id":"Cu","name":"Copper","formula":"Cu","color":"#B87333","state":"solid","density":8.96,"molarMass":63.546,"description":"Copper metal","safetyFlags":[]},
+    {"id":"Au","name":"Gold","formula":"Au","color":"#F5C542","state":"solid","density":19.32,"molarMass":196.967,"description":"Gold metal","safetyFlags":[]},
+    {"id":"sulfur","name":"Sulfur","formula":"S","color":"#FDE047","state":"solid","density":2.07,"molarMass":32.06,"description":"Yellow elemental sulfur","safetyFlags":["irritant"]}
+  ],
+  "equipment": [
+    {"group":"Containers","id":"beaker","name":"Beaker 250ml","width":80,"height":100,"icon":"beaker"},
+    {"group":"Containers","id":"erlenmeyer","name":"Erlenmeyer Flask","width":80,"height":100,"icon":"beaker"},
+    {"group":"Containers","id":"roundflask","name":"Round-Bottom Flask","width":120,"height":128,"icon":"flask-round"},
+    {"group":"Containers","id":"testtube","name":"Test Tube","width":30,"height":120,"icon":"test-tube"},
+    {"group":"Containers","id":"graduated_cylinder","name":"Graduated Cylinder","width":60,"height":160,"icon":"test-tube"},
+    {"group":"Containers","id":"separatory_funnel","name":"Separatory Funnel","width":70,"height":140,"icon":"funnel"},
+    {"group":"Containers","id":"volumetric_flask","name":"Volumetric Flask","width":100,"height":148,"icon":"flask-conical"},
+    {"group":"Containers","id":"burette","name":"Burette","width":50,"height":180,"icon":"pipette"},
+    {"group":"Containers","id":"pipette","name":"Pipette","width":68,"height":150,"icon":"pipette"},
+    {"group":"Containers","id":"petridish","name":"Petri Dish","width":110,"height":55,"icon":"circle"},
+    {"group":"Containers","id":"watchglass","name":"Watch Glass","width":90,"height":40,"icon":"circle"},
+    {"group":"Containers","id":"funnel","name":"Funnel","width":90,"height":100,"icon":"funnel"},
+    {"group":"Heating","id":"hotplate","name":"Hotplate","width":120,"height":60,"icon":"beaker"},
+    {"group":"Heating","id":"burner","name":"Bunsen Burner","width":60,"height":100,"icon":"beaker"},
+    {"group":"Heating","id":"icebath","name":"Ice Bath","width":160,"height":100,"icon":"snowflake"},
+    {"group":"Connections","id":"thermometer","name":"Thermometer","width":44,"height":150,"icon":"test-tube"},
+    {"group":"Connections","id":"phmeter","name":"pH Meter","width":72,"height":128,"icon":"waves"},
+    {"group":"Connections","id":"stand","name":"Ring Stand","width":100,"height":160,"icon":"minus"},
+    {"group":"Connections","id":"condenser","name":"Condenser","width":180,"height":100,"icon":"flask-conical"}
+  ]
+}

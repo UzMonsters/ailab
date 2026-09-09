@@ -1,32 +1,6 @@
-import fs from 'node:fs';
-import path from 'node:path';
-
-const messagesDir = path.resolve('src/messages');
-const locales = ['en', 'ru', 'uz'];
-
-function load(locale) {
-  return JSON.parse(fs.readFileSync(path.join(messagesDir, `${locale}.json`), 'utf8'));
-}
-
-function keys(value, prefix = '') {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return [prefix];
-  return Object.entries(value).flatMap(([key, child]) => keys(child, prefix ? `${prefix}.${key}` : key));
-}
-
-const source = load('en');
-const sourceKeys = new Set(keys(source));
-const missing = [];
-
-for (const locale of locales.slice(1)) {
-  const localeKeys = new Set(keys(load(locale)));
-  for (const key of sourceKeys) if (!localeKeys.has(key)) missing.push(`${locale}:${key}`);
-  for (const key of localeKeys) if (!sourceKeys.has(key)) missing.push(`en:${key}`);
-}
-
-if (missing.length) {
-  console.error(`Translation key mismatch (${missing.length}):`);
-  console.error(missing.join('\n'));
-  process.exit(1);
-}
-
-console.log(`Translation keys are aligned for ${locales.join(', ')}.`);
+import fs from 'node:fs';import path from 'node:path';
+const locales=['en','ru','uz'],dir=path.resolve('src/messages');
+const keys=(value,prefix='')=>!value||typeof value!=='object'||Array.isArray(value)?[prefix]:Object.entries(value).flatMap(([key,child])=>keys(child,prefix?`${prefix}.${key}`:key));
+const sets=Object.fromEntries(locales.map(locale=>[locale,new Set(keys(JSON.parse(fs.readFileSync(path.join(dir,`${locale}.json`),'utf8'))))]));const source=sets.en,missing=[];
+for(const locale of locales.slice(1)){for(const key of source)if(!sets[locale].has(key))missing.push(`${locale}:${key}`);for(const key of sets[locale])if(!source.has(key))missing.push(`en:${key}`)}
+if(missing.length){console.error(`Translation key mismatch (${missing.length}):\n${missing.join('\n')}`);process.exit(1)}console.log(`Translation keys are aligned for ${locales.join(', ')}.`);
