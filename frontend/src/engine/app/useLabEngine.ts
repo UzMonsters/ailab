@@ -11,8 +11,8 @@ import { ApiSimulationProvider } from '../simulation/SimulationProvider';
 
 /**
  * Creates and manages the LabEngine lifecycle.
- * Always uses LocalSimulationProvider — backend simulation is a future phase.
- * Always uses LocalWorkspaceRepository — saves/restores scene from localStorage.
+ * Saved workspaces use backend repositories and simulation sessions.
+ * The local provider remains available only for an intentionally unsaved sandbox.
  */
 export function useLabEngine(workspaceId?: string, sessionId?: string) {
   const [registry] = useState(() => createDefaultEquipmentRegistry());

@@ -5,23 +5,16 @@ import AdminPageHeader from '@/widgets/admin/AdminPageHeader';
 import AdminDataTable, { Column } from '@/widgets/admin/AdminDataTable';
 import AdminDrawer from '@/widgets/admin/AdminDrawer';
 import { Plus } from 'lucide-react';
+import demoCatalogs from '@/mocks/data/demo-catalogs.json';
 
 const TABS = ['Models', 'Constants', 'Equipment'];
 
 // Mock Data
 type Model = { id: string; name: string; category: string; complexity: string };
-const mockModels: Model[] = [
-  { id: 'mod1', name: 'Pendulum', category: 'Mechanics', complexity: 'Low' },
-  { id: 'mod2', name: 'Projectile Motion', category: 'Kinematics', complexity: 'Medium' },
-  { id: 'mod3', name: 'Circuit Simulator', category: 'Electromagnetism', complexity: 'High' },
-];
+const mockModels: Model[] = demoCatalogs.physics.models;
 
 type Constant = { id: string; name: string; symbol: string; value: string; unit: string };
-const mockConstants: Constant[] = [
-  { id: 'con1', name: 'Speed of Light', symbol: 'c', value: '299792458', unit: 'm/s' },
-  { id: 'con2', name: 'Planck Constant', symbol: 'h', value: '6.62607015e-34', unit: 'J·s' },
-  { id: 'con3', name: 'Gravitational Constant', symbol: 'G', value: '6.67430e-11', unit: 'm³/(kg·s²)' },
-];
+const mockConstants: Constant[] = demoCatalogs.physics.constants;
 
 export default function AdminPhysicsPage() {
   const [activeTab, setActiveTab] = useState('Models');

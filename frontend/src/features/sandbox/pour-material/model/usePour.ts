@@ -3,11 +3,12 @@ import { useToast } from "@/shared/ui/ToastContainer";
 import type { Engine as LabEngine } from '@/engine/core/Engine';
 import type { Item } from '@/widgets/sandbox/types';
 import { isLiquidConduit, isVessel } from '@/widgets/sandbox/types';
+import { getTransferAnimationProfile, type TransferAnimationKind } from '@/widgets/sandbox/animationProfiles';
 
 export function usePour(engine: LabEngine | null, items: Item[], queueWorkspaceEvent: (event: string, payload: any) => void, history: any) {
   const [pourSource, setPourSource] = useState<string | null>(null);
   const [pourAmount, setPourAmount] = useState(25);
-  const [pourAnimation, setPourAnimation] = useState<string | null>(null);
+  const [pourAnimation, setPourAnimation] = useState<{ sourceId: string; targetId: string; amountMl: number; kind: TransferAnimationKind; durationMs: number; arcLift: number; streamWidth: number } | null>(null);
   const [spillAnimation, setSpillAnimation] = useState<string | null>(null); // For overflow visuals
   
   const { addToast } = useToast();
@@ -19,22 +20,24 @@ export function usePour(engine: LabEngine | null, items: Item[], queueWorkspaceE
     if (spillAnimationTimer.current !== null) window.clearTimeout(spillAnimationTimer.current);
   }, []);
 
-  const triggerPourAnimation = useCallback((itemId: string, amount: number, overflowAmount: number = 0) => {
+  const triggerPourAnimation = useCallback((sourceId: string, targetId: string, amount: number, overflowAmount: number = 0) => {
     if (pourAnimationTimer.current !== null) window.clearTimeout(pourAnimationTimer.current);
-    setPourAnimation(itemId);
-    const durationMs = Math.max(900, (amount / 25) * 1000);
+    const source = items.find((item) => item.id === sourceId);
+    const profile = getTransferAnimationProfile(source, amount);
+    setPourAnimation({ sourceId, targetId, amountMl: amount, ...profile });
+    const durationMs = profile.durationMs;
     
     if (overflowAmount > 0) {
       if (spillAnimationTimer.current !== null) window.clearTimeout(spillAnimationTimer.current);
-      setSpillAnimation(itemId);
+      setSpillAnimation(targetId);
       spillAnimationTimer.current = window.setTimeout(() => setSpillAnimation(null), durationMs + 1500);
     }
     
     pourAnimationTimer.current = window.setTimeout(() => {
-      setPourAnimation((current) => (current === itemId ? null : current));
+      setPourAnimation((current) => (current?.sourceId === sourceId && current.targetId === targetId ? null : current));
       pourAnimationTimer.current = null;
     }, durationMs);
-  }, []);
+  }, [items]);
 
   const pour = useCallback((sourceId: string, targetId: string, customAmount: number) => {
     const source = items.find((item) => item.id === sourceId);
@@ -59,8 +62,8 @@ export function usePour(engine: LabEngine | null, items: Item[], queueWorkspaceE
       engine.fluid.startPour(source.id, target.id, availableAmount, 25 * Math.max(.5, Number(engine.workspace.simulation.speed ?? 1)));
       engine.notifyUpdate();
 
-      queueWorkspaceEvent("POUR", { sourceId: source.id, targetId: target.id, amountMl: availableAmount, overflowAmount });
-      triggerPourAnimation(target.id, acceptedAmount, overflowAmount);
+      queueWorkspaceEvent("POUR", { sourceId: source.id, targetId: target.id, materialId: source.material.id, amountMl: availableAmount, overflowAmount });
+      triggerPourAnimation(source.id, target.id, acceptedAmount, overflowAmount);
       setPourSource(null);
       
       if (overflowAmount > 0) {
@@ -69,7 +72,7 @@ export function usePour(engine: LabEngine | null, items: Item[], queueWorkspaceE
         addToast(`Poured ${acceptedAmount} mL to ${target.name}`, "success");
       }
     }
-  }, [items, engine, history, queueWorkspaceEvent, triggerPourAnimation, addToast]);
+  }, [items, engine, queueWorkspaceEvent, triggerPourAnimation, addToast]);
 
   return {
     pourSource, setPourSource,

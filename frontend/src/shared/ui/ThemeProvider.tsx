@@ -9,7 +9,7 @@ const THEME_PREFERENCE_KEY = "chemistry-theme-preference";
 
 function RouteThemeController() {
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
 
   useEffect(() => {
     const localizedPath = pathname.replace(/^\/[^/]+/, "") || "/";
@@ -23,13 +23,15 @@ function RouteThemeController() {
       } else if (!savedPreference && theme && theme !== "system") {
         window.localStorage.setItem(THEME_PREFERENCE_KEY, theme);
       }
+      document.documentElement.dataset.theme = resolvedTheme === "light" ? "light" : "dark";
       return;
     }
 
     // Keep the preference for Dashboard/Sandbox, but force every other route dark.
     if (theme === "light") window.localStorage.setItem(THEME_PREFERENCE_KEY, "light");
+    document.documentElement.dataset.theme = "dark";
     if (theme !== "dark") setTheme("dark");
-  }, [pathname, setTheme, theme]);
+  }, [pathname, resolvedTheme, setTheme, theme]);
 
   return null;
 }

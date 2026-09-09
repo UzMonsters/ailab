@@ -1,70 +1,8 @@
 'use client';
-import { useAdminStore } from '@/stores/admin.store';
-import { useState } from 'react';
-import { Search } from 'lucide-react';
-
-export default function AdminLabsPage() {
-  const materials = useAdminStore((state) => state.materials);
-  const [search, setSearch] = useState('');
-
-  const filtered = materials.filter(m => m.name.toLowerCase().includes(search.toLowerCase()));
-
-  return (
-    <div className="p-4 md:p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Laboratories</h1>
-          <p className="text-sm text-[var(--muted-foreground)] mt-1">Manage laboratory materials and resources</p>
-        </div>
-      </div>
-      
-      <div className="mb-6 max-w-sm">
-        <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
-          <input 
-            type="text" 
-            placeholder="Search materials..." 
-            value={search} 
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full py-2 pl-9 pr-4 bg-[var(--input)] border border-[var(--border)] rounded-[var(--radius-sm)] text-sm text-[var(--foreground)] outline-none focus:border-[var(--border-focus)] transition-all" 
-          />
-        </div>
-      </div>
-
-      <div className="border border-[var(--border)] bg-[var(--card)] rounded-[var(--radius-lg)] overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-[var(--border)]">
-              <th className="text-left py-3 px-4 text-[var(--muted-foreground)] font-medium">Name</th>
-              <th className="text-left py-3 px-4 text-[var(--muted-foreground)] font-medium">Type</th>
-              <th className="text-left py-3 px-4 text-[var(--muted-foreground)] font-medium">Status</th>
-              <th className="text-left py-3 px-4 text-[var(--muted-foreground)] font-medium">Uses</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr><td colSpan={4} className="py-8 text-center text-[var(--muted-foreground)]">No materials found.</td></tr>
-            ) : (
-              filtered.map(m => (
-                <tr key={m.id} className="border-b border-[var(--border)]/50 hover:bg-white/[0.02]">
-                  <td className="py-3 px-4 font-medium">{m.name}</td>
-                  <td className="py-3 px-4 text-[var(--muted-foreground)]">
-                    <span className="px-2 py-1 text-xs rounded-full bg-white/5 border border-white/10">
-                      {m.type}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className={`px-2 py-1 text-xs rounded-full border ${m.status === 'Available' ? 'bg-[#14F195]/10 text-[#14F195] border-[#14F195]/30' : 'bg-white/5 border-white/10 text-[var(--muted-foreground)]'}`}>
-                      {m.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-[var(--muted-foreground)]">{m.uses}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
+import { useCallback,useEffect,useState } from 'react';
+import { AlertCircle,Loader2,Pause,RefreshCw,Square } from 'lucide-react';
+import AdminPageHeader from '@/widgets/admin/AdminPageHeader';
+import { adminPlatformApi } from '@/entities/admin/api/platform-admin.api';
+import type { JsonObject } from '@/shared/api/contracts/platform';
+import { errorMessage } from '@/shared/utils/errorMessage';
+export default function Page(){const [rows,setRows]=useState<JsonObject[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState('');const load=useCallback(async()=>{setLoading(true);try{const page=await adminPlatformApi.laboratories.list({size:100});setRows(page.items??page.content??[]);setError('');}catch(reason){setError(errorMessage(reason,'Unable to load laboratory sessions'));}finally{setLoading(false);}},[]);useEffect(()=>{const timer=window.setTimeout(()=>void load(),0);return()=>window.clearTimeout(timer);},[load]);const act=async(kind:'pause'|'terminate',row:JsonObject)=>{const id=String(row.workspaceId??row.sessionId),reason=window.prompt(kind==='pause'?'Reason for pausing':'Reason for termination');if(!reason)return;try{await adminPlatformApi.laboratories[kind](id,{reason,notifyOwner:true});await load();}catch(e){setError(errorMessage(e,'Command failed'));}};return <div className="space-y-6 pb-12"><AdminPageHeader title="Laboratory Sessions" description="Monitor and manage active workspaces." counters={[{label:'Backend sessions',value:rows.length}]} actions={<button onClick={()=>void load()} className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-[#141b2a] text-white" aria-label="Refresh"><RefreshCw size={16}/></button>}/>{error&&<div className="flex gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-300"><AlertCircle size={17}/>{error}<button onClick={()=>void load()} className="ml-auto underline">Retry</button></div>}{loading?<div className="grid min-h-64 place-items-center"><Loader2 className="animate-spin text-violet-400"/></div>:rows.length===0?<div className="rounded-2xl border border-dashed border-white/10 p-12 text-center text-[#8490a3]">No active sessions.</div>:<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{rows.map((row,index)=><article key={String(row.workspaceId??index)} className="rounded-2xl border border-white/[.07] bg-[#0b101a] p-5"><div className="flex items-start justify-between"><div><h2 className="font-semibold text-white">{String(row.name??'Laboratory')}</h2><p className="mt-1 font-mono text-xs text-cyan-300">{String(row.sessionId??row.workspaceId)}</p></div><span className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs text-emerald-300">{String(row.status??'ACTIVE')}</span></div><div className="mt-5 grid grid-cols-2 gap-3 text-xs text-[#8490a3]"><span>Objects <b className="block text-lg text-white">{String(row.objectCount??0)}</b></span><span>Science <b className="block text-sm text-white">{String(row.science??'Chemistry')}</b></span></div><div className="mt-5 flex gap-2"><button onClick={()=>void act('pause',row)} className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-amber-500/20 py-2 text-xs text-amber-300"><Pause size={14}/>Pause</button><button onClick={()=>void act('terminate',row)} className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-red-500/20 py-2 text-xs text-red-300"><Square size={14}/>Terminate</button></div></article>)}</div>}</div>}

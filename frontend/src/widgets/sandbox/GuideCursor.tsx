@@ -20,18 +20,20 @@ export function GuideCursor({ active, locale, onFinish }: { active: boolean; loc
   useEffect(() => {
     if (!active) return;
     const next = ["toolbar:connect", "port:thermometer:sensor", "port:beaker:sensor"].map(targetPoint).filter((point): point is Point => Boolean(point));
-    setPoints(next);
-    setIndex(0);
+    const initTimer = window.setTimeout(() => {
+      setPoints(next);
+      setIndex(0);
+    }, 0);
     if (next.length < 3) {
       const timer = window.setTimeout(onFinish, 900);
-      return () => window.clearTimeout(timer);
+      return () => { window.clearTimeout(initTimer); window.clearTimeout(timer); };
     }
     const timers = [
       window.setTimeout(() => setIndex(1), 700),
       window.setTimeout(() => setIndex(2), 1500),
       window.setTimeout(onFinish, 2400),
     ];
-    return () => timers.forEach(window.clearTimeout);
+    return () => { window.clearTimeout(initTimer); timers.forEach(window.clearTimeout); };
   }, [active, onFinish]);
 
   if (!active || points.length === 0) return null;

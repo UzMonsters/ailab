@@ -26,44 +26,16 @@ function queryString(query: WorkspaceListQuery = {}): string {
   return result ? `?${result}` : '';
 }
 
-function offlineWorkspace(id = 'mock-ws-1', name = 'Offline Sandbox'): Workspace {
-  const now = new Date().toISOString();
-  return { id, name, science: 'chemistry', isFavorite: false, isDeleted: false, createdAt: now, updatedAt: now, thumbnail: undefined, accessLevel: 'owner', ownerId: '1' } as Workspace;
-}
-
-// Keep the dashboard independent from the backend until the auth/session flow
-// is ready. Set NEXT_PUBLIC_BACKEND_ENABLED=true to restore API workspace sync.
-const backendEnabled = process.env.NEXT_PUBLIC_BACKEND_ENABLED === 'true';
-
 export const workspacesApi = {
   list: async (query: WorkspaceListQuery = {}): Promise<Workspace[]> => {
-    if (!backendEnabled) return [offlineWorkspace()];
-    try {
-      const response = await api.get<WorkspacePageResponse<Workspace>>(`/api/v1/workspaces${queryString(query)}`);
-      // A running backend may legitimately return an empty account. Keep the
-      // local/demo dashboard usable in that case, just like the offline flow.
-      return response.items.length > 0 ? response.items : [offlineWorkspace()];
-    } catch {
-      return [offlineWorkspace()];
-    }
+    const response = await api.get<WorkspacePageResponse<Workspace>>(`/api/v1/workspaces${queryString(query)}`);
+    return response.items;
   },
 
-  get: async (id: string) => {
-    if (!backendEnabled) return offlineWorkspace(id);
-    try {
-      return await api.get<Workspace>(`/api/v1/workspaces/${id}`);
-    } catch {
-      return offlineWorkspace(id);
-    }
-  },
+  get: (id: string) => api.get<Workspace>(`/api/v1/workspaces/${id}`),
 
-  create: async (name: string, science: Workspace['science'] = 'chemistry') => {
-    try {
-      return await api.post<Workspace>('/api/v1/workspaces', { name, science });
-    } catch {
-      return { id: `mock-${Date.now()}`, name, science, isFavorite: false, isDeleted: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), accessLevel: 'owner', ownerId: '1' } as Workspace;
-    }
-  },
+  create: (name: string, science: Workspace['science'] = 'chemistry') =>
+    api.post<Workspace>('/api/v1/workspaces', { name, science }),
 
   update: (
     id: string,
@@ -80,32 +52,16 @@ export const workspacesApi = {
   saveThumbnail: (id: string, data: { svg?: string; width?: number; height?: number; imageData?: string }) =>
     api.post<{ thumbnailUrl: string; updatedAt: string }>(`/api/v1/workspaces/${id}/thumbnail`, data),
 
-  getState: async (id: string) => {
-    try {
-      return await api.get<WorkspaceState>(`/api/v1/workspaces/${id}/state`);
-    } catch {
-      return { version: 1, scene: { objects: {}, connections: {} } } as unknown as WorkspaceState;
-    }
-  },
+  getState: (id: string) => api.get<WorkspaceState>(`/api/v1/workspaces/${id}/state`),
 
-  saveState: async (id: string, state: WorkspaceState, expectedVersion?: number) => {
-    try {
-      return await api.put<WorkspaceState>(
-        `/api/v1/workspaces/${id}/state${expectedVersion === undefined ? '' : `?expectedVersion=${expectedVersion}`}`,
-        state,
-      );
-    } catch {
-      return state;
-    }
-  },
+  saveState: (id: string, state: WorkspaceState, expectedVersion?: number) =>
+    api.put<WorkspaceState>(
+      `/api/v1/workspaces/${id}/state${expectedVersion === undefined ? '' : `?expectedVersion=${expectedVersion}`}`,
+      state,
+    ),
 
-  appendEvent: async (id: string, event: SandboxEventCommand) => {
-    try {
-      return await api.post<WorkspaceEventAck>(`/api/v1/workspaces/${id}/events`, event);
-    } catch {
-      return { status: 'acknowledged', eventId: crypto.randomUUID() } as unknown as WorkspaceEventAck;
-    }
-  },
+  appendEvent: (id: string, event: SandboxEventCommand) =>
+    api.post<WorkspaceEventAck>(`/api/v1/workspaces/${id}/events`, event),
 
   getEvents: (id: string, afterVersion?: number, limit?: number) => {
     const params = new URLSearchParams();

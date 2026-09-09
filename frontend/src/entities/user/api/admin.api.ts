@@ -1,40 +1,20 @@
 import { api } from '@/shared/api/client';
-import type { AdminUserResponse, AdminUpdateUserRequest, AuthRegisterResponse } from '@/types';
+import { apiQuery } from '@/shared/api/query';
+import type { JsonObject, PageEnvelope } from '@/shared/api/contracts/platform';
 
-type BackendAdminUser = Omit<AdminUserResponse, 'active' | 'createdAt'> & {
-  language?: string;
-  theme?: string;
-  applicationSettings?: Record<string, unknown>;
-  statistics?: Record<string, number>;
-  achievements?: string[];
-};
-
-const mapUser = (user: BackendAdminUser): AdminUserResponse => ({
-  id: user.id,
-  username: user.username,
-  email: user.email,
-  role: user.role,
-  avatarUrl: user.avatarUrl ?? null,
-  active: user.role !== 'ROLE_BANNED',
-  level: user.level ?? 1,
-  createdAt: new Date().toISOString(),
-});
+export interface AdminUserListItem {
+  id: string; displayName: string; email: string; role: string; status: string;
+  level: number; xp: number; lastActiveAt: string | null; createdAt: string; version: number;
+}
 
 export const adminApi = {
-  getUsers: async () => (await api.get<BackendAdminUser[]>('/api/v1/admin/users')).map(mapUser),
-
-  getUser: async (id: string) => mapUser(await api.get<BackendAdminUser>(`/api/v1/admin/users/${id}`)),
-
-  createUser: async (data: { username: string; email: string; password: string; role?: AdminUserResponse['role'] }) => {
-    const created = await api.post<AuthRegisterResponse>('/api/v1/auth/register', { username: data.username, email: data.email, password: data.password });
-    if (data.role && data.role !== 'ROLE_USER') await api.put<{ success: boolean }>(`/api/v1/admin/users/${created.id}`, { username: data.username, email: data.email, role: data.role });
-    return created;
-  },
-
-  updateUser: async (id: string, data: AdminUpdateUserRequest) => {
-    await api.put<{ success: boolean }>(`/api/v1/admin/users/${id}`, { username: data.username, email: data.email, role: data.role });
-    return adminApi.getUser(id);
-  },
-
-  deleteUser: (id: string) => api.delete<{ success: boolean }>(`/api/v1/admin/users/${id}`),
+  getUsers: (filters: Record<string, string | number | undefined> = {}) => api.get<PageEnvelope<AdminUserListItem> & { items: AdminUserListItem[] }>(`/api/v1/admin/users${apiQuery(filters)}`),
+  getUser: (id: string) => api.get<JsonObject>(`/api/v1/admin/users/${id}`),
+  patchUser: (id: string, data: JsonObject) => api.patch<AdminUserListItem>(`/api/v1/admin/users/${id}`, data),
+  updateUser: (id: string, data: JsonObject) => api.put<{ success: boolean }>(`/api/v1/admin/users/${id}`, data),
+  blockUser: (id: string, reason: string, until?: string) => api.post<JsonObject>(`/api/v1/admin/users/${id}/block`, { reason, until }),
+  unblockUser: (id: string, reason = 'Разблокировано администратором') => api.post<JsonObject>(`/api/v1/admin/users/${id}/unblock`, { reason }),
+  activity: (id: string, filters: Record<string, string | number | undefined> = {}) => api.get<PageEnvelope<JsonObject>>(`/api/v1/admin/users/${id}/activity${apiQuery(filters)}`),
+  learningProgress: (id: string, track = 'chemistry') => api.get<JsonObject>(`/api/v1/admin/users/${id}/learning-progress${apiQuery({ track })}`),
+  deleteUser: (id: string, reason = 'Удалено администратором') => api.delete<JsonObject>(`/api/v1/admin/users/${id}`),
 };

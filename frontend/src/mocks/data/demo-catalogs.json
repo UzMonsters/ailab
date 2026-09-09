@@ -1,0 +1,34 @@
+{
+  "purpose": "Explicit opt-in demo fixtures for domains not implemented by backend. Production screens must not silently fall back to this file.",
+  "physics": {
+    "models": [
+      { "id": "mod1", "name": "Pendulum", "category": "Mechanics", "complexity": "Low" },
+      { "id": "mod2", "name": "Projectile Motion", "category": "Kinematics", "complexity": "Medium" },
+      { "id": "mod3", "name": "Circuit Simulator", "category": "Electromagnetism", "complexity": "High" }
+    ],
+    "constants": [
+      { "id": "con1", "name": "Speed of Light", "symbol": "c", "value": "299792458", "unit": "m/s" },
+      { "id": "con2", "name": "Planck Constant", "symbol": "h", "value": "6.62607015e-34", "unit": "J·s" },
+      { "id": "con3", "name": "Gravitational Constant", "symbol": "G", "value": "6.67430e-11", "unit": "m³/(kg·s²)" }
+    ]
+  },
+  "biology": {
+    "specimens": [
+      { "id": "sp1", "name": "Amoeba Proteus", "species": "A. proteus", "classification": "Protista" },
+      { "id": "sp2", "name": "Human Cheek Cell", "species": "H. sapiens", "classification": "Animalia" },
+      { "id": "sp3", "name": "Onion Epidermis", "species": "A. cepa", "classification": "Plantae" }
+    ],
+    "processes": [
+      { "id": "pr1", "name": "Photosynthesis", "type": "Metabolic", "duration": "Continuous" },
+      { "id": "pr2", "name": "Cellular Respiration", "type": "Metabolic", "duration": "Continuous" },
+      { "id": "pr3", "name": "Mitosis", "type": "Cell Division", "duration": "~2 hours" }
+    ]
+  },
+  "offlineWorkspace": {
+    "id": "demo-workspace",
+    "name": "Offline Sandbox",
+    "science": "chemistry",
+    "isFavorite": false,
+    "isDeleted": false
+  }
+}
