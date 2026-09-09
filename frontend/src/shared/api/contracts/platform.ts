@@ -31,6 +31,8 @@ export interface WorkspaceShareLink {
   linkId: string;
   url?: string;
   role: 'EDITOR' | 'VIEWER';
+  /** Present on link-list responses; omitted by some create responses. */
+  status?: 'ACTIVE' | 'REVOKED' | 'EXPIRED' | string;
   expiresAt: string | null;
   maxUses: number | null;
   useCount: number;

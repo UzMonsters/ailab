@@ -204,17 +204,34 @@ export function ShareDialog({ snapshot, workspaceId, onClose }: ShareDialogProps
   };
 
   const shareNative = useCallback(async () => {
-    if (!shareUrl || !navigator.share) return;
+    if (!navigator.share) return;
+    const url = shareUrl ?? await createServerLink();
+    if (!url) return;
     try {
       await navigator.share({
         title: snapshot.title || "Химический эксперимент",
         text: "Откройте мой химический эксперимент в лаборатории!",
-        url: shareUrl,
+        url,
       });
     } catch {
       // Ignored user cancel
     }
-  }, [shareUrl, snapshot.title]);
+  }, [createServerLink, shareUrl, snapshot.title]);
+
+  const revokeLink = useCallback(async (linkId: string) => {
+    if (!workspaceId) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await workspaceCollaborationApi.revokeShareLink(workspaceId, linkId);
+      await refreshAccess();
+      setServerUrl(null);
+    } catch (reason) {
+      setError(errorMessage(reason, "Не удалось отозвать ссылку"));
+    } finally {
+      setBusy(false);
+    }
+  }, [refreshAccess, workspaceId]);
 
   const qrSvgMarkup = shareUrl ? generateQrSvg(shareUrl, 220) : null;
 
@@ -391,6 +408,21 @@ export function ShareDialog({ snapshot, workspaceId, onClose }: ShareDialogProps
             <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 p-2">
               <input aria-label="Share link" readOnly value={shareUrl} onFocus={event => event.currentTarget.select()} className="min-w-0 flex-1 bg-transparent px-2 text-[11px] text-cyan-200 outline-none" />
               <button type="button" onClick={copyLink} className="shrink-0 rounded-lg border border-white/10 px-2.5 py-1.5 text-[11px] font-semibold text-white">{copied ? "Скопировано" : "Копировать"}</button>
+            </div>
+          )}
+
+          {workspaceId && links.length > 0 && (
+            <div className="max-h-24 space-y-1 overflow-y-auto rounded-xl border border-white/10 bg-black/20 p-2">
+              {links.map(link => (
+                <div key={link.id} className="flex items-center justify-between gap-2 rounded-lg px-1.5 py-1 text-[10px] text-white/70">
+                  <span className="truncate">{link.role} · {link.status}</span>
+                  {link.status === 'ACTIVE' && (
+                    <button type="button" disabled={busy} onClick={() => void revokeLink(link.id)} className="shrink-0 text-rose-300 hover:text-rose-200 disabled:opacity-40">
+                      Отозвать
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           )}
 

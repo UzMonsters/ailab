@@ -637,7 +637,7 @@ export const useBookStudioStore = create<BookStudioState>((set, get) => ({
       const locale = get().contentLocale;
       await adminBookApi.createChapter(bookId, {
         position: get().chapters.length + 1,
-        translations: { [locale]: { title, description: '' } },
+        translations: { [locale]: { title: title.trim(), description: '' } },
       });
       await get().loadBook(bookId);
     } catch (e) {

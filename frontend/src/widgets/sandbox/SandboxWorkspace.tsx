@@ -229,6 +229,9 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
   const scenarioRuntime = previewRuntime ? { scenario: previewRuntime, level: null, attempt: null, loading: false, error: null } : loadedScenarioRuntime;
   const runtimeLevelIntro = normalizeRuntimeLevelIntro(scenarioRuntime.level, scenarioRuntime.attempt, scenarioRuntime.scenario);
   const activeLevelIntro = runtimeLevelIntro ?? levelDefinition;
+  const levelIntroKey = activeLevelIntro
+    ? `${String(activeLevelIntro.id)}:${activeLevelIntro.scenarioId}:${String((scenarioRuntime.attempt as { id?: string } | null)?.id ?? '')}`
+    : null;
   const sandboxMode = previewRuntime ? 'ADMIN_PREVIEW' : scenarioRuntime.scenario ? 'LEARNING' : 'NORMAL';
   const levelMode = Boolean(levelDefinition || learningAttemptId || scenarioRuntime.scenario);
   const levelLabel = levelDefinition
@@ -455,11 +458,14 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
     return () => window.clearTimeout(timer);
   }, [scenarioRuntime.scenario?.id]);
 
+  const openedLevelIntroRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (!activeLevelIntro || previewRuntime) return;
+    if (!levelIntroKey || previewRuntime || openedLevelIntroRef.current === levelIntroKey) return;
+    openedLevelIntroRef.current = levelIntroKey;
     const timer = window.setTimeout(() => setLevelIntroOpen(true), 0);
     return () => window.clearTimeout(timer);
-  }, [activeLevelIntro, previewRuntime]);
+  }, [levelIntroKey, previewRuntime]);
   const [helpActive, setHelpActive] = useState(false);
   const [scenarioHintIndex, setScenarioHintIndex] = useState(0);
   const [guideDemoOpen, setGuideDemoOpen] = useState(false);

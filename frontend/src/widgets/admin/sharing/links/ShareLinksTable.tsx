@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { workspaceCollaborationApi } from '@/entities/workspace/api/collaboration.api';
-import { workspacesApi } from '@/entities/workspace/api/workspace.api';
+import { adminPlatformApi } from '@/entities/admin/api/platform-admin.api';
 import { Link2, Copy, Check } from 'lucide-react';
 import type { JsonObject } from '@/shared/api/contracts/platform';
 
@@ -35,16 +34,14 @@ export function ShareLinksTable() {
       setLoading(true);
       setError('');
       try {
-        const ws = await workspacesApi.list({ size: 50 });
-        const wsList = Array.isArray(ws) ? ws : (ws as any).items || [];
+        const ws = await adminPlatformApi.workspaces.list({ size: 100 });
+        const wsList = ws.items ?? [];
         const allLinks: (JsonObject & { workspaceName?: string })[] = [];
-        for (const workspace of wsList) {
-          try {
-            const res = await workspaceCollaborationApi.shareLinks(String(workspace.id));
-            const arr = Array.isArray(res) ? res : [];
-            arr.forEach((l: any) => allLinks.push({ ...l, workspaceName: workspace.name || workspace.title }));
-          } catch {}
-        }
+        const details = await Promise.all(wsList.map(workspace => adminPlatformApi.workspaces.get(String(workspace.id))));
+        details.forEach(detail => {
+          const arr = Array.isArray(detail.shareLinks) ? detail.shareLinks : [];
+          arr.forEach(link => allLinks.push({ ...(link as JsonObject), workspaceName: String(detail.name ?? '') }));
+        });
         setLinks(allLinks);
       } catch { setError('Could not load share links.'); }
       setLoading(false);

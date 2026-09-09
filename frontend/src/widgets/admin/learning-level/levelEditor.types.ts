@@ -32,7 +32,7 @@ export const emptyLevelTranslation = (): LevelTranslation => ({
 });
 
 export const emptyLevel = (): LevelDraft => ({
-  trackId: 'chemistry',
+  trackId: 'track-chemistry',
   levelNumber: 1,
   order: 1,
   difficulty: 'BEGINNER',
@@ -53,5 +53,5 @@ export const difficultyLabel: Record<LevelDifficulty, Record<Locale, string>> = 
 };
 
 export const TRACK_OPTIONS = [
-  { id: 'chemistry', label: { ru: 'Химия', uz: 'Kimyo', en: 'Chemistry' } },
+  { id: 'track-chemistry', label: { ru: 'Химия', uz: 'Kimyo', en: 'Chemistry' } },
 ] as const;

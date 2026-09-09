@@ -91,11 +91,20 @@ export default function LearningLevelEditor({ id }: { id?: string }) {
     let active = true;
     const load = id
       ? adminLearningApi.level(id)
-      : Promise.resolve({} as JsonObject);
+      : adminLearningApi.levels({ trackId: 'track-chemistry', size: 100, sort: 'levelNumber,desc' });
     void load
       .then(raw => {
         if (!active) return;
-        const next = id ? levelFromRaw(raw) : emptyLevel();
+        const existing = 'items' in raw || 'content' in raw
+          ? ((raw.items ?? raw.content ?? []) as JsonObject[])
+          : [];
+        const next = id
+          ? levelFromRaw(raw)
+          : {
+              ...emptyLevel(),
+              levelNumber: Math.max(0, ...existing.map(level => Number(level.levelNumber) || 0)) + 1,
+              order: Math.max(0, ...existing.map(level => Number(level.order) || 0)) + 1,
+            };
         setDraft(next);
         setBaseline(JSON.stringify(levelPayload(next)));
       })
