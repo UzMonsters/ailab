@@ -137,8 +137,36 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   return res.json();
 }
 
+async function requestBlob(endpoint: string): Promise<Blob> {
+  const headers: Record<string, string> = {};
+  if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+
+  let res = await fetch(`${API_BASE}${endpoint}`, { headers, credentials: 'include' });
+  if (res.status === 401) {
+    const refreshed = await refreshAccessToken();
+    if (refreshed && accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+      res = await fetch(`${API_BASE}${endpoint}`, { headers, credentials: 'include' });
+    }
+  }
+
+  if (!res.ok) {
+    let message = res.statusText || 'Download failed';
+    try {
+      const errorData = await res.json() as Partial<ApiError>;
+      message = errorData.message || errorData.detail || errorData.error || errorData.title || message;
+    } catch {
+      // A failed file endpoint may return an empty response body.
+    }
+    throw new ApiErrorImpl({ status: res.status, message });
+  }
+
+  return res.blob();
+}
+
 export const api = {
   get: <T>(endpoint: string) => request<T>(endpoint),
+  getBlob: (endpoint: string) => requestBlob(endpoint),
 
   post: <T>(endpoint: string, body?: unknown) =>
     request<T>(endpoint, {

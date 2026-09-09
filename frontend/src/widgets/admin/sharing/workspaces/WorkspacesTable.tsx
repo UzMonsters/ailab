@@ -1,13 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { workspacesApi } from '@/entities/workspace/api/workspace.api';
-import { workspaceCollaborationApi } from '@/entities/workspace/api/collaboration.api';
+import { useLocale } from 'next-intl';
+import { adminPlatformApi } from '@/entities/admin/api/platform-admin.api';
 import { ExternalLink, Users, Link2, MoreHorizontal, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { JsonObject } from '@/shared/api/contracts/platform';
-import type { Workspace } from '@/entities/workspace/model/workspace.types';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 
 const statusColors: Record<string, string> = {
   ACTIVE: 'bg-emerald-500/15 text-emerald-400',
@@ -29,12 +27,7 @@ function timeAgo(date: string | undefined): string {
   return new Date(date).toLocaleDateString();
 }
 
-interface WorkspaceRow extends Workspace {
-  memberCount?: number;
-  linkCount?: number;
-  status?: string;
-  title?: string;
-}
+type WorkspaceRow = JsonObject;
 
 export function WorkspacesTable() {
   const [workspaces, setWorkspaces] = useState<WorkspaceRow[]>([]);
@@ -46,8 +39,7 @@ export function WorkspacesTable() {
   const [statusFilter, setStatusFilter] = useState('');
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
-  const pathname = usePathname();
-  const locale = 'en';
+  const locale = useLocale();
   const pageSize = 25;
 
   useEffect(() => {
@@ -57,32 +49,14 @@ export function WorkspacesTable() {
       setError('');
       try {
         const params: Record<string, any> = { size: pageSize, page: page - 1 };
-        if (search) params.search = search;
+        if (search) params.q = search;
         if (statusFilter) params.status = statusFilter;
-        const res = await workspacesApi.listPage(params);
+        const res = await adminPlatformApi.workspaces.list(params);
         const list = res.items ?? [];
 
-        const enriched: WorkspaceRow[] = await Promise.all(list.map(async (ws) => {
-          let memberCount: number | null = null;
-          let linkCount: number | null = null;
-          try {
-            const members = await workspaceCollaborationApi.members(String(ws.id));
-            memberCount = Array.isArray(members) ? members.length : 0;
-          } catch (err) {
-            console.error('Failed to load members for workspace', ws.id, err);
-          }
-          try {
-            const links = await workspaceCollaborationApi.shareLinks(String(ws.id));
-            linkCount = Array.isArray(links) ? links.length : 0;
-          } catch (err) {
-            console.error('Failed to load links for workspace', ws.id, err);
-          }
-          return { ...ws, memberCount, linkCount };
-        }));
-
         if (!cancelled) {
-          setWorkspaces(enriched);
-          setServerTotal(res.total ?? 0);
+          setWorkspaces(list);
+          setServerTotal(Number((res.page as JsonObject | undefined)?.totalElements ?? 0));
           setLoading(false);
         }
       } catch (err) {
@@ -170,13 +144,13 @@ export function WorkspacesTable() {
                     <td className="px-4 py-3">
                       <span className="flex items-center gap-1.5 text-xs text-slate-300">
                         <Users size={12} className="text-slate-500" />
-                        {ws.memberCount ?? '—'}
+                        {String(ws.memberCount ?? '—')}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <span className="flex items-center gap-1.5 text-xs text-slate-300">
                         <Link2 size={12} className="text-slate-500" />
-                        {ws.linkCount ?? '—'}
+                        {String(ws.activeShareLinkCount ?? '—')}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -185,7 +159,7 @@ export function WorkspacesTable() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-400">
-                      {ws.createdAt ? timeAgo(String(ws.createdAt)) : '—'}
+                      {ws.updatedAt ? timeAgo(String(ws.updatedAt)) : '—'}
                     </td>
                     <td className="px-4 py-3">
                       <div className="relative" data-menu>
@@ -204,7 +178,7 @@ export function WorkspacesTable() {
                               <ExternalLink size={12} /> View details
                             </Link>
                             <Link
-                              href={`/${locale}/workspace/sandbox`}
+                              href={`/${locale}/workspace/sandbox?workspace=${encodeURIComponent(String(ws.id))}`}
                               className="flex w-full items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:bg-white/5"
                             >
                               <ExternalLink size={12} /> Open workspace

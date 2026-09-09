@@ -234,8 +234,14 @@ function ContentsPanel({ item, onRemove }: { item: Item; onRemove?: (itemId: str
     <section className="space-y-2">
       <p className="text-[11px] font-bold uppercase text-[var(--muted-foreground)] tracking-wider">{ts("properties.contents")}</p>
       {item.contents.map((c, i) => {
-        const total = item.contents.reduce((sum, content) => sum + Math.max(0, content.amount), 0);
-        const share = total > 0 ? c.amount / total * 100 : 0;
+        // Snapshots created by older clients may not have an `amount` on every
+        // component. Treat it as zero instead of crashing the properties panel.
+        const amount = Number.isFinite(Number(c.amount)) ? Math.max(0, Number(c.amount)) : 0;
+        const total = item.contents.reduce((sum, content) => {
+          const contentAmount = Number(content.amount);
+          return sum + (Number.isFinite(contentAmount) ? Math.max(0, contentAmount) : 0);
+        }, 0);
+        const share = total > 0 ? amount / total * 100 : 0;
         const isCopperSulfateSolution = c.materialId === 'CuSO4(aq)' && c.phase === 'aqueous';
         const isHomogeneous = Boolean((c as typeof c & { metadata?: { homogeneous?: boolean } }).metadata?.homogeneous);
         const displayName = isCopperSulfateSolution
@@ -255,7 +261,7 @@ function ContentsPanel({ item, onRemove }: { item: Item; onRemove?: (itemId: str
             {isHomogeneous && <span className="rounded-full bg-cyan-400/10 px-1.5 py-0.5 text-[9px] font-semibold text-cyan-300">{homogeneousLabel}</span>}
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-foreground/80">{c.amount.toFixed(1)} {c.unit ?? 'mL'} · {share.toFixed(0)}%</span>
+            <span className="font-mono text-foreground/80">{amount.toFixed(1)} {c.unit ?? 'mL'} · {share.toFixed(0)}%</span>
             {canRemoveComponent && onRemove && (
               <button
                 type="button"

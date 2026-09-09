@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { workspaceCollaborationApi } from '@/entities/workspace/api/collaboration.api';
-import { workspacesApi } from '@/entities/workspace/api/workspace.api';
+import { adminPlatformApi } from '@/entities/admin/api/platform-admin.api';
 import { Users } from 'lucide-react';
 import type { JsonObject } from '@/shared/api/contracts/platform';
 
@@ -16,16 +15,14 @@ export function MembershipsTable() {
       setLoading(true);
       setError('');
       try {
-        const ws = await workspacesApi.list({ size: 50 });
-        const wsList = Array.isArray(ws) ? ws : (ws as any).items || [];
+        const ws = await adminPlatformApi.workspaces.list({ size: 100 });
+        const wsList = ws.items ?? [];
         const allMembers: (JsonObject & { workspaceName?: string })[] = [];
-        for (const workspace of wsList) {
-          try {
-            const mems = await workspaceCollaborationApi.members(String(workspace.id));
-            const arr = Array.isArray(mems) ? mems : [];
-            arr.forEach((m: any) => allMembers.push({ ...m, workspaceName: workspace.name || workspace.title }));
-          } catch {}
-        }
+        const details = await Promise.all(wsList.map(workspace => adminPlatformApi.workspaces.get(String(workspace.id))));
+        details.forEach(detail => {
+          const arr = Array.isArray(detail.members) ? detail.members : [];
+          arr.forEach(member => allMembers.push({ ...(member as JsonObject), workspaceName: String(detail.name ?? '') }));
+        });
         setMembers(allMembers);
       } catch { setError('Could not load members.'); }
       setLoading(false);

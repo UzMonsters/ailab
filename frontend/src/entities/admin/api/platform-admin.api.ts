@@ -45,6 +45,10 @@ export const adminPlatformApi = {
     subjects: () => api.get<{ items: JsonObject[] }>('/api/v1/admin/subjects'),
     patchSubject: (id: string, request: JsonObject) => api.patch<JsonObject>(`/api/v1/admin/subjects/${id}`, request),
   },
+  workspaces: {
+    list: (filters: Query = {}) => api.get<PageEnvelope<JsonObject>>(`/api/v1/admin/workspaces${apiQuery(filters)}`),
+    get: (id: string) => api.get<JsonObject>(`/api/v1/admin/workspaces/${id}`),
+  },
   assets: {
     uploadUrls: (request: JsonObject) => api.post<JsonObject>('/api/v1/admin/assets/upload-urls', request),
     complete: (assetId: string, request: JsonObject) => api.post<JsonObject>(`/api/v1/admin/assets/${assetId}/complete`, request),

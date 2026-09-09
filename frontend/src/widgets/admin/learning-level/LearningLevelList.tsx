@@ -68,7 +68,7 @@ export function LearningLevelList() {
     setLoading(true);
     setError('');
     try {
-      const page = await adminLearningApi.levels({ size: 100, sort: 'order,asc' });
+      const page = await adminLearningApi.levels({ size: 100, sort: 'sortOrder,asc' });
       setRows(page.items ?? page.content ?? []);
     } catch (reason) {
       setError(errorMessage(reason, 'Unable to load levels'));

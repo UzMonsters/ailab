@@ -1,13 +1,12 @@
 'use client';
 
 import { useBookStudioStore, labelEntity } from '../store/useBookStudioStore';
-import { adminBookApi } from '@/entities/book/api/book.api';
 import type { JsonObject } from '@/shared/api/contracts/platform';
 import { Plus, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
 export function PagesPanel() {
-  const { book, page, pages, selectPage, chapters, dirty } = useBookStudioStore();
+  const { book, page, pages, selectPage, chapters, dirty, createChapter, createPage } = useBookStudioStore();
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
   const [showChapterModal, setShowChapterModal] = useState(false);
   const [chapterTitle, setChapterTitle] = useState('');
@@ -27,8 +26,7 @@ export function PagesPanel() {
   const addPage = async (chapterId: string) => {
     if (!book) return;
     try {
-      await adminBookApi.createPage(String(book.id), { chapterId });
-      void useBookStudioStore.getState().loadBook(String(book.id));
+      await createPage(chapterId);
     } catch (e) {
       setCreateError(e instanceof Error ? e.message : 'Failed to create page');
       setTimeout(() => setCreateError(''), 4000);
@@ -46,8 +44,7 @@ export function PagesPanel() {
     setCreating(true);
     setCreateError('');
     try {
-      await adminBookApi.createChapter(String(book.id), { title: chapterTitle.trim() });
-      void useBookStudioStore.getState().loadBook(String(book.id));
+      await createChapter(String(book.id), chapterTitle.trim());
       setShowChapterModal(false);
       setChapterTitle('');
     } catch (e) {
