@@ -5,6 +5,8 @@ import com.ailab.user.domain.User;
 import com.ailab.user.repository.UserRepository;
 import com.ailab.workspace.dto.WorkspacePermissionsDto;
 import com.ailab.workspace.repository.WorkspaceRepository;
+import com.ailab.workspace.security.ShareSessionPrincipal;
+import com.ailab.workspace.security.WorkspaceShareSessionService;
 import com.ailab.workspace.service.WorkspaceMemberService;
 import io.jsonwebtoken.Claims;
 import org.springframework.messaging.Message;
@@ -16,6 +18,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
@@ -30,20 +33,24 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberService memberService;
+    private final WorkspaceShareSessionService shareSessionService;
 
     // Active session tracking: workspaceId -> Set<sessionId>
     private final Map<String, Set<String>> workspaceActiveSessions = new ConcurrentHashMap<>();
     private final Map<String, String> sessionToUser = new ConcurrentHashMap<>();
+    private final Map<String, String> sessionToShareToken = new ConcurrentHashMap<>();
 
     public JwtStompChannelInterceptor(
             JwtService jwtService,
             UserRepository userRepository,
             WorkspaceRepository workspaceRepository,
-            WorkspaceMemberService memberService) {
+            WorkspaceMemberService memberService,
+            WorkspaceShareSessionService shareSessionService) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.workspaceRepository = workspaceRepository;
         this.memberService = memberService;
+        this.shareSessionService = shareSessionService;
     }
 
     @Override
@@ -53,6 +60,9 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
 
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
             String authHeader = accessor.getFirstNativeHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("ShareSession ")) {
+                authHeader = "Bearer " + authHeader.substring("ShareSession ".length()).trim();
+            }
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 authHeader = accessor.getFirstNativeHeader("accessToken");
                 if (authHeader != null && !authHeader.startsWith("Bearer ")) {
@@ -66,10 +76,11 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
             try {
                 String token = authHeader.substring(7);
                 if (token.startsWith("guest_sess_")) {
-                    // Guest share session
-                    String guestId = "guest_" + UUID.randomUUID().toString().substring(0, 8);
+                    if (accessor.getSessionId() != null) {
+                        sessionToShareToken.put(accessor.getSessionId(), token);
+                    }
                     UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                            guestId, null, List.of(new SimpleGrantedAuthority("ROLE_GUEST")));
+                            WorkspaceShareSessionService.AUTH_NAME_PREFIX + token, null, List.of(new SimpleGrantedAuthority("ROLE_GUEST")));
                     accessor.setUser(auth);
                 } else {
                     Claims claims = jwtService.parse(token);
@@ -100,27 +111,42 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
                 String userId = user.getName();
                 String workspaceId = extractScopedId(destination, "workspaces");
                 if (workspaceId != null) {
+                    ShareSessionPrincipal sharePrincipal = null;
+                    if (isShareSessionUser(userId, accessor.getSessionId())) {
+                        String token = shareTokenFor(userId, accessor.getSessionId());
+                        sharePrincipal = shareSessionService.validate(token, workspaceId);
+                        Authentication auth = shareSessionService.authenticationFor(sharePrincipal);
+                        accessor.setUser(auth);
+                        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+                        userId = sharePrincipal.guestId();
+                        if (accessor.getSessionId() != null) {
+                            sessionToUser.put(accessor.getSessionId(), userId);
+                        }
+                    }
+
                     // Track session
                     if (accessor.getSessionId() != null) {
                         workspaceActiveSessions.computeIfAbsent(workspaceId, k -> ConcurrentHashMap.newKeySet()).add(accessor.getSessionId());
                     }
 
-                    WorkspacePermissionsDto perms = memberService.getPermissions(workspaceId, userId);
-                    if ("NONE".equals(perms.role()) && !userId.startsWith("guest_")) {
+                    WorkspacePermissionsDto perms = sharePrincipal != null
+                            ? WorkspacePermissionsDto.of(sharePrincipal.role(), sharePrincipal.capabilities())
+                            : memberService.getPermissions(workspaceId, userId);
+                    if ("NONE".equals(perms.role())) {
                         throw new AccessDeniedException("Workspace access denied: " + workspaceId);
                     }
 
                     // Capability validation
                     if (destination.contains("/chat")) {
-                        if (!perms.capabilities().contains("CHAT") && !userId.startsWith("guest_")) {
+                        if (!perms.capabilities().contains("CHAT")) {
                             throw new AccessDeniedException("Chat permission denied");
                         }
                     } else if (destination.contains("/comments")) {
-                        if (!perms.capabilities().contains("COMMENT") && !userId.startsWith("guest_")) {
+                        if (!perms.capabilities().contains("COMMENT")) {
                             throw new AccessDeniedException("Comments permission denied");
                         }
                     } else if (StompCommand.SEND.equals(accessor.getCommand()) && destination.contains("/events")) {
-                        if (!perms.capabilities().contains("EDIT_SCENE") && !userId.startsWith("guest_")) {
+                        if (!perms.capabilities().contains("EDIT_SCENE")) {
                             throw new AccessDeniedException("Edit scene permission denied for user: " + userId);
                         }
                     }
@@ -130,9 +156,26 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
                 if (sessionId != null) {
                     var workspace = workspaceRepository.findByExperimentSessionId(sessionId);
                     if (workspace.isPresent()) {
-                        WorkspacePermissionsDto perms = memberService.getPermissions(workspace.get().getId(), userId);
-                        if ("NONE".equals(perms.role()) && !userId.startsWith("guest_")) {
+                        WorkspacePermissionsDto perms;
+                        if (isShareSessionUser(userId, accessor.getSessionId())) {
+                            String token = shareTokenFor(userId, accessor.getSessionId());
+                            ShareSessionPrincipal principal = shareSessionService.validate(token, workspace.get().getId());
+                            Authentication auth = shareSessionService.authenticationFor(principal);
+                            accessor.setUser(auth);
+                            org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+                            userId = principal.guestId();
+                            if (accessor.getSessionId() != null) {
+                                sessionToUser.put(accessor.getSessionId(), userId);
+                            }
+                            perms = WorkspacePermissionsDto.of(principal.role(), principal.capabilities());
+                        } else {
+                            perms = memberService.getPermissions(workspace.get().getId(), userId);
+                        }
+                        if ("NONE".equals(perms.role())) {
                             throw new AccessDeniedException("Experiment access denied: " + sessionId);
+                        }
+                        if (StompCommand.SEND.equals(accessor.getCommand()) && !perms.capabilities().contains("RUN_EXPERIMENT")) {
+                            throw new AccessDeniedException("Experiment command permission denied");
                         }
                     }
                 }
@@ -140,12 +183,29 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
         } else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
             if (accessor.getSessionId() != null) {
                 sessionToUser.remove(accessor.getSessionId());
+                sessionToShareToken.remove(accessor.getSessionId());
                 for (Set<String> sessions : workspaceActiveSessions.values()) {
                     sessions.remove(accessor.getSessionId());
                 }
             }
         }
         return message;
+    }
+
+    private boolean isShareSessionUser(String userId, String sessionId) {
+        return userId != null
+                && (userId.startsWith(WorkspaceShareSessionService.AUTH_NAME_PREFIX)
+                || (userId.startsWith("guest_") && sessionId != null && sessionToShareToken.containsKey(sessionId)));
+    }
+
+    private String shareTokenFor(String userId, String sessionId) {
+        if (sessionId != null && sessionToShareToken.containsKey(sessionId)) {
+            return sessionToShareToken.get(sessionId);
+        }
+        if (userId != null && userId.startsWith(WorkspaceShareSessionService.AUTH_NAME_PREFIX)) {
+            return userId.substring(WorkspaceShareSessionService.AUTH_NAME_PREFIX.length());
+        }
+        throw new AuthenticationCredentialsNotFoundException("Share session token is required");
     }
 
     public void revokeUserSessions(String workspaceId, String userId) {
