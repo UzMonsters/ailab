@@ -42,6 +42,15 @@ public class PublicLearningController {
         return auth.getName();
     }
 
+    private String getRequiredUserId() {
+        String userId = getOptionalUserId();
+        if (userId == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "AUTH_REQUIRED: User must be authenticated to perform learning attempt operations");
+        }
+        return userId;
+    }
+
     @GetMapping("/tracks/chemistry")
     @Operation(summary = "Get Chemistry Track Map")
     public TrackMapResponse getChemistryTrackMap(@RequestParam(required = false, defaultValue = "ru") String locale) {
@@ -73,7 +82,7 @@ public class PublicLearningController {
             @PathVariable String id,
             @RequestBody(required = false) StartAttemptRequest request
     ) {
-        return attemptService.startOrResumeAttempt(id, request, getOptionalUserId(), false);
+        return attemptService.startOrResumeAttempt(id, request, getRequiredUserId(), false);
     }
 
     @GetMapping("/attempts/{id}")

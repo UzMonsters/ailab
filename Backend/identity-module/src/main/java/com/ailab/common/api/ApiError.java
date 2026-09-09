@@ -2,6 +2,7 @@ package com.ailab.common.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +12,7 @@ public record ApiError(
         @JsonProperty("error") String error,
         @JsonProperty("message") String message,
         @JsonProperty("path") String path,
+        @JsonProperty("instance") String instance,
         @JsonProperty("violations") List<FieldViolation> violations,
         @JsonProperty("fieldViolations") List<FieldViolation> fieldViolations,
         @JsonProperty("errors") Map<String, String> errors,
@@ -33,11 +35,12 @@ public record ApiError(
                 error,
                 message,
                 path,
+                path,
                 violations != null ? violations : List.of(),
                 fieldViolations != null ? fieldViolations : List.of(),
                 errors != null ? errors : Map.of(),
                 correlationId,
-                "https://errors.jasscience.dev/" + (error != null ? error.toLowerCase().replace(' ', '-') : "error"),
+                "https://api.aichemistry.local/problems/" + (error != null ? error.toLowerCase().replace(' ', '-').replace('_', '-') : "error"),
                 error != null ? error : "Error",
                 error != null ? error.toUpperCase().replace(' ', '_') : "ERROR",
                 message,
@@ -52,25 +55,59 @@ public record ApiError(
     }
 
     public static ApiError ofProblem(int status, String code, String title, String detail, String path, String correlationId, Map<String, String> errors) {
+        List<FieldViolation> violations = new ArrayList<>();
+        if (errors != null) {
+            errors.forEach((k, v) -> violations.add(new FieldViolation(k, "INVALID", v)));
+        }
         return new ApiError(
                 Instant.now(),
                 status,
                 title,
                 detail,
                 path,
-                List.of(),
-                List.of(),
+                path,
+                violations,
+                violations,
                 errors != null ? errors : Map.of(),
                 correlationId,
-                "https://errors.jasscience.dev/" + code.toLowerCase().replace('_', '-'),
+                "https://api.aichemistry.local/problems/" + (code != null ? code.toLowerCase().replace('_', '-') : "error"),
                 title,
                 code,
                 detail,
-                List.of(),
+                violations,
                 correlationId
         );
     }
 
-    public record FieldViolation(String field, String message) {
+    public static ApiError ofProblemWithViolations(int status, String code, String title, String detail, String path, String correlationId, List<FieldViolation> violations) {
+        List<FieldViolation> v = violations != null ? violations : List.of();
+        return new ApiError(
+                Instant.now(),
+                status,
+                title,
+                detail,
+                path,
+                path,
+                v,
+                v,
+                Map.of(),
+                correlationId,
+                "https://api.aichemistry.local/problems/" + (code != null ? code.toLowerCase().replace('_', '-') : "error"),
+                title,
+                code,
+                detail,
+                v,
+                correlationId
+        );
+    }
+
+    public record FieldViolation(
+            @JsonProperty("field") String field,
+            @JsonProperty("code") String code,
+            @JsonProperty("message") String message
+    ) {
+        public FieldViolation(String field, String message) {
+            this(field, "INVALID", message);
+        }
     }
 }

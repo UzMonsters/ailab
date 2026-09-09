@@ -31,17 +31,33 @@ public class LearningLevelService {
         this.objectMapper = objectMapper;
     }
 
+    public LearningLevelEntity findLevelOrThrow(String levelId) {
+        return levelRepository.findById(levelId)
+                .or(() -> {
+                    if ("lvl_1".equalsIgnoreCase(levelId) || "mixtures".equalsIgnoreCase(levelId)) {
+                        return levelRepository.findById("level-chemistry-1")
+                                .or(() -> levelRepository.findByTrackIdAndLevelNumber("track-chemistry", 1));
+                    } else if ("level-chemistry-1".equalsIgnoreCase(levelId)) {
+                        return levelRepository.findById("lvl_1");
+                    }
+                    return Optional.empty();
+                })
+                .orElseThrow(() -> new LevelNotFoundException("Level not found: " + levelId));
+    }
+
     @Transactional(readOnly = true)
     public LevelDefinitionDto getPublishedLevel(String levelId, String locale) {
-        LearningLevelEntity level = levelRepository.findById(levelId)
-                .orElseThrow(() -> new LevelNotFoundException("Level not found: " + levelId));
+        LearningLevelEntity level = findLevelOrThrow(levelId);
 
         if (level.getStatus() != LearningStatus.PUBLISHED && level.getPublishedVersion() == null) {
             throw new LevelNotFoundException("Level is not published yet: " + levelId);
         }
 
         long versionToLoad = level.getPublishedVersion() != null ? level.getPublishedVersion() : level.getDraftVersion();
-        Optional<LearningLevelPublishedSnapshotEntity> snapshotOpt = snapshotRepository.findByLevelIdAndVersion(levelId, versionToLoad);
+        Optional<LearningLevelPublishedSnapshotEntity> snapshotOpt = snapshotRepository.findByLevelIdAndVersion(level.getId(), versionToLoad);
+        if (snapshotOpt.isEmpty() && !level.getId().equals(levelId)) {
+            snapshotOpt = snapshotRepository.findByLevelIdAndVersion(levelId, versionToLoad);
+        }
 
         if (snapshotOpt.isPresent()) {
             return parseLevelFromSnapshot(snapshotOpt.get().getSnapshotDataJson(), locale);
@@ -52,15 +68,17 @@ public class LearningLevelService {
 
     @Transactional(readOnly = true)
     public LevelDefinitionDto getLevelSnapshotOrDraft(String levelId, Long version, String locale) {
+        LearningLevelEntity level = findLevelOrThrow(levelId);
         if (version != null) {
-            Optional<LearningLevelPublishedSnapshotEntity> snap = snapshotRepository.findByLevelIdAndVersion(levelId, version);
+            Optional<LearningLevelPublishedSnapshotEntity> snap = snapshotRepository.findByLevelIdAndVersion(level.getId(), version);
+            if (snap.isEmpty() && !level.getId().equals(levelId)) {
+                snap = snapshotRepository.findByLevelIdAndVersion(levelId, version);
+            }
             if (snap.isPresent()) {
                 return parseLevelFromSnapshot(snap.get().getSnapshotDataJson(), locale);
             }
         }
 
-        LearningLevelEntity level = levelRepository.findById(levelId)
-                .orElseThrow(() -> new LevelNotFoundException("Level not found: " + levelId));
         return mapEntityToDefinitionDto(level, locale);
     }
 

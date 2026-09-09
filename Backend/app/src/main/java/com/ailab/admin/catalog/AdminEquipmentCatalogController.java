@@ -75,6 +75,14 @@ public class AdminEquipmentCatalogController {
         return catalogService.saveCompatibility(id, request, ifMatch, actorId, "Admin User");
     }
 
+    @PostMapping("/{id}/validate")
+    public Map<String, Object> validateEquipment(
+            @PathVariable String id,
+            @RequestBody(required = false) Map<String, Object> request) {
+        Long version = request != null && request.get("version") != null ? ((Number) request.get("version")).longValue() : null;
+        return catalogService.validateDraft("EQUIPMENT", id, version);
+    }
+
     @PostMapping("/{id}/publish")
     public ResponseEntity<Map<String, Object>> publishEquipment(
             @PathVariable String id,

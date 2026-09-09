@@ -76,23 +76,49 @@ public class LearningDataInitializer implements CommandLineRunner {
 
     private void seedPublishedLevel1(String trackId) {
         LearningLevelEntity level = new LearningLevelEntity();
-        level.setId("level-chemistry-1");
+        level.setId("lvl_1");
         level.setTrackId(trackId);
         level.setLevelNumber(1);
         level.setSortOrder(1);
         level.setDifficulty("BEGINNER");
-        level.setEstimatedMinutes(5);
+        level.setEstimatedMinutes(15);
         level.setStatus(LearningStatus.PUBLISHED);
         level.setDraftVersion(1);
         level.setPublishedVersion(1L);
         level.setPrerequisitesJson("[]");
-        level.setRequirementsJson("{\"prerequisiteLevelIds\":[],\"requiredBadgeIds\":[],\"allowReplay\":true}");
-        level.setAvailableEquipmentJson("[\"beaker_250ml\"]");
-        level.setAvailableMaterialsJson("[]");
-        level.setScenarioJson("{\"catalogVersion\":1,\"availableEquipmentIds\":[\"beaker_250ml\"],\"availableMaterialIds\":[]}");
-        level.setStepsJson("[{\"id\":\"add-beaker\",\"order\":1,\"type\":\"CONTAINER_SETUP\",\"translations\":{\"ru\":{\"title\":\"Добавьте стакан\",\"instruction\":\"Перетащите химический стакан на рабочий стол лаборатории\"},\"en\":{\"title\":\"Add a beaker\",\"instruction\":\"Drag a beaker onto the laboratory workspace\"},\"uz\":{\"title\":\"Stakanni qo'shing\",\"instruction\":\"Kimyoviy stakanni ish stoliga qo'ying\"}},\"checkpoint\":{\"factType\":\"CONTAINER_PRESENT\",\"target\":{\"equipmentCode\":\"beaker\"}},\"guideTargets\":[{\"level\":1,\"kind\":\"TAB\",\"id\":\"equipment\",\"placement\":\"top\",\"text\":\"Выберите вкладку оборудования\",\"sequence\":1},{\"level\":2,\"kind\":\"ITEM\",\"catalogCode\":\"beaker_250ml\",\"placement\":\"top\",\"text\":\"Перетащите стакан на холст\",\"sequence\":2}]}]");
-        level.setRewardsJson("{\"badgeId\":\"badge-first-step\",\"unlockLevelIds\":[\"level-chemistry-2\"],\"unlockEquipmentIds\":[\"beaker_250ml\"],\"unlockMaterialIds\":[],\"unlockBookChapterIds\":[]}");
-        level.setTranslationsJson("{\"ru\":{\"title\":\"Знакомство с лабораторией\",\"summary\":\"Научитесь размещать базовую лабораторную посуду\",\"goal\":\"Разместите химический стакан на рабочей поверхности\"},\"en\":{\"title\":\"Introduction to Laboratory\",\"summary\":\"Learn how to place basic glassware\",\"goal\":\"Place a beaker on the workspace\"},\"uz\":{\"title\":\"Laboratoriya bilan tanishuv\",\"summary\":\"Asosiy idishlarni joylashtirishni o'rganing\",\"goal\":\"Ish stoliga stakanni joylashtiring\"}}");
+        level.setRequirementsJson("{\"prerequisiteLevelIds\":[],\"requiredBadgeIds\":[],\"allowReplay\":true,\"maxAttempts\":null}");
+        level.setAvailableEquipmentJson("[\"beaker_250ml\", \"graduated_cylinder_100ml\"]");
+        level.setAvailableMaterialsJson("[\"water_distilled\", \"nacl\"]");
+        level.setScenarioJson("{\"scenarioId\":\"scen_mixtures\",\"catalogVersion\":1,\"availableEquipmentIds\":[\"beaker_250ml\",\"graduated_cylinder_100ml\"],\"availableMaterialIds\":[\"water_distilled\",\"nacl\"],\"initialState\":{}}");
+        level.setStepsJson("""
+                [
+                  {
+                    "id": "step-1",
+                    "order": 1,
+                    "type": "INTERACTION",
+                    "translations": {
+                      "ru": { "title": "Подготовка оборудования", "instruction": "Разместите стакан на рабочем столе" },
+                      "en": { "title": "Equipment Setup", "instruction": "Place beaker on the workbench" },
+                      "uz": { "title": "Uskunani o'rnatish", "instruction": "Stakanni ish stoliga qo'ying" }
+                    },
+                    "checkpoint": {
+                      "factType": "AUTO",
+                      "source": {},
+                      "target": {},
+                      "parameters": {}
+                    },
+                    "guideTargets": []
+                  }
+                ]
+                """);
+        level.setRewardsJson("{\"badgeId\":\"badge_chemistry_starter\",\"unlockLevelIds\":[\"level-chemistry-2\"],\"unlockEquipmentIds\":[\"beaker_250ml\"],\"unlockMaterialIds\":[],\"unlockBookChapterIds\":[\"chapter-basics\"]}");
+        level.setTranslationsJson("""
+                {
+                  "ru": { "title": "Смеси", "code": "mixtures", "summary": "Изучение смесей и методов их разделения", "goal": "Научиться создавать и разделять растворы" },
+                  "en": { "title": "Mixtures", "code": "mixtures", "summary": "Study of mixtures and separation methods", "goal": "Learn to create and separate solutions" },
+                  "uz": { "title": "Aralashmalar", "code": "mixtures", "summary": "Aralashmalar va ularni ajratish usullarini o'rganish", "goal": "Eritmalar tayyorlash va ajratishni o'rganish" }
+                }
+                """);
 
         levelRepository.save(level);
         saveSnapshot(level, 1L);
@@ -109,8 +135,8 @@ public class LearningDataInitializer implements CommandLineRunner {
         level.setStatus(LearningStatus.PUBLISHED);
         level.setDraftVersion(1);
         level.setPublishedVersion(1L);
-        level.setPrerequisitesJson("[\"level-chemistry-1\"]");
-        level.setRequirementsJson("{\"prerequisiteLevelIds\":[\"level-chemistry-1\"],\"requiredBadgeIds\":[],\"allowReplay\":true}");
+        level.setPrerequisitesJson("[\"lvl_1\"]");
+        level.setRequirementsJson("{\"prerequisiteLevelIds\":[\"lvl_1\"],\"requiredBadgeIds\":[],\"allowReplay\":true}");
         level.setAvailableEquipmentJson("[\"beaker_250ml\"]");
         level.setAvailableMaterialsJson("[\"H2O\"]");
         level.setScenarioJson("{\"catalogVersion\":1,\"availableEquipmentIds\":[\"beaker_250ml\"],\"availableMaterialIds\":[\"H2O\"]}");
@@ -216,7 +242,7 @@ public class LearningDataInitializer implements CommandLineRunner {
         ch1.setId("ch-foundations");
         ch1.setTrackId(trackId);
         ch1.setSortOrder(1);
-        ch1.setLevelIdsJson("[\"level-chemistry-1\",\"level-chemistry-2\",\"level-chemistry-3\"]");
+        ch1.setLevelIdsJson("[\"lvl_1\",\"level-chemistry-2\",\"level-chemistry-3\"]");
         ch1.setStatus(LearningStatus.PUBLISHED);
         ch1.setTranslationsJson("{\"ru\":{\"title\":\"Глава 1: Введение и основы посуды\"},\"en\":{\"title\":\"Chapter 1: Intro and Glassware\"},\"uz\":{\"title\":\"1-bob: Kirish va asosiy idishlar\"}}");
         chapterRepository.save(ch1);

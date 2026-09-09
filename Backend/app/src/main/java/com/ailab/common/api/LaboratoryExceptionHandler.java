@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -23,14 +22,15 @@ public class LaboratoryExceptionHandler {
 
     @ExceptionHandler(WorkspaceNotFoundException.class)
     ResponseEntity<ApiError> workspaceNotFound(WorkspaceNotFoundException ex, HttpServletRequest req) {
-        return problem(HttpStatus.NOT_FOUND, "WORKSPACE_NOT_FOUND", "Workspace Not Found", ex.getMessage(), req, Map.of());
+        return problem(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", "Workspace Not Found", ex.getMessage(), req, Map.of());
     }
 
     @ExceptionHandler(VersionConflictException.class)
     ResponseEntity<ApiError> workspaceVersionConflict(VersionConflictException ex, HttpServletRequest req) {
-        return problem(HttpStatus.CONFLICT, "VERSION_CONFLICT", "Version Conflict", ex.getMessage(), req, Map.of(
-                "expectedVersion", Long.toString(ex.getExpectedVersion()),
-                "actualVersion", Long.toString(ex.getActualVersion())));
+        List<ApiError.FieldViolation> violations = List.of(
+                new ApiError.FieldViolation("version", "STALE", "Expected " + ex.getExpectedVersion() + ", actual " + ex.getActualVersion())
+        );
+        return problemWithViolations(HttpStatus.CONFLICT, "VERSION_CONFLICT", "Version Conflict", ex.getMessage(), req, violations);
     }
 
     @ExceptionHandler(ResponseStatusException.class)
@@ -39,14 +39,20 @@ public class LaboratoryExceptionHandler {
         if (status == null) status = HttpStatus.BAD_REQUEST;
         String reason = ex.getReason() != null ? ex.getReason() : status.getReasonPhrase();
         String code = status.name();
-        if (reason.startsWith("PORT_") || reason.startsWith("INVALID_") || reason.startsWith("THERMAL_")
-                || reason.startsWith("LAST_OWNER") || reason.startsWith("STALE_") || reason.startsWith("SHARE_")
-                || reason.startsWith("CAPABILITY_REQUIRED") || reason.startsWith("PREVIEW_")
-                || reason.startsWith("CHECKSUM_") || reason.startsWith("CONFIRMATION_REQUIRED")) {
-            int colon = reason.indexOf(':');
-            code = colon > 0 ? reason.substring(0, colon).trim() : reason;
+        String detail = reason;
+
+        int colon = reason.indexOf(':');
+        if (colon > 0) {
+            String potentialCode = reason.substring(0, colon).trim();
+            if (!potentialCode.contains(" ")) {
+                code = potentialCode;
+                detail = reason.substring(colon + 1).trim();
+            }
+        } else if (!reason.contains(" ")) {
+            code = reason.trim();
         }
-        return problem(status, code, status.getReasonPhrase(), reason, req, Map.of());
+
+        return problem(status, code, status.getReasonPhrase(), detail, req, Map.of());
     }
 
     @ExceptionHandler(SafetyException.class)
@@ -92,16 +98,18 @@ public class LaboratoryExceptionHandler {
 
     @ExceptionHandler(com.ailab.learning.exception.LevelVersionChangedException.class)
     ResponseEntity<ApiError> levelVersionChanged(com.ailab.learning.exception.LevelVersionChangedException ex, HttpServletRequest req) {
-        return problem(HttpStatus.CONFLICT, "LEVEL_VERSION_CHANGED", "Level Version Changed", ex.getMessage(), req, Map.of(
-                "expectedVersion", Long.toString(ex.getExpectedVersion()),
-                "actualVersion", Long.toString(ex.getActualVersion())));
+        List<ApiError.FieldViolation> violations = List.of(
+                new ApiError.FieldViolation("version", "STALE", "Expected " + ex.getExpectedVersion() + ", actual " + ex.getActualVersion())
+        );
+        return problemWithViolations(HttpStatus.CONFLICT, "VERSION_CONFLICT", "Version Conflict", ex.getMessage(), req, violations);
     }
 
     @ExceptionHandler(com.ailab.learning.exception.LearningStateVersionConflictException.class)
     ResponseEntity<ApiError> learningStateVersionConflict(com.ailab.learning.exception.LearningStateVersionConflictException ex, HttpServletRequest req) {
-        return problem(HttpStatus.CONFLICT, "STATE_VERSION_CONFLICT", "State Version Conflict", ex.getMessage(), req, Map.of(
-                "expectedVersion", Long.toString(ex.getExpectedVersion()),
-                "actualVersion", Long.toString(ex.getActualVersion())));
+        List<ApiError.FieldViolation> violations = List.of(
+                new ApiError.FieldViolation("stateVersion", "STALE", "Expected " + ex.getExpectedVersion() + ", actual " + ex.getActualVersion())
+        );
+        return problemWithViolations(HttpStatus.CONFLICT, "VERSION_CONFLICT", "Version Conflict", ex.getMessage(), req, violations);
     }
 
     @ExceptionHandler(com.ailab.learning.exception.StepRequirementNotMetException.class)
@@ -114,6 +122,12 @@ public class LaboratoryExceptionHandler {
     private ResponseEntity<ApiError> problem(HttpStatus status, String code, String title, String message, HttpServletRequest req, Map<String, String> errors) {
         String correlationId = req.getHeader("X-Correlation-Id");
         ApiError err = ApiError.ofProblem(status.value(), code, title, message != null ? message : title, req.getRequestURI(), correlationId, errors);
+        return ResponseEntity.status(status).body(err);
+    }
+
+    private ResponseEntity<ApiError> problemWithViolations(HttpStatus status, String code, String title, String message, HttpServletRequest req, List<ApiError.FieldViolation> violations) {
+        String correlationId = req.getHeader("X-Correlation-Id");
+        ApiError err = ApiError.ofProblemWithViolations(status.value(), code, title, message != null ? message : title, req.getRequestURI(), correlationId, violations);
         return ResponseEntity.status(status).body(err);
     }
 }

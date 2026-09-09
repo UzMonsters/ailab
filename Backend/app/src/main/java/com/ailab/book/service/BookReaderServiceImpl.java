@@ -78,8 +78,19 @@ public class BookReaderServiceImpl implements BookReaderService {
             String chTitle = String.valueOf(chLoc.getOrDefault("title", "Chapter " + pos));
 
             @SuppressWarnings("unchecked")
-            List<?> pages = ch.get("pages") instanceof List<?> pl ? pl : List.of();
-            chapters.add(new BookDtos.PublicChapterSummary(chId, pos, chTitle, pages.size(), null));
+            List<Map<String, Object>> rawPages = ch.get("pages") instanceof List<?> pl ? (List<Map<String, Object>>) pl : List.of();
+            List<BookDtos.PublicPageSummary> pageSummaries = new ArrayList<>();
+            for (Map<String, Object> pg : rawPages) {
+                String pgId = (String) pg.get("id");
+                String pgSlug = (String) pg.get("slug");
+                Integer pgPos = (Integer) pg.get("position");
+                @SuppressWarnings("unchecked")
+                Map<String, Object> pgTrans = pg.get("translations") instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
+                Map<String, Object> pgLoc = extractLocaleMap(pgTrans, effectiveLocale, defaultLocale);
+                String pgTitle = String.valueOf(pgLoc.getOrDefault("title", "Page " + pgPos));
+                pageSummaries.add(new BookDtos.PublicPageSummary(pgId, pgSlug, pgPos, pgTitle));
+            }
+            chapters.add(new BookDtos.PublicChapterSummary(chId, pos, chTitle, rawPages.size(), pageSummaries));
         }
 
         return new BookDtos.PublicBookManifest(

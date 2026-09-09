@@ -1,8 +1,11 @@
 package com.ailab.admin.catalog;
 
 import com.ailab.admin.audit.AuditLogService;
+import com.ailab.chemistry.domain.formula.DefaultFormulaParser;
+import com.ailab.chemistry.domain.formula.FormulaParser;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.criteria.Predicate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,12 +23,25 @@ import java.util.*;
 @Transactional
 public class AdminCatalogServiceImpl implements AdminCatalogService {
 
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+            "updatedAt", "createdAt", "code", "status", "version", "publishedVersion", "entityType"
+    );
+
     private final AdminCatalogDraftRepository repository;
     private final AuditLogService auditLogService;
+    private final FormulaParser formulaParser;
 
+    @Autowired
     public AdminCatalogServiceImpl(AdminCatalogDraftRepository repository, AuditLogService auditLogService) {
         this.repository = repository;
         this.auditLogService = auditLogService;
+        this.formulaParser = new DefaultFormulaParser();
+    }
+
+    public AdminCatalogServiceImpl(AdminCatalogDraftRepository repository, AuditLogService auditLogService, FormulaParser formulaParser) {
+        this.repository = repository;
+        this.auditLogService = auditLogService;
+        this.formulaParser = formulaParser != null ? formulaParser : new DefaultFormulaParser();
     }
 
     @PostConstruct
@@ -34,14 +50,14 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
             seedInitialDraft("ELEMENT", "H", Map.of(
                     "atomicNumber", 1, "symbol", "H", "name", "Hydrogen",
                     "properties", Map.of("group", 1, "period", 1, "category", "nonmetal", "atomicMass", 1.008),
-                    "translations", Map.of("en", "Hydrogen", "ru", "Водород", "uz", "Vodorod")
+                    "translations", Map.of("en", Map.of("name", "Hydrogen"), "ru", Map.of("name", "Водород"), "uz", Map.of("name", "Vodorod"))
             ));
             seedInitialDraft("SUBSTANCE", "H2O", Map.of(
                     "code", "H2O", "formula", "H2O", "phase", "LIQUID",
                     "appearance", Map.of("color", "colorless", "state", "liquid"),
                     "properties", Map.of("density", 1.0, "molarMass", 18.015),
                     "hazards", List.of(),
-                    "translations", Map.of("en", "Water", "ru", "Вода", "uz", "Suv")
+                    "translations", Map.of("en", Map.of("name", "Water"), "ru", Map.of("name", "Вода"), "uz", Map.of("name", "Suv"))
             ));
             seedInitialDraft("REACTION", "acid_base_neut", Map.of(
                     "code", "acid_base_neut",
@@ -51,7 +67,7 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
                     "energy", Map.of("enthalpyJoule", -57100),
                     "appearance", Map.of("thermalOutput", "EXOTHERMIC"),
                     "safety", Map.of("severity", "LOW"),
-                    "translations", Map.of("en", "Neutralization", "ru", "Нейтрализация", "uz", "Neytrallanish")
+                    "translations", Map.of("en", Map.of("name", "Neutralization"), "ru", Map.of("name", "Нейтрализация"), "uz", Map.of("name", "Neytrallanish"))
             ));
             seedInitialDraft("EQUIPMENT", "beaker-250", Map.of(
                     "code", "beaker-250", "name", "250ml Glass Beaker",
@@ -63,29 +79,31 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
                             Map.of("id", "SPOUT", "type", "FLUID", "direction", "OUTPUT", "connector", "spout"),
                             Map.of("id", "BOTTOM_PAD", "type", "THERMAL", "direction", "BIDIRECTIONAL", "connector", "thermal-contact")
                     ),
-                    "translations", Map.of("en", "250ml Glass Beaker", "ru", "Стеклянный стакан 250мл", "uz", "250ml shisha stakan")
+                    "translations", Map.of("en", Map.of("name", "250ml Glass Beaker"), "ru", Map.of("name", "Стеклянный стакан 250мл"), "uz", Map.of("name", "250ml shisha stakan"))
             ));
             seedInitialDraft("MATERIAL", "hydrochloric-acid", Map.of(
                     "code", "hydrochloric-acid", "name", "Hydrochloric Acid 1M",
+                    "formula", "HCl",
                     "type", "SOLUTION", "phase", "LIQUID",
                     "appearance", Map.of("color", "transparent"),
                     "properties", Map.of("concentrationM", 1.0, "ph", 0.0),
                     "safety", Map.of("hazard", "CORROSIVE", "severity", "HIGH"),
-                    "translations", Map.of("en", "Hydrochloric Acid", "ru", "Соляная кислота", "uz", "Xlorid kislota")
+                    "translations", Map.of("en", Map.of("name", "Hydrochloric Acid"), "ru", Map.of("name", "Соляная кислота"), "uz", Map.of("name", "Xlorid kislota"))
             ));
             seedInitialDraft("SCENARIO", "chem_acid_base_1", Map.of(
                     "subject", "CHEMISTRY",
                     "trackId", "chemistry-basics",
                     "difficulty", "BEGINNER",
                     "order", 1,
+                    "initialScene", Map.of("alias", "beaker-250", "equipmentCode", "beaker-250"),
                     "scenario", Map.of("title", "Titration Introduction", "description", "Neutralize acid using base"),
                     "steps", List.of(
                             Map.of("order", 1, "instruction", "Place beaker on workspace", "targetEquipment", "beaker-250"),
                             Map.of("order", 2, "instruction", "Pour 50ml HCl", "targetMaterial", "hydrochloric-acid")
                     ),
                     "checkpoints", List.of(Map.of("id", "cp_1", "condition", "ph >= 6.8 && ph <= 7.2")),
-                    "guideTargets", List.of("beaker-250", "buret-50"),
-                    "translations", Map.of("en", "Acid-Base Titration", "ru", "Кислотно-основное титрование", "uz", "Kislota-asos titrlash")
+                    "guideTargets", List.of("beaker-250"),
+                    "translations", Map.of("en", Map.of("name", "Acid-Base Titration"), "ru", Map.of("name", "Кислотно-основное титрование"), "uz", Map.of("name", "Kislota-asos titrlash"))
             ));
             seedInitialDraft("SAFETY_RULE", "RULE_ACID_WATER", Map.of(
                     "code", "RULE_ACID_WATER",
@@ -93,7 +111,7 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
                     "severity", "CRITICAL",
                     "condition", "materialA == 'CONCENTRATED_H2SO4' && materialB == 'H2O' && addOrder == 'WATER_INTO_ACID'",
                     "effect", "THERMAL_EXPLOSION_HAZARD",
-                    "translations", Map.of("en", "Never pour water into acid", "ru", "Не лейте воду в кислоту", "uz", "Kislotaga suv quymang")
+                    "translations", Map.of("en", Map.of("name", "Never pour water into acid"), "ru", Map.of("name", "Не лейте воду в кислоту"), "uz", Map.of("name", "Kislotaga suv quymang"))
             ));
         }
     }
@@ -130,12 +148,12 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
                 .map(this::toResponseMap)
                 .toList();
 
-        Map<String, Object> pageMeta = Map.of(
-                "number", draftPage.getNumber(),
-                "size", draftPage.getSize(),
-                "totalElements", draftPage.getTotalElements(),
-                "totalPages", draftPage.getTotalPages()
-        );
+        Map<String, Object> pageMeta = new LinkedHashMap<>();
+        pageMeta.put("page", draftPage.getNumber());
+        pageMeta.put("number", draftPage.getNumber());
+        pageMeta.put("size", draftPage.getSize());
+        pageMeta.put("totalElements", draftPage.getTotalElements());
+        pageMeta.put("totalPages", draftPage.getTotalPages());
 
         return Map.of("items", items, "page", pageMeta);
     }
@@ -162,7 +180,7 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
                 actorId, actorName, "ADMIN",
                 entityType.toLowerCase() + ".created", entityType.toUpperCase(), draft.getId(), draft.getCode(),
                 "CATALOG", "ADMIN_WEB", "SUCCESS", "MEDIUM",
-                null, body, List.of("all"), null, null, null, Map.of("version", draft.getVersion())
+                null, new LinkedHashMap<>(body), List.of("all"), null, null, null, Map.of("version", draft.getVersion())
         );
 
         return toResponseMap(draft);
@@ -171,9 +189,22 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
     @Override
     public Map<String, Object> patchDraft(String entityType, String id, Map<String, Object> patch, String ifMatch, String actorId, String actorName) {
         AdminCatalogDraftEntity draft = findDraft(entityType, id);
-        validateIfMatch(draft.getVersion(), ifMatch);
 
-        Map<String, Object> existing = new LinkedHashMap<>(draft.getData());
+        Long expectedVersion = null;
+        if (patch.get("expectedVersion") instanceof Number n) {
+            expectedVersion = n.longValue();
+        } else if (patch.get("version") instanceof Number n) {
+            expectedVersion = n.longValue();
+        }
+
+        if (expectedVersion != null) {
+            validateIfMatch(draft.getVersion(), String.valueOf(expectedVersion));
+        } else {
+            validateIfMatch(draft.getVersion(), ifMatch);
+        }
+
+        Map<String, Object> beforeState = draft.getData() != null ? new LinkedHashMap<>(draft.getData()) : Map.of();
+        Map<String, Object> existing = new LinkedHashMap<>(beforeState);
         existing.putAll(patch);
 
         validatePayload(entityType, existing);
@@ -185,7 +216,7 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
                 actorId, actorName, "ADMIN",
                 entityType.toLowerCase() + ".updated", entityType.toUpperCase(), draft.getId(), draft.getCode(),
                 "CATALOG", "ADMIN_WEB", "SUCCESS", "MEDIUM",
-                draft.getData(), existing, new ArrayList<>(patch.keySet()), null, null, null, Map.of("version", draft.getVersion())
+                beforeState, existing, new ArrayList<>(patch.keySet()), null, null, null, Map.of("version", draft.getVersion())
         );
 
         return toResponseMap(draft);
@@ -194,7 +225,19 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
     @Override
     public Map<String, Object> savePorts(String id, Map<String, Object> request, String ifMatch, String actorId, String actorName) {
         AdminCatalogDraftEntity draft = findDraft("EQUIPMENT", id);
-        validateIfMatch(draft.getVersion(), ifMatch);
+
+        Long expectedVersion = null;
+        if (request.get("expectedVersion") instanceof Number n) {
+            expectedVersion = n.longValue();
+        } else if (request.get("version") instanceof Number n) {
+            expectedVersion = n.longValue();
+        }
+
+        if (expectedVersion != null) {
+            validateIfMatch(draft.getVersion(), String.valueOf(expectedVersion));
+        } else {
+            validateIfMatch(draft.getVersion(), ifMatch);
+        }
 
         Object portsObj = request.get("ports");
         if (!(portsObj instanceof List<?> portsList)) {
@@ -210,7 +253,8 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
             }
         }
 
-        Map<String, Object> data = new LinkedHashMap<>(draft.getData());
+        Map<String, Object> beforeState = draft.getData() != null ? new LinkedHashMap<>(draft.getData()) : Map.of();
+        Map<String, Object> data = new LinkedHashMap<>(beforeState);
         data.put("ports", portsList);
         draft.updateData(data);
         repository.save(draft);
@@ -219,7 +263,7 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
                 actorId, actorName, "ADMIN",
                 "equipment.ports_updated", "EQUIPMENT", draft.getId(), draft.getCode(),
                 "CATALOG", "ADMIN_WEB", "SUCCESS", "HIGH",
-                draft.getData(), data, List.of("ports"), null, null, null, Map.of("version", draft.getVersion())
+                beforeState, data, List.of("ports"), null, null, null, Map.of("version", draft.getVersion())
         );
 
         return Map.of(
@@ -232,10 +276,20 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
     @Override
     public Map<String, Object> saveCompatibility(String id, Map<String, Object> request, String ifMatch, String actorId, String actorName) {
         AdminCatalogDraftEntity draft = findDraft("EQUIPMENT", id);
-        validateIfMatch(draft.getVersion(), ifMatch);
+
+        Long expectedVersion = request.get("expectedVersion") != null
+                ? ((Number) request.get("expectedVersion")).longValue()
+                : (request.get("version") != null ? ((Number) request.get("version")).longValue() : null);
+
+        if (expectedVersion != null) {
+            validateIfMatch(draft.getVersion(), String.valueOf(expectedVersion));
+        } else {
+            validateIfMatch(draft.getVersion(), ifMatch);
+        }
 
         Object rulesObj = request.get("rules");
-        Map<String, Object> data = new LinkedHashMap<>(draft.getData());
+        Map<String, Object> beforeState = draft.getData() != null ? new LinkedHashMap<>(draft.getData()) : Map.of();
+        Map<String, Object> data = new LinkedHashMap<>(beforeState);
         data.put("compatibilityRules", rulesObj != null ? rulesObj : List.of());
         draft.updateData(data);
         repository.save(draft);
@@ -251,6 +305,10 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
     @Transactional(readOnly = true)
     public Map<String, Object> validateDraft(String entityType, String id, Long version) {
         AdminCatalogDraftEntity draft = findDraft(entityType, id);
+        if (version != null && !Objects.equals(draft.getVersion(), version)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "VERSION_CONFLICT: Version mismatch. Expected " + version + " but current is " + draft.getVersion());
+        }
+
         List<String> errors = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
 
@@ -259,21 +317,55 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
             errors.add("Draft data is empty");
         }
 
-        if ("REACTION".equalsIgnoreCase(entityType)) {
-            Object reactants = data.get("reactants");
-            Object products = data.get("products");
+        if ("MATERIAL".equalsIgnoreCase(entityType)) {
+            if (data != null && data.get("formula") != null) {
+                String formula = String.valueOf(data.get("formula")).trim();
+                try {
+                    formulaParser.parse(formula);
+                } catch (Exception e) {
+                    errors.add("Invalid chemical formula: " + formula);
+                }
+            }
+        } else if ("REACTION".equalsIgnoreCase(entityType)) {
+            Object reactants = data != null ? data.get("reactants") : null;
+            Object products = data != null ? data.get("products") : null;
             if (reactants == null || !(reactants instanceof List) || ((List<?>) reactants).isEmpty()) {
                 errors.add("Reaction must have at least one reactant");
             }
             if (products == null || !(products instanceof List) || ((List<?>) products).isEmpty()) {
                 errors.add("Reaction must have at least one product");
             }
-            return Map.of(
-                    "valid", errors.isEmpty(),
-                    "errors", errors,
-                    "warnings", warnings,
-                    "balance", Map.of("balanced", errors.isEmpty(), "equation", "Balanced reaction validated")
-            );
+        } else if ("SCENARIO".equalsIgnoreCase(entityType)) {
+            if (data != null) {
+                Object initialSceneObj = data.get("initialScene");
+                if (initialSceneObj instanceof Map<?, ?> initialScene) {
+                    Object eqCode = initialScene.get("equipmentCode") != null ? initialScene.get("equipmentCode") : initialScene.get("alias");
+                    if (eqCode != null) {
+                        String eqCodeStr = String.valueOf(eqCode);
+                        boolean eqExists = repository.findByEntityTypeAndCode("EQUIPMENT", eqCodeStr).isPresent()
+                                || repository.findByEntityTypeAndId("EQUIPMENT", eqCodeStr).isPresent();
+                        if (!eqExists) {
+                            warnings.add("Referenced initialScene equipment not found in catalog: " + eqCodeStr);
+                        }
+                    }
+                }
+                Object stepsObj = data.get("steps");
+                if (stepsObj instanceof List<?> stepsList) {
+                    for (Object s : stepsList) {
+                        if (s instanceof Map<?, ?> stepMap) {
+                            Object tMat = stepMap.get("targetMaterial");
+                            if (tMat != null) {
+                                String matStr = String.valueOf(tMat);
+                                boolean matExists = repository.findByEntityTypeAndCode("MATERIAL", matStr).isPresent()
+                                        || repository.findByEntityTypeAndId("MATERIAL", matStr).isPresent();
+                                if (!matExists) {
+                                    warnings.add("Step references material not found in catalog: " + matStr);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         return Map.of(
@@ -290,7 +382,7 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
 
         Map<String, Object> validation = validateDraft(entityType, id, version);
         if (Boolean.FALSE.equals(validation.get("valid"))) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "VALIDATION_ERROR: Cannot publish invalid draft");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "PUBLISH_VALIDATION_FAILED: Cannot publish invalid draft: " + validation.get("errors"));
         }
 
         draft.publish(idempotencyKey);
@@ -311,13 +403,25 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
     }
 
     private void validatePayload(String entityType, Map<String, Object> body) {
-        if ("EQUIPMENT".equalsIgnoreCase(entityType)) {
+        if ("MATERIAL".equalsIgnoreCase(entityType) || "SUBSTANCE".equalsIgnoreCase(entityType)) {
+            Object formulaObj = body.get("formula");
+            if (formulaObj != null) {
+                String formula = String.valueOf(formulaObj).trim();
+                if (!formula.isBlank()) {
+                    try {
+                        formulaParser.parse(formula);
+                    } catch (Exception e) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR: Invalid chemical formula '" + formula + "': " + e.getMessage());
+                    }
+                }
+            }
+        } else if ("EQUIPMENT".equalsIgnoreCase(entityType)) {
             Object portsObj = body.get("ports");
             if (portsObj instanceof List<?> portsList) {
                 for (Object p : portsList) {
                     if (p instanceof Map<?, ?> portMap) {
-                        if (portMap.get("id") == null || portMap.get("type") == null || portMap.get("direction") == null || portMap.get("connector") == null) {
-                            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "PORT_SCHEMA_INVALID: Port requires id, type, direction, and connector");
+                        if (portMap.get("id") == null || (portMap.get("type") == null && portMap.get("kind") == null) || portMap.get("direction") == null) {
+                            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "PORT_SCHEMA_INVALID: Port requires id, direction, and type/kind");
                         }
                     }
                 }
@@ -328,11 +432,11 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
     private AdminCatalogDraftEntity findDraft(String entityType, String identifier) {
         return repository.findByEntityTypeAndId(entityType.toUpperCase(), identifier)
                 .or(() -> repository.findByEntityTypeAndCode(entityType.toUpperCase(), identifier))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, entityType + " draft not found: " + identifier));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND: " + entityType + " draft not found: " + identifier));
     }
 
     private void validateIfMatch(Long currentVersion, String ifMatch) {
-        if (ifMatch == null || ifMatch.isBlank()) return;
+        if (ifMatch == null || ifMatch.isBlank() || "*".equals(ifMatch.trim())) return;
         String clean = ifMatch.replace("\"", "").replace("W/", "").trim();
         try {
             long parsed = Long.parseLong(clean);
@@ -349,6 +453,9 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
         }
         String[] parts = sort.split(",");
         String field = parts[0].trim();
+        if (!ALLOWED_SORT_FIELDS.contains(field)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "INVALID_QUERY: Invalid sort field: " + field);
+        }
         Sort.Direction direction = parts.length > 1 && "asc".equalsIgnoreCase(parts[1].trim()) ? Sort.Direction.ASC : Sort.Direction.DESC;
         return Sort.by(direction, field);
     }
@@ -364,8 +471,24 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
         m.put("publishedAt", e.getPublishedAt());
         m.put("createdAt", e.getCreatedAt());
         m.put("updatedAt", e.getUpdatedAt());
-        if (e.getData() != null) {
-            m.putAll(e.getData());
+
+        Map<String, Object> data = e.getData();
+        if (data != null) {
+            m.putAll(data);
+            Object trObj = data.get("translations");
+            if (trObj instanceof Map<?, ?> trMap) {
+                Map<String, Object> normalizedTranslations = new LinkedHashMap<>();
+                for (Map.Entry<?, ?> entry : trMap.entrySet()) {
+                    String locale = String.valueOf(entry.getKey());
+                    Object val = entry.getValue();
+                    if (val instanceof Map<?, ?>) {
+                        normalizedTranslations.put(locale, val);
+                    } else if (val != null) {
+                        normalizedTranslations.put(locale, Map.of("name", String.valueOf(val)));
+                    }
+                }
+                m.put("translations", normalizedTranslations);
+            }
         }
         return m;
     }

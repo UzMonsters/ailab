@@ -36,6 +36,10 @@ public class BookAdminServiceImpl implements BookAdminService {
         this.validationService = validationService;
     }
 
+    private static final Set<String> ALLOWED_BOOK_SORT_FIELDS = Set.of(
+            "updatedAt", "createdAt", "slug", "status", "draftVersion", "publishedVersion"
+    );
+
     @Override
     @Transactional(readOnly = true)
     public BookDtos.BookListResponse listBooks(int page, int size, String query, BookStatus status, String sort) {
@@ -43,6 +47,9 @@ public class BookAdminServiceImpl implements BookAdminService {
         if (sort != null && !sort.isBlank()) {
             String[] parts = sort.split(",");
             String field = parts[0].trim();
+            if (!ALLOWED_BOOK_SORT_FIELDS.contains(field)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "INVALID_QUERY: Invalid sort field: " + field);
+            }
             Sort.Direction direction = parts.length > 1 && "asc".equalsIgnoreCase(parts[1].trim())
                     ? Sort.Direction.ASC
                     : Sort.Direction.DESC;
@@ -107,7 +114,11 @@ public class BookAdminServiceImpl implements BookAdminService {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "BOOK_NOT_FOUND: Book not found with id " + bookId));
 
-        validateIfMatch(ifMatch, book.getDraftVersion());
+        if (request != null && request.getEffectiveExpectedVersion() != null) {
+            validateIfMatch(String.valueOf(request.getEffectiveExpectedVersion()), book.getDraftVersion());
+        } else {
+            validateIfMatch(ifMatch, book.getDraftVersion());
+        }
 
         if (request.slug() != null && !request.slug().isBlank()) {
             String newSlug = request.slug().trim().toLowerCase();

@@ -58,8 +58,8 @@ public class BookAssetServiceImpl implements BookAssetService {
 
             String assetId = "ast_" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
             Instant expiresAt = Instant.now().plus(1, ChronoUnit.HOURS);
-            String uploadUrl = "https://storage.jasscience.dev/uploads/" + assetId + "/" + filename;
-            String downloadUrl = "https://storage.jasscience.dev/assets/" + assetId + "/" + filename;
+            String uploadUrl = "/api/v1/assets/upload/" + assetId;
+            String downloadUrl = "/api/v1/assets/raw/" + assetId + "/" + filename;
 
             AssetKind kind = "SVG".equalsIgnoreCase(file.kind()) || contentType.contains("svg") ? AssetKind.SVG : AssetKind.IMAGE;
 

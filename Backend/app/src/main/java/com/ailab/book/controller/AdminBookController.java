@@ -7,6 +7,7 @@ import com.ailab.book.service.BookPublishService;
 import com.ailab.book.service.BookValidationService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -41,12 +42,12 @@ public class AdminBookController {
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public BookDtos.BookEditorDocument createBook(
+    public ResponseEntity<BookDtos.BookEditorDocument> createBook(
             @RequestBody BookDtos.CreateBookRequest request,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey
     ) {
-        return adminService.createBook(request, idempotencyKey);
+        BookDtos.BookEditorDocument doc = adminService.createBook(request, idempotencyKey);
+        return ResponseEntity.created(java.net.URI.create("/api/v1/admin/books/" + doc.id())).body(doc);
     }
 
     @GetMapping("/{bookId}")
@@ -105,6 +106,18 @@ public class AdminBookController {
             }
         }
         adminService.deleteChapter(bookId, chapterId, version, isConfirm);
+    }
+
+    @PostMapping("/{bookId}/chapters/{chapterId}/delete")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteChapterViaPost(
+            @PathVariable String bookId,
+            @PathVariable String chapterId,
+            @RequestParam(required = false) Long expectedVersion,
+            @RequestParam(defaultValue = "false") Boolean confirm,
+            @RequestBody(required = false) BookDtos.DeleteChapterRequest requestBody
+    ) {
+        deleteChapter(bookId, chapterId, expectedVersion, confirm, requestBody);
     }
 
     @PostMapping("/{bookId}/pages")

@@ -68,6 +68,9 @@ public class LearningUserAttemptEntity {
     @Column(name = "completed_at")
     private Instant completedAt;
 
+    @Column(name = "score")
+    private Integer score = 100;
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
 
@@ -126,6 +129,9 @@ public class LearningUserAttemptEntity {
 
     public Instant getCompletedAt() { return completedAt; }
     public void setCompletedAt(Instant completedAt) { this.completedAt = completedAt; }
+
+    public Integer getScore() { return score; }
+    public void setScore(Integer score) { this.score = score; }
 
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }

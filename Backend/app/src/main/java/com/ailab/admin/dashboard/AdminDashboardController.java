@@ -81,4 +81,13 @@ public class AdminDashboardController {
     public Map<String, Object> getReport(@PathVariable String jobId) {
         return dashboardService.getReportJob(jobId);
     }
+
+    @GetMapping("/reports/{jobId}/download")
+    public ResponseEntity<byte[]> downloadReport(@PathVariable String jobId) {
+        byte[] content = dashboardService.downloadReport(jobId);
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.parseMediaType("text/csv; charset=UTF-8"));
+        headers.setContentDispositionFormData("attachment", jobId + ".csv");
+        return new ResponseEntity<>(content, headers, HttpStatus.OK);
+    }
 }

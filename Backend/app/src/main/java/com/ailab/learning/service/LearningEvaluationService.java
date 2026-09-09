@@ -152,9 +152,9 @@ public class LearningEvaluationService {
             att.setUpdatedAt(Instant.now());
             attemptRepository.save(att);
 
-            return new EvaluateCheckpointResponse(true, null, nextStepId);
+            return new EvaluateCheckpointResponse(true, 100, null, nextStepId, att.getStateVersion());
         } else {
-            return new EvaluateCheckpointResponse(false, evalResult.reason(), null);
+            return new EvaluateCheckpointResponse(false, 0, evalResult.reason(), null, att.getStateVersion());
         }
     }
 

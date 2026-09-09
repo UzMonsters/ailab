@@ -54,8 +54,9 @@ class AdminBookControllerTest {
 
         when(adminService.createBook(req, "idem-1")).thenReturn(doc);
 
-        BookDtos.BookEditorDocument result = controller.createBook(req, "idem-1");
-        assertThat(result.id()).isEqualTo("book_1");
+        var response = controller.createBook(req, "idem-1");
+        assertThat(response.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.CREATED);
+        assertThat(response.getBody().id()).isEqualTo("book_1");
     }
 
     @Test

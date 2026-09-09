@@ -73,12 +73,12 @@ class AdminLearningServiceTest {
     @BeforeEach
     void setUp() {
         levelService = new LearningLevelService(levelRepository, snapshotRepository, objectMapper);
+        validationService = new AdminLearningValidationService(levelRepository, objectMapper);
         adminService = new AdminLearningService(
                 trackRepository, levelRepository, snapshotRepository, chapterRepository,
                 taskRepository, rewardRepository, progressRepository, attemptRepository,
-                resetAuditRepository, levelService, workspaceRepository, workspaceStateRepository, objectMapper
+                resetAuditRepository, levelService, validationService, workspaceRepository, workspaceStateRepository, objectMapper
         );
-        validationService = new AdminLearningValidationService(levelRepository, objectMapper);
 
         level1 = new LearningLevelEntity();
         level1.setId("level-chemistry-1");

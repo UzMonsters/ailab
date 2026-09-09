@@ -25,6 +25,16 @@ public class AdminMeController {
                 .toList();
 
         List<String> permissions = List.of(
+                "dashboard.read",
+                "books.read",
+                "books.write",
+                "books.publish",
+                "learning.read",
+                "learning.write",
+                "learning.publish",
+                "catalog.read",
+                "catalog.write",
+                "catalog.publish",
                 "users:read",
                 "users:write",
                 "users:delete",
