@@ -24,6 +24,7 @@ export function legacyScenarioRuntime(id: string | undefined, locale: RuntimeLoc
     equipmentIds: [],
     materialIds: [],
     catalog: emptyRuntimeCatalog(),
+    catalogPolicy: 'OPEN',
     steps: scenario.steps.map((step, index) => {
       const strings = localized?.steps[index] ?? fallbackStep(id, index);
       return { id: `${id}-${index + 1}`, title: strings.title, instruction: strings.instruction, hints: [{ id: `${id}-${index + 1}-hint`, type: 'TEXT', text: strings.hint }], completionRule: { operator: 'ALL', conditions: [] }, legacyCheck: step.check };

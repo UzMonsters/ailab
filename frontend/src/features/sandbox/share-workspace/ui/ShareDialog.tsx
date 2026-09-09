@@ -161,16 +161,18 @@ export function ShareDialog({ snapshot, workspaceId, onClose }: ShareDialogProps
       // The API returns a relative path. Copying it as-is opens a browser
       // search instead of a workspace link, especially from the desktop app.
       const url = new URL(rawUrl, window.location.origin).toString();
-      setServerUrl(url);
+      const encoded = encodeSnapshot(snapshot);
+      const finalUrl = encoded.length < MAX_URL_BYTES ? `${url}#snapshot=${encoded}` : url;
+      setServerUrl(finalUrl);
       setLinks((current) => [link, ...current]);
-      return url;
+      return finalUrl;
     } catch (reason) {
       setError(errorMessage(reason, "Не удалось создать ссылку"));
       return null;
     } finally {
       setBusy(false);
     }
-  }, [accessRole, localShareUrl, password, workspaceId]);
+  }, [accessRole, localShareUrl, password, snapshot, workspaceId]);
 
   const copyLink = useCallback(async () => {
     const url = shareUrl ?? await createServerLink();
@@ -181,10 +183,12 @@ export function ShareDialog({ snapshot, workspaceId, onClose }: ShareDialogProps
         setCopied(true);
         setTimeout(() => setCopied(false), 2500);
       } else {
-        window.prompt("Скопируйте ссылку:", url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
       }
     } catch {
-      window.prompt("Скопируйте ссылку:", url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
     }
   }, [createServerLink, shareUrl]);
 

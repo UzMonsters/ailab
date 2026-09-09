@@ -7,7 +7,7 @@ import {
   Atom, LayoutDashboard, FlaskConical, Settings,
   Bell, Database, ChevronLeft, ChevronRight,
   TestTube2, Zap, Microscope, BookOpen,
-  List, LogOut
+  List, LogOut, Users
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import ToastProvider from '@/widgets/admin/ToastProvider';
@@ -19,19 +19,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname() || '';
   const router = useRouter();
   
-  let locale = pathname.split('/')[1];
-  if (!['ru', 'en', 'uz'].includes(locale)) {
-    locale = 'ru';
-  }
+  const locale = 'en';
 
+  const isBookEditor = pathname.includes('/admin/book');
   const [collapsed, setCollapsed] = useState(false);
   const { user, logout, fetchUser } = useAuthStore();
 
   useEffect(() => {
-    // Admin is a frontend prototype in this phase. User hydration is best-effort
-    // and must never block local CRUD screens when the backend is unavailable.
     void fetchUser();
   }, [fetchUser]);
+
+  const sidebarCollapsed = isBookEditor || collapsed;
 
   const handleLogout = async () => {
     await logout();
@@ -70,7 +68,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     {
       title: 'Collaboration',
       links: [
-        { href: `/${locale}/admin/sharing`, label: 'Sharing', icon: Bell },
+        { href: `/${locale}/admin/sharing`, label: 'Collaboration', icon: Users },
       ]
     },
     {
@@ -88,7 +86,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="admin-theme admin-layout">
-      {/* Mobile Sidebar Overlay */}
       {mobileMenuOpen && (
         <div 
           className="fixed inset-0 bg-black/60 z-[45] md:hidden backdrop-blur-sm"
@@ -96,27 +93,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         />
       )}
 
-      {/* Sidebar */}
-      <aside className={`admin-sidebar ${collapsed ? 'collapsed' : ''} ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} fixed md:relative h-full z-50 transition-transform duration-300`}>
+      <aside className={`admin-sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} fixed md:relative h-full z-50 transition-transform duration-300`}>
         <div className="sidebar-header">
           <div className="w-8 h-8 bg-gradient-to-br from-[#8B5CF6] to-[#22D3EE] rounded-lg flex items-center justify-center shrink-0">
             <Atom size={16} className="text-white" />
           </div>
-          {!collapsed && <span>jasScience Admin</span>}
+          {!sidebarCollapsed && <span>jasScience Admin</span>}
         </div>
         
         <div className="sidebar-content">
           {navGroups.map((group, idx) => (
             <div key={idx}>
-              {group.title && !collapsed && <div className="sidebar-section">{group.title}</div>}
-              {group.title && collapsed && <div className="h-4"></div>}
+              {group.title && !sidebarCollapsed && <div className="sidebar-section">{group.title}</div>}
+              {group.title && sidebarCollapsed && <div className="h-4"></div>}
               
               {group.links.map(link => {
                 const isActive = activeHref === link.href;
                 return (
-                  <Link key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)} className={`sidebar-link ${isActive ? 'active' : ''}`} title={collapsed ? link.label : undefined}>
+                  <Link key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)} className={`sidebar-link ${isActive ? 'active' : ''}`} title={sidebarCollapsed ? link.label : undefined}>
                     <link.icon size={18} className="shrink-0" />
-                    {!collapsed && <span>{link.label}</span>}
+                    {!sidebarCollapsed && <span>{link.label}</span>}
                   </Link>
                 );
               })}
@@ -125,10 +121,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
         
         <div className="p-3 border-t border-[rgba(255,255,255,0.07)] flex items-center justify-between">
-          <button onClick={() => setCollapsed(!collapsed)} className="header-icon p-2 hidden md:block">
-            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          <button onClick={() => setCollapsed(!sidebarCollapsed)} className="header-icon p-2 hidden md:block">
+            {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
           </button>
-          {!collapsed && (
+          {!sidebarCollapsed && (
             <button onClick={handleLogout} className="header-icon p-2 hover:text-[#ef4444]" title={t('logout')} aria-label={t('logout')}>
               <LogOut size={18} />
             </button>
@@ -136,7 +132,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="admin-main">
         <header className="admin-header">
           <div className="flex items-center gap-4">

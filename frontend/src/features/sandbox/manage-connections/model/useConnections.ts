@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { useToast } from "@/shared/ui/ToastContainer";
 import type { Engine as LabEngine } from '@/engine/core/Engine';
 import type { Item } from '@/widgets/sandbox/types';
@@ -13,6 +14,7 @@ export function useConnections(engine: LabEngine | null, items: Item[], setSelec
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   
   const { addToast } = useToast();
+  const ts = useTranslations("sandbox");
   const connectionEngine = useMemo(() => new ConnectionEngine(), []);
 
   const cancelConnection = useCallback((preserveTool = false) => {
@@ -55,8 +57,8 @@ export function useConnections(engine: LabEngine | null, items: Item[], setSelec
     setConnectSource(itemId);
     setConnectSourcePort({ itemId, portId });
     setConnectionSnap(null);
-    addToast("Drag to a compatible port", "info");
-  }, [connectSourcePort, setSelectedId, setTool, addToast]);
+    addToast(ts("connections.dragToPort"), "info");
+  }, [connectSourcePort, setSelectedId, setTool, addToast, ts]);
 
   const hoverPort = useCallback((itemId: string, portId: string, point: { x: number; y: number }) => {
     if (!connectSourcePort || connectSourcePort.itemId === itemId) return;

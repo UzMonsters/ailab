@@ -62,24 +62,6 @@ const ui = {
   uz:{brand:"Laboratoriya ekspeditsiyasi",back:"Orqaga",sandbox:"Sandboxni ochish",eyebrow:"KIMYO EKSPEDITSIYASI",levels:"30 bosqich",desc:"Birinchi o'lchovlardan tortib murakkab tizimlargacha bo'lgan yo'lni bosib o'ting.",available:"Mavjud",current:"Joriy bosqich",locked:"Bloklangan",done:"Tugallangan",start:"Tajribani boshlash",mission:"Bosqich",core:"Laboratoriya yadrosi"} 
 } as const;
 
-const levelLocales = { 
-  en:{titles:["First Drop","Precision Work","Transfer","Temperature Control","First Heating","Mixing","Phase Change","Pressure","Solutions","Laboratory Master","Acids","Bases","Neutralization","Indicators","Concentration","Gas Processes","Evaporation","Condensation","Heat Exchange","Simple Distillation","Cooler","Flow Control","Burette","Precise Dosing","Separation","Complex Setup","Coupled Systems","Pressure Control","Research Scheme","Laboratory Expedition"]}, 
-  ru:{titles:["Первая капля","Точная работа","Переливание","Контроль температуры","Первое нагревание","Смеси","Фазовый переход","Давление","Растворы","Мастер лаборатории","Кислоты","Основания","Нейтрализация","Индикаторы","Концентрация","Газовые процессы","Испарение","Конденсация","Теплообмен","Простая дистилляция","Холодильник","Контроль потока","Бюретка","Точная дозировка","Разделение","Сложная установка","Связанные системы","Контроль давления","Исследовательская схема","Лабораторная экспедиция"]},
-  uz:{titles:["Birinchi tomchi","Aniq ish","Quyish","Harorat nazorati","Birinchi isitish","Aralashmalar","Faza o'zgarishi","Bosim","Eritmalar","Laboratoriya ustasi","Kislotalar","Asoslar","Neytrallash","Indikatorlar","Konsentratsiya","Gaz jarayonlari","Bug'lanish","Kondensatsiya","Issiqlik almashinuvi","Oddiy distillash","Sovutgich","Oqim nazorati","Byuretka","Aniq dozalash","Ajratish","Murakkab qurilma","Bog'langan tizimlar","Bosim nazorati","Tadqiqot sxemasi","Laboratoriya ekspeditsiyasi"]}
-} as const;
-
-function generateLevels(locale: string): Level[] {
-  const t = levelLocales[locale as keyof typeof levelLocales] || levelLocales.ru;
-  return layoutData.map((node) => ({
-    ...node,
-    title: t.titles[node.id - 1] || `Level ${node.id}`,
-    skill: "Эксперимент",
-    description: "Исследуйте законы химии на практике.",
-    reward: "Опыт",
-    xp: 100 + node.id * 10
-  }));
-}
-
 function ConnectionGraph({ layout, current, hovered, completed }: { layout: LayoutNode[], current: number, hovered: number | null, completed: number[] }) {
   const paths = [];
   const getPath = (from: LayoutNode, to: LayoutNode) => {
@@ -180,6 +162,7 @@ export default function ChemistryLevelsPage() {
   const [backendLevels, setBackendLevels] = useState<LearningLevelSummary[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [startingLevelId, setStartingLevelId] = useState<string | null>(null);
   
   const [selected, setSelected] = useState<Level | null>(null);
   const [hovered, setHovered] = useState<number | null>(null);
@@ -225,7 +208,7 @@ export default function ChemistryLevelsPage() {
     const level = levels.find((item) => item.id === id);
     return completed.includes(id) ? "completed" : level?.lockedByBackend ? "locked" : id === current ? "current" : "locked";
   };
-  const progress = Math.round(completed.length / levels.length * 100);
+  const progress = levels.length ? Math.round(completed.length / levels.length * 100) : 0;
 
   // Auto center on load
   const mapRef = useRef<HTMLDivElement>(null);
@@ -310,14 +293,27 @@ export default function ChemistryLevelsPage() {
             <span>{copy.mission} {selected.id}</span>
             <h2>{selected.title}</h2>
             <p>{selected.description}</p>
-            <button className={styles.start} type="button" onClick={async () => {
+            <button className={styles.start} type="button" disabled={startingLevelId === selected.backendId} onClick={async () => {
               if (!selected.backendId) return;
-              const attempt = await learningApi.startAttempt(selected.backendId, { locale, clientAttemptId: crypto.randomUUID() });
-              const attemptId = String(attempt.attemptId ?? '');
-              const workspaceId = String(attempt.workspaceId ?? '');
-              router.push(`/${locale}/workspace/sandbox?level=${selected.id}&levelId=${encodeURIComponent(selected.backendId)}${attemptId ? `&attempt=${encodeURIComponent(attemptId)}` : ''}${workspaceId ? `&workspace=${encodeURIComponent(workspaceId)}` : ''}`);
+              setStartingLevelId(selected.backendId);
+              setLoadError(null);
+              try {
+                const attempt = await learningApi.startAttempt(selected.backendId, { locale, clientAttemptId: crypto.randomUUID() });
+                const attemptId = String(attempt.attemptId ?? '');
+                const workspaceId = String(attempt.workspaceId ?? '');
+                const experimentSessionId = String(attempt.experimentId ?? attempt.sessionId ?? '');
+                const params = new URLSearchParams({ level: String(selected.id), levelId: selected.backendId });
+                if (attemptId) params.set('attempt', attemptId);
+                if (workspaceId) params.set('workspace', workspaceId);
+                if (experimentSessionId) params.set('experimentSessionId', experimentSessionId);
+                router.push(`/${locale}/workspace/sandbox?${params.toString()}`);
+              } catch (reason) {
+                setLoadError(errorMessage(reason, 'Не удалось начать эксперимент'));
+              } finally {
+                setStartingLevelId(null);
+              }
             }}>
-              {copy.start} <Play size={16} />
+              {startingLevelId === selected.backendId ? <Loader2 className="animate-spin" size={16}/> : <Play size={16} />} {copy.start}
             </button>
           </aside>
         </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import type { Item } from './types';
 
 export interface ContextMenuProps {
@@ -10,6 +11,7 @@ export interface ContextMenuProps {
 }
 
 export function ContextMenu({ x, y, item, onClose, onAction }: ContextMenuProps) {
+  const ts = useTranslations("sandbox");
   React.useEffect(() => {
     const handleClickOutside = () => onClose();
     document.addEventListener('pointerdown', handleClickOutside);
@@ -27,7 +29,7 @@ export function ContextMenu({ x, y, item, onClose, onAction }: ContextMenuProps)
         onClick={() => { onAction('delete', item.id); onClose(); }}
         className="px-3 py-1.5 text-left text-sm text-red-500 hover:bg-red-500/10"
       >
-        Удалить прибор (Del)
+        {ts("contextMenu.deleteEquipment")}
       </button>
     </div>
   );

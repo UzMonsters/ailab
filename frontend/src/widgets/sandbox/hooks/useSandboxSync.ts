@@ -17,8 +17,8 @@ type RealtimeEvent = { stateVersion?: number; stateDelta?: UnknownRecord };
 interface UseSandboxSyncProps {
   engine: Engine;
   workspaceId: string | null;
-  sessionId: string | null;
-  setSessionId: (id: string | null) => void;
+  accessSessionToken: string | null;
+  setExperimentSessionId: (id: string | null) => void;
   history: CommandHistory;
   isAuthenticated: boolean;
   authChecked: boolean;
@@ -102,7 +102,7 @@ async function retry<T>(operation: () => Promise<T>, attempts = 4): Promise<T> {
 }
 
 export function useSandboxSync({
-  engine, workspaceId, sessionId, setSessionId, history, isAuthenticated, authChecked,
+  engine, workspaceId, accessSessionToken, setExperimentSessionId, history, isAuthenticated, authChecked,
   showToast, registry, pan, zoom, setPan, setZoom, getWorkspaceSnapshot,
 }: UseSandboxSyncProps) {
   const repository = engine.repository as WorkspaceRepository | undefined;
@@ -158,9 +158,9 @@ export function useSandboxSync({
     setZoom(Number(viewport.zoom ?? 1));
     stateVersionRef.current = state.stateVersion;
     setVersionTick((value) => value + 1);
-    setSessionId(state.sessionId ?? null);
+    setExperimentSessionId(state.sessionId ?? null);
     engine.notifyUpdate();
-  }, [engine, registry, setPan, setSessionId, setZoom]);
+  }, [engine, registry, setExperimentSessionId, setPan, setZoom]);
 
   const applyRealtimeDelta = useCallback((event: RealtimeEvent) => {
     const version = Number(event.stateVersion);
@@ -297,7 +297,8 @@ export function useSandboxSync({
   }, [applyWorkspaceState, engine, history, repository, setLifecycle, showToast, workspaceId]);
 
   useEffect(() => {
-    if (!workspaceId || !authChecked || !isAuthenticated || hydrated.current || !repository) return;
+    const hasAccess = isAuthenticated || (accessSessionToken && accessSessionToken.startsWith('guest_sess_'));
+    if (!workspaceId || !authChecked || !hasAccess || hydrated.current || !repository) return;
     let cancelled = false;
     cancelledRef.current = false;
     setLifecycle('loading');
@@ -310,19 +311,40 @@ export function useSandboxSync({
         });
       } catch { pendingEvents.current = []; }
     }
-    void retry(() => repository.getState(workspaceId)).then(async (state) => {
-      if (cancelled || cancelledRef.current) return;
-      setLifecycle('hydrating');
-      applyWorkspaceState(state);
-      hydrated.current = true;
-      setLifecycle('ready');
-      await drainIncomingEvents();
-      await flushPendingEvents();
-    }).catch((error: unknown) => {
-      if (!cancelled) { hydrated.current = true; setLifecycle('offline'); showToast(error instanceof Error ? error.message : 'Workspace state could not be loaded', 'error'); }
-    });
+    void (async () => {
+      try {
+        const hashMatch = typeof window !== 'undefined' ? window.location.hash.match(/[#&]snapshot=([^&]*)/) : null;
+        if (hashMatch) {
+          const snapshotStr = decodeURIComponent(atob(hashMatch[1]));
+          const data = JSON.parse(snapshotStr);
+          if (data && data.version === 2 && !cancelled && !cancelledRef.current) {
+            setLifecycle('hydrating');
+            applyWorkspaceState({ ...data, stateVersion: 1, items: data.objects });
+            hydrated.current = true;
+            setLifecycle('ready');
+            await drainIncomingEvents();
+            await flushPendingEvents();
+            return;
+          }
+        }
+      } catch {
+        // Hash parsing failed, fall back to backend
+      }
+      
+      retry(() => repository.getState(workspaceId)).then(async (state) => {
+        if (cancelled || cancelledRef.current) return;
+        setLifecycle('hydrating');
+        applyWorkspaceState(state);
+        hydrated.current = true;
+        setLifecycle('ready');
+        await drainIncomingEvents();
+        await flushPendingEvents();
+      }).catch((error: unknown) => {
+        if (!cancelled) { hydrated.current = true; setLifecycle('offline'); showToast(error instanceof Error ? error.message : 'Workspace state could not be loaded', 'error'); }
+      });
+    })();
     return () => { cancelled = true; cancelledRef.current = true; };
-  }, [applyWorkspaceState, authChecked, drainIncomingEvents, flushPendingEvents, isAuthenticated, queueStorageKey, repository, setLifecycle, showToast, workspaceId]);
+  }, [accessSessionToken, applyWorkspaceState, authChecked, drainIncomingEvents, flushPendingEvents, isAuthenticated, queueStorageKey, repository, setLifecycle, showToast, workspaceId]);
 
   useEffect(() => {
     if (!workspaceId || !authChecked || !isAuthenticated || !hydrated.current || !repository) return;
@@ -336,8 +358,9 @@ export function useSandboxSync({
   }, [authChecked, isAuthenticated, pan.x, pan.y, repository, setLifecycle, workspaceId, zoom]);
 
   useEffect(() => {
-    if (!workspaceId || !authChecked || !isAuthenticated || lifecycleRef.current !== 'ready') return;
-    const connection = connectWorkspaceRealtime(workspaceId, sessionId, {
+    const hasAccess = isAuthenticated || (accessSessionToken && accessSessionToken.startsWith('guest_sess_'));
+    if (!workspaceId || !authChecked || !hasAccess || lifecycleRef.current !== 'ready') return;
+    const connection = connectWorkspaceRealtime(workspaceId, accessSessionToken, {
       onWorkspaceEvent: (event) => { const parsed = asRealtimeEvent(event); if (parsed) void processRealtimeEventRef.current(parsed); },
       onAck: (event) => { const ack = record(event) as Partial<WorkspaceEventAck>; if (typeof ack.stateVersion === 'number') stateVersionRef.current = Math.max(stateVersionRef.current, ack.stateVersion); },
       onError: (event) => {
@@ -349,7 +372,7 @@ export function useSandboxSync({
     });
     realtimeRef.current = connection;
     return () => { connection.close(); realtimeRef.current = null; };
-  }, [authChecked, isAuthenticated, realtimeEpoch, sessionId, setLifecycle, workspaceId]);
+  }, [accessSessionToken, authChecked, isAuthenticated, realtimeEpoch, setLifecycle, workspaceId]);
 
   useEffect(() => {
     const online = () => { setLifecycle('ready'); setRealtimeEpoch((value) => value + 1); void flushPendingEvents(); };

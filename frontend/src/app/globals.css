@@ -25,6 +25,9 @@
   --radius-sm: calc(var(--radius) * .6);
   --radius-md: calc(var(--radius) * .8);
   --radius-lg: var(--radius);
+  --font-book-serif: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  --font-tech-sans: Inter, 'Segoe UI', Arial, sans-serif;
+  --font-handwritten: Caveat, 'Segoe Print', 'Comic Sans MS', cursive;
   --font-sans: 'Geist', 'Geist Fallback', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   
   --font-book: var(--font-book-serif);

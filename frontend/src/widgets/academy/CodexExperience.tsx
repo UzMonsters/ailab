@@ -112,7 +112,7 @@ export default function CodexExperience({
   const [currentPage, setCurrentPage] = useState(() => getCodexPageForEntity(initialContext));
   const [bookManifest, setBookManifest] = useState<BookManifest | null>(null);
   const [publishedPages, setPublishedPages] = useState<JsonObject[]>([]);
-  const [bookSyncState, setBookSyncState] = useState<'loading' | 'connected' | 'local'>('loading');
+  const [bookSyncState, setBookSyncState] = useState<'loading' | 'connected' | 'error'>('loading');
   const [savedBookmark, setSavedBookmark] = useState<number | null>(null);
 
   useEffect(() => {
@@ -146,7 +146,7 @@ export default function CodexExperience({
       } catch {
         // The manifest is public; progress requires an authenticated account.
       }
-    }).catch(() => { if (active) setBookSyncState('local'); });
+    }).catch(() => { if (active) setBookSyncState('error'); });
     return () => { active = false; };
   }, []);
 
@@ -350,20 +350,16 @@ export default function CodexExperience({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [onOpenLab, theme]
   );
-  // The page descriptors are stable; rendering them is intentionally cached across UI-only updates.
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
-  const renderedPages = useMemo(() => pages.map((page) => page.render()), [pages]);
   const readerPages = useMemo(() => {
-    if (!publishedPages.length) return renderedPages;
     const locale = typeof document === 'undefined' ? 'en' : document.documentElement.lang || 'en';
     return publishedPages.map((publishedPage) => <BookPageRenderer key={String(publishedPage.id)} blocks={hydrateBookPageBlocks(publishedPage.blocks ?? publishedPage.contentBlocks, locale)} className="h-full w-full" onInteract={(scenarioId) => onOpenLab?.({ type: 'scenario', id: scenarioId })}/>);
-  }, [onOpenLab, publishedPages, renderedPages]);
+  }, [onOpenLab, publishedPages]);
 
   return (
     <main className={`academy-page ${theme}-theme`}>
       <div className="academy-background" />
       <div className={`academy-book-sync academy-book-sync-${bookSyncState}`} role="status">
-        {bookSyncState === 'connected' ? 'Книга синхронизирована' : bookSyncState === 'loading' ? 'Проверяем публикацию…' : 'Локальная редакция · публикация backend не найдена'}
+        {bookSyncState === 'connected' ? 'Книга синхронизирована' : bookSyncState === 'loading' ? 'Проверяем публикацию…' : 'Опубликованная книга не найдена в backend'}
       </div>
       <div className="academy-container" ref={containerRef}>
         <div className="academy-book-viewport" style={{ width: BOOK_WIDTH * scale, height: BOOK_HEIGHT * scale }}>
@@ -435,7 +431,7 @@ export default function CodexExperience({
                 ))}
               </div>
 
-              <BookFlip
+              {readerPages.length > 0 ? <BookFlip
                 currentPage={currentPage}
                 pages={readerPages}
                 onNavigate={navigate}
@@ -449,7 +445,7 @@ export default function CodexExperience({
                   if (currentPageId) void bookApi.saveProgress(bookManifest.book.id, { pageId: currentPageId, scrollAnchor: null, bookmarks: bookmarkPageId ? [{ pageId: bookmarkPageId }] : [], updatedAt: new Date().toISOString() });
                 }}
                 totalPages={readerPages.length}
-              />
+              /> : <div className="academy-page-surface grid h-full place-items-center p-10 text-center"><div><h2 className="text-2xl font-semibold">{bookSyncState === 'loading' ? 'Загрузка книги…' : 'Книга ещё не опубликована'}</h2><p className="mt-3 max-w-md text-sm opacity-70">Содержимое книги загружается только из backend. Опубликуйте книгу со slug <code>chemistry-lab</code> в Book Studio.</p></div></div>}
             </div>
           )}
         </div>

@@ -60,7 +60,6 @@ export function SandboxDock({
   onNextHint,
 }: SandboxDockProps) {
   const ts = useTranslations("sandbox");
-  const showHowLabel = 'Show how';
   const eventLabel = (event: string) => {
     const key = `dock.event.${event.toLowerCase()}`;
     return ts.has(key) ? ts(key) : event.replaceAll('_', ' ');
@@ -116,23 +115,23 @@ export function SandboxDock({
         const stepIndex = Math.min(Math.max(activeScenario.step, 0), scenario.steps.length - 1);
         const currentStep = scenario.steps[stepIndex];
         const scenarioName = scenario.title;
-        const stepTitle = isComplete ? 'Scenario complete' : currentStep.title;
-        const stepDescription = isComplete ? 'Every step is complete. You can repeat this Scenario or continue to the next level.' : currentStep.instruction;
-        const stepHint = isComplete ? 'Close this panel when you are ready.' : currentStep.hints[hintIndex % Math.max(1, currentStep.hints.length)]?.text ?? 'Complete the instruction shown above.';
+        const stepTitle = isComplete ? ts("scenario.complete") : currentStep.title;
+        const stepDescription = isComplete ? ts("scenario.completeDesc") : currentStep.instruction;
+        const stepHint = isComplete ? ts("scenario.closePanelHint") : currentStep.hints[hintIndex % Math.max(1, currentStep.hints.length)]?.text ?? ts("scenario.completeAbove");
         return (
           <div className="fixed inset-0 z-[260] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Scenario instructions">
             <button type="button" aria-label="Close instructions" className="absolute inset-0 cursor-default" onClick={() => setHelpDialogOpen(false)} />
             <div className="relative z-10 w-full max-w-xl overflow-hidden rounded-3xl border border-lime-300/40 bg-[#101723] text-foreground shadow-[0_0_80px_rgba(163,230,53,.18)]">
               <div className="h-1.5 bg-gradient-to-r from-cyan-400 via-lime-300 to-violet-400" />
               <div className="flex items-start justify-between gap-4 p-5 pb-3 sm:p-7 sm:pb-4">
-                <div><span className="text-[10px] font-bold uppercase tracking-[.2em] text-lime-300">Scenario instructions</span><h2 className="mt-2 text-xl font-black sm:text-2xl">{scenarioName}</h2></div>
+                <div><span className="text-[10px] font-bold uppercase tracking-[.2em] text-lime-300">{ts("scenario.instructions")}</span><h2 className="mt-2 text-xl font-black sm:text-2xl">{scenarioName}</h2></div>
                 <button type="button" onClick={() => setHelpDialogOpen(false)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border text-lg text-foreground/70 transition hover:bg-white/10 hover:text-white" aria-label="Close">×</button>
               </div>
               <div className="space-y-4 px-5 pb-5 sm:px-7 sm:pb-7">
-                <div className="flex items-center gap-2 text-xs font-semibold text-foreground/60"><span className="rounded-full bg-[var(--primary)]/20 px-2.5 py-1 text-[var(--primary-bright)]">{isComplete ? 'Complete' : `Step ${activeScenario.step + 1} of ${scenario.steps.length}`}</span><span>The hint is specific to the current step</span></div>
-                <div className="rounded-2xl border border-white/10 bg-white/[.04] p-4 sm:p-5"><h3 className="text-lg font-bold text-white sm:text-xl">{stepTitle}</h3><p className="mt-3 text-sm leading-6 text-foreground/75 sm:text-base">{stepDescription}</p><div className="mt-4 rounded-xl border border-cyan-300/20 bg-cyan-300/[.08] p-3.5 text-sm leading-6 text-cyan-100"><span className="mr-1 font-bold text-cyan-300">Next action:</span>{stepHint}</div></div>
-                {!isComplete && <p className="text-xs leading-5 text-foreground/50">The workspace advances automatically after the completion rule becomes true.</p>}
-                <button type="button" onClick={() => setHelpDialogOpen(false)} className="w-full rounded-xl bg-[var(--primary)] px-4 py-3 text-sm font-bold text-white transition hover:brightness-110">Got it</button>
+                <div className="flex items-center gap-2 text-xs font-semibold text-foreground/60"><span className="rounded-full bg-[var(--primary)]/20 px-2.5 py-1 text-[var(--primary-bright)]">{isComplete ? ts("scenario.complete") : `${ts("scenario.step")} ${activeScenario.step + 1} / ${scenario.steps.length}`}</span><span>{ts("scenario.hintSpecific")}</span></div>
+                <div className="rounded-2xl border border-white/10 bg-white/[.04] p-4 sm:p-5"><h3 className="text-lg font-bold text-white sm:text-xl">{stepTitle}</h3><p className="mt-3 text-sm leading-6 text-foreground/75 sm:text-base">{stepDescription}</p><div className="mt-4 rounded-xl border border-cyan-300/20 bg-cyan-300/[.08] p-3.5 text-sm leading-6 text-cyan-100"><span className="mr-1 font-bold text-cyan-300">{ts("scenario.nextAction")}</span>{stepHint}</div></div>
+                {!isComplete && <p className="text-xs leading-5 text-foreground/50">{ts("scenario.autoAdvance")}</p>}
+                <button type="button" onClick={() => setHelpDialogOpen(false)} className="w-full rounded-xl bg-[var(--primary)] px-4 py-3 text-sm font-bold text-white transition hover:brightness-110">{ts("scenario.gotIt")}</button>
               </div>
             </div>
           </div>
@@ -151,7 +150,7 @@ export function SandboxDock({
                 <div className="absolute -bottom-24 -right-24 h-48 w-48 rounded-full bg-violet-500/20 blur-3xl" />
                 
                 <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-cyan-300">
-                   {isComplete ? "Scenario complete" : `Step ${activeScenario.step + 1}`}
+                   {isComplete ? ts("scenario.complete") : `${ts("scenario.step")} ${activeScenario.step + 1}`}
                 </div>
 
                 <h1 className="max-w-full text-3xl font-black tracking-tight text-white md:text-5xl">
@@ -187,18 +186,18 @@ export function SandboxDock({
                <div className={`flex flex-col gap-1 border-b border-[var(--primary)]/20 bg-[var(--primary)]/10 p-3 text-sm text-foreground transition-opacity duration-500 ${scenarioIntro ? 'opacity-0' : 'opacity-100'}`}>
                  <div className="flex items-center justify-between">
                    <div className="min-w-0">
-                     <span className="block text-[10px] font-semibold uppercase tracking-[.16em] text-[var(--muted-foreground)]">SCENARIO PROGRESS</span>
+                     <span className="block text-[10px] font-semibold uppercase tracking-[.16em] text-[var(--muted-foreground)]">{ts("scenario.progressLabel")}</span>
                      <span className="block truncate font-bold text-[var(--primary-bright)]">{scenario.title}</span>
                    </div>
                    <div className="flex items-center gap-2">
-                     {currentStep.hints.some((hint) => hint.type !== 'TEXT') && <button type="button" onClick={onShowHow} className="rounded-lg border border-violet-300/50 bg-violet-500/10 px-2.5 py-1 text-[10px] font-semibold text-violet-100 transition hover:bg-violet-500/20">{showHowLabel}</button>}
-                     <button type="button" onClick={openHelpDialog} className={`rounded-lg border px-2.5 py-1 text-[10px] font-semibold transition ${helpActive ? 'border-lime-300/70 bg-lime-300/20 text-lime-200' : 'border-white/15 text-foreground/80 hover:bg-foreground/10'}`}>HELP</button>
-                   <span className="text-xs text-[var(--muted-foreground)]">
-                   {isComplete ? 'COMPLETE' : `STEP ${activeScenario.step + 1} OF ${scenario.steps.length}`}
-                   </span>
+                      {currentStep.hints.some((hint) => hint.type !== 'TEXT') && <button type="button" onClick={onShowHow} className="rounded-lg border border-violet-300/50 bg-violet-500/10 px-2.5 py-1 text-[10px] font-semibold text-violet-100 transition hover:bg-violet-500/20">{ts("scenario.showHow")}</button>}
+                      <button type="button" onClick={openHelpDialog} className={`rounded-lg border px-2.5 py-1 text-[10px] font-semibold transition ${helpActive ? 'border-lime-300/70 bg-lime-300/20 text-lime-200' : 'border-white/15 text-foreground/80 hover:bg-foreground/10'}`}>{ts("scenario.help")}</button>
+                    <span className="text-xs text-[var(--muted-foreground)]">
+                    {isComplete ? ts("scenario.complete") : `${ts("scenario.step")} ${activeScenario.step + 1} / ${scenario.steps.length}`}
+                    </span>
                  </div>
                </div>
-               <p className="font-semibold text-xs mb-1">{isComplete ? 'SCENARIO COMPLETE' : currentStep.title}</p>
+               <p className="font-semibold text-xs mb-1">{isComplete ? ts("scenario.complete") : currentStep.title}</p>
                {!isComplete && <p className="text-[10px] text-[var(--muted-foreground)] mb-2">{currentStep.instruction} <span className="text-[var(--primary)]">{currentStep.hints[hintIndex % Math.max(1, currentStep.hints.length)]?.text}</span></p>}
                
                {/* Step indicators */}
@@ -251,7 +250,7 @@ export function SandboxDock({
         </div>}
       </section>
 
-      {mobilePanel === 'dock' && <MobileSheet title={bottomDockTab} onClose={() => setMobilePanel(null)}><div className="space-y-3">{activeScenario && <button type="button" onClick={openHelpDialog} className={`w-full rounded-lg border px-3 py-2 text-left text-xs font-semibold ${helpActive ? 'border-lime-300/70 bg-lime-300/15 text-lime-200' : 'border-border text-foreground/80'}`}>Помощь — показать, что делать</button>}<div className="flex gap-1 overflow-x-auto">{([{ id: 'Events', label: ts('dock.events') }, { id: 'Measurements', label: ts('dock.measurements') }, { id: 'Charts', label: ts('dock.charts') }, { id: 'Simulation', label: ts('dock.simulation') }] as const).map((tab) => <button key={tab.id} onClick={() => setBottomDockTab(tab.id)} className={`rounded-lg px-3 py-2 text-xs transition-all duration-300 ${bottomDockTab === tab.id ? 'bg-[var(--primary)] text-white' : 'bg-white/[.05]'}`}>{tab.label}</button>)}</div>{bottomDockTab === 'Measurements' && (temperatureConnected && selected && measuredTemperature !== null ? <MeasurementCard label={`${ts('dock.temperature')} · LIVE`} value={`${measuredTemperature.toFixed(1)} °C`} /> : <p className="rounded-lg border border-cyan-400/20 bg-cyan-400/[.05] p-3 text-xs">Нет измерений. Подключите измерительный прибор.</p>)}{bottomDockTab === 'Charts' && <div className="space-y-2"><MiniChart title={ts('dock.temperature')} samples={measurementSamples} field="temperature" color="#F97316" /></div>}{bottomDockTab === 'Events' && <div className="space-y-1 text-xs">{eventLog.slice().reverse().map((entry, idx) => <p key={`${entry.time}-${entry.event}-${idx}`}><span className="mr-2 font-mono">{entry.time}</span>{eventLabel(entry.event)}</p>)}</div>}{bottomDockTab === 'Simulation' && <p className="text-xs">{ts('dock.simulationDescriptionShort')}</p>}</div></MobileSheet>}
+      {mobilePanel === 'dock' && <MobileSheet title={bottomDockTab} onClose={() => setMobilePanel(null)}><div className="space-y-3">{activeScenario && <button type="button" onClick={openHelpDialog} className={`w-full rounded-lg border px-3 py-2 text-left text-xs font-semibold ${helpActive ? 'border-lime-300/70 bg-lime-300/15 text-lime-200' : 'border-border text-foreground/80'}`}>{ts("scenario.showHelp")}</button>}<div className="flex gap-1 overflow-x-auto">{([{ id: 'Events', label: ts('dock.events') }, { id: 'Measurements', label: ts('dock.measurements') }, { id: 'Charts', label: ts('dock.charts') }, { id: 'Simulation', label: ts('dock.simulation') }] as const).map((tab) => <button key={tab.id} onClick={() => setBottomDockTab(tab.id)} className={`rounded-lg px-3 py-2 text-xs transition-all duration-300 ${bottomDockTab === tab.id ? 'bg-[var(--primary)] text-white' : 'bg-white/[.05]'}`}>{tab.label}</button>)}</div>{bottomDockTab === 'Measurements' && (temperatureConnected && selected && measuredTemperature !== null ? <MeasurementCard label={`${ts('dock.temperature')} · LIVE`} value={`${measuredTemperature.toFixed(1)} °C`} /> : <p className="rounded-lg border border-cyan-400/20 bg-cyan-400/[.05] p-3 text-xs">Нет измерений. Подключите измерительный прибор.</p>)}{bottomDockTab === 'Charts' && <div className="space-y-2"><MiniChart title={ts('dock.temperature')} samples={measurementSamples} field="temperature" color="#F97316" /></div>}{bottomDockTab === 'Events' && <div className="space-y-1 text-xs">{eventLog.slice().reverse().map((entry, idx) => <p key={`${entry.time}-${entry.event}-${idx}`}><span className="mr-2 font-mono">{entry.time}</span>{eventLabel(entry.event)}</p>)}</div>}{bottomDockTab === 'Simulation' && <p className="text-xs">{ts('dock.simulationDescriptionShort')}</p>}</div></MobileSheet>}
     </>
   );
 }

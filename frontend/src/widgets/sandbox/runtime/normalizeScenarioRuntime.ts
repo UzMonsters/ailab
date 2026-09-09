@@ -37,6 +37,7 @@ export function normalizeScenarioRuntime(payload: JsonObject, locale: RuntimeLoc
     equipmentIds: draft.resources.equipmentIds,
     materialIds: draft.resources.materialIds,
     catalog: runtimeCatalogFromPayload(payload, raw),
+    catalogPolicy: (raw.catalogPolicy === 'RESTRICTED' ? 'RESTRICTED' : 'OPEN') as 'OPEN' | 'RESTRICTED',
     steps: draft.steps.map((step, index) => {
       const stepCopy = step.translations[locale] ?? step.translations.en;
       return {
@@ -54,6 +55,12 @@ export function normalizeScenarioRuntime(payload: JsonObject, locale: RuntimeLoc
           fromPortId: hint.fromPortId || undefined,
           toAlias: hint.toAlias || undefined,
           toPortId: hint.toPortId || undefined,
+          assetId: hint.assetId || undefined,
+          assetUrl: hint.assetUrl || undefined,
+          targetTab: hint.targetTab || undefined,
+          target: hint.target || undefined,
+          materialId: hint.materialId || undefined,
+          equipmentId: hint.equipmentId || undefined,
         } satisfies RuntimeHint)),
       };
     }),
@@ -73,6 +80,7 @@ export function runtimeScenarioFromDraft(draft: ScenarioDraft, locale: RuntimeLo
   return {
     id: draft.id ?? (draft.code || 'draft-scenario'), code: draft.code || 'draft-scenario', title: draft.translations[locale].name || draft.translations.en.name || 'Untitled Scenario', description: draft.translations[locale].description || draft.translations.en.description,
     source: 'draft', mode: 'ADMIN_PREVIEW', initialScene: draft.initialScene, equipmentIds: draft.resources.equipmentIds, materialIds: draft.resources.materialIds, catalog: createRuntimeCatalog(sourceCatalog.equipment, sourceCatalog.materials),
-    steps: draft.steps.map((step, index) => ({ id: step.id, title: step.translations[locale].title || step.translations.en.title || `Step ${index + 1}`, instruction: step.translations[locale].instruction || step.translations.en.instruction, completionRule: step.completionRule as RuntimeRuleGroup, hints: step.hints.map((hint) => ({ id: hint.id, type: hint.type, text: hint.translations[locale].text || hint.translations.en.text, targetAlias: hint.targetAlias || undefined, targetPortId: hint.targetPortId || undefined, fromAlias: hint.fromAlias || undefined, fromPortId: hint.fromPortId || undefined, toAlias: hint.toAlias || undefined, toPortId: hint.toPortId || undefined })) })),
+    catalogPolicy: 'OPEN' as const,
+    steps: draft.steps.map((step, index) => ({ id: step.id, title: step.translations[locale].title || step.translations.en.title || `Step ${index + 1}`, instruction: step.translations[locale].instruction || step.translations.en.instruction, completionRule: step.completionRule as RuntimeRuleGroup, hints: step.hints.map((hint) => ({ id: hint.id, type: hint.type, text: hint.translations[locale].text || hint.translations.en.text, targetAlias: hint.targetAlias || undefined, targetPortId: hint.targetPortId || undefined, fromAlias: hint.fromAlias || undefined, fromPortId: hint.fromPortId || undefined, toAlias: hint.toAlias || undefined, toPortId: hint.toPortId || undefined, assetId: hint.assetId || undefined, targetTab: hint.targetTab || undefined, materialId: hint.materialId || undefined, equipmentId: hint.equipmentId || undefined })) })),
   };
 }

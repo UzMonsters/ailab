@@ -127,7 +127,7 @@ export function PourDialog({
           </button>
         </div>
         <label className="mt-4 block text-sm font-medium">
-          {ts("amount")}: <span className="text-[var(--primary-bright)] font-bold">{amount} мл</span>
+          {ts("amount")}: <span className="text-[var(--primary-bright)] font-bold">{amount} {ts("pourDialog.ml")}</span>
           <input
             aria-label={ts("amount")}
             type="range"
@@ -156,10 +156,10 @@ export function PourDialog({
 }
 
 export function ResetConfirmDialog({
-  title = "Сбросить эксперимент?",
-  description = "Текущие изменения, налитые вещества и временные соединения будут сброшены до начального состояния.",
-  confirmLabel = "Сбросить",
-  cancelLabel = "Отмена",
+  title,
+  description,
+  confirmLabel,
+  cancelLabel,
   onConfirm,
   onClose,
 }: {
@@ -170,6 +170,11 @@ export function ResetConfirmDialog({
   onConfirm: () => void;
   onClose: () => void;
 }) {
+  const ts = useTranslations("sandbox");
+  const resolvedTitle = title ?? ts("resetDialog.title");
+  const resolvedDescription = description ?? ts("resetDialog.description");
+  const resolvedConfirmLabel = confirmLabel ?? ts("resetDialog.confirm");
+  const resolvedCancelLabel = cancelLabel ?? ts("resetDialog.cancel");
   return (
     <div
       className="fixed inset-0 z-[200] grid place-items-center bg-black/70 p-4 backdrop-blur-md transition-opacity"
@@ -185,13 +190,13 @@ export function ResetConfirmDialog({
           <div className="flex items-center gap-2 text-red-400">
             <span className="h-3 w-3 rounded-full bg-red-500 animate-ping" />
             <h2 id="reset-dialog-title" className="text-base font-bold text-white">
-              {title}
+              {resolvedTitle}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Закрыть"
+            aria-label={ts("close")}
             className="rounded-lg p-1.5 text-white/40 transition-colors hover:bg-white/10 hover:text-white"
           >
             <X size={16} />
@@ -199,7 +204,7 @@ export function ResetConfirmDialog({
         </div>
 
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-          {description}
+          {resolvedDescription}
         </p>
 
         <div className="mt-6 flex justify-end gap-2">
@@ -208,7 +213,7 @@ export function ResetConfirmDialog({
             onClick={onClose}
             className="rounded-xl border border-border bg-white/[0.03] px-4 py-2.5 text-xs font-semibold text-muted-foreground transition-all hover:bg-white/10 hover:text-white"
           >
-            {cancelLabel}
+            {resolvedCancelLabel}
           </button>
           <button
             type="button"
@@ -218,7 +223,7 @@ export function ResetConfirmDialog({
             }}
             className="rounded-xl bg-red-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg transition-all hover:bg-red-500 active:scale-95"
           >
-            {confirmLabel}
+            {resolvedConfirmLabel}
           </button>
         </div>
       </div>

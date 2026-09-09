@@ -14,12 +14,13 @@ import { ApiSimulationProvider } from '../simulation/SimulationProvider';
  * Saved workspaces use backend repositories and simulation sessions.
  * The local provider remains available only for an intentionally unsaved sandbox.
  */
-export function useLabEngine(workspaceId?: string, sessionId?: string) {
+export function useLabEngine(workspaceId?: string, accessSessionToken?: string, experimentSessionId?: string) {
   const [registry] = useState(() => createDefaultEquipmentRegistry());
   const [engine] = useState(() => {
-    const backendMode = Boolean(workspaceId);
-    const simulation = backendMode ? new ApiSimulationProvider() : new LocalSimulationProvider();
-    const repository = backendMode ? new ApiWorkspaceRepository() : new LocalWorkspaceRepository();
+    const persistedWorkspace = Boolean(workspaceId);
+    const backendSimulation = persistedWorkspace || Boolean(experimentSessionId);
+    const simulation = backendSimulation ? new ApiSimulationProvider() : new LocalSimulationProvider();
+    const repository = persistedWorkspace ? new ApiWorkspaceRepository(accessSessionToken) : new LocalWorkspaceRepository();
     return new Engine(new Workspace(), simulation, repository);
   });
 

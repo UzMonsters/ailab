@@ -43,8 +43,9 @@ export default function EquipmentEditor({ id }: { id?: string }) {
   const effectiveSaveState: EditorSaveState = saveState === 'saving' || saveState === 'failed' ? saveState : dirty ? 'dirty' : 'saved';
 
   useEffect(() => { if (!id) return; let active = true; void adminPlatformApi.equipment.get(id).then(record => { if (!active) return; const next = createEquipmentDraft(record); setDraft(next); setBaseline(JSON.stringify(equipmentPayload(next))); setSaveState('saved'); }).catch(reason => { if (active) setError(errorMessage(reason, t('loadFailed'))); }).finally(() => { if (active) setLoading(false); }); return () => { active = false; }; }, [id, t]);
-  useEffect(() => { const prevent = (event: BeforeUnloadEvent) => { if (!dirty) return; event.preventDefault(); event.returnValue = ''; }; window.addEventListener('beforeunload', prevent); return () => window.removeEventListener('beforeunload', prevent); }, [dirty]);
-  useEffect(() => { const protectNavigation = (event: MouseEvent) => { if (!dirty || event.defaultPrevented || event.button !== 0) return; const anchor = (event.target as Element | null)?.closest('a[href]') as HTMLAnchorElement | null; if (!anchor || anchor.target === '_blank' || anchor.href === window.location.href) return; if (!window.confirm(t('discardChanges'))) event.preventDefault(); }; document.addEventListener('click', protectNavigation, true); return () => document.removeEventListener('click', protectNavigation, true); }, [dirty, t]);
+  useEffect(() => { if (!dirty) return; const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; }; window.addEventListener('beforeunload', handler); return () => window.removeEventListener('beforeunload', handler); }, [dirty]);
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
+  useEffect(() => { if (!dirty) return; const protect = (event: MouseEvent) => { if (event.defaultPrevented || event.button !== 0) return; const anchor = (event.target as Element | null)?.closest('a[href]') as HTMLAnchorElement | null; if (!anchor || anchor.target === '_blank' || anchor.href === window.location.href) return; event.preventDefault(); setPendingNavigation(anchor.href); }; document.addEventListener('click', protect, true); return () => document.removeEventListener('click', protect, true); }, [dirty]);
 
   const change = useCallback((patch: Partial<EquipmentDraft>) => setDraft(current => ({ ...current, ...patch })), []);
   const save = useCallback(async (): Promise<JsonObject | null> => {
@@ -57,7 +58,7 @@ export default function EquipmentEditor({ id }: { id?: string }) {
       if (!id) { const createdId = String(result.id ?? result.code ?? ''); if (createdId) router.replace(`/${locale}/admin/equipment/${createdId}`); }
       return result;
     } catch (reason) { const message = errorMessage(reason, t('saveFailed')); setError(message); setSaveState('failed'); addToast({ type: 'error', title: t('saveFailed'), message }); return null; }
-  }, [addToast, draft, id, locale, router, t]);
+    }, [addToast, draft, id, locale, router, t]);
   const validate = () => { setActiveTab('validation'); addToast({ type: issues.some(issue => issue.severity === 'error') ? 'error' : issues.length ? 'warning' : 'success', title: issues.length ? t('validationFound', { count: issues.length }) : t('validationPassed') }); };
   const publish = async () => {
     const blocking = validateEquipment(draft).filter(issue => issue.severity === 'error');
@@ -77,7 +78,7 @@ export default function EquipmentEditor({ id }: { id?: string }) {
   const sidebar = <nav aria-label="Equipment editor sections" className={`sticky top-28 space-y-1 rounded-2xl border border-white/[.07] bg-[#0b101a] p-2 ${navCollapsed ? 'w-14' : ''}`}><button type="button" onClick={() => setNavCollapsed(value => !value)} className="mb-1 grid h-9 w-full place-items-center rounded-lg text-slate-400 hover:bg-white/[.05]" aria-label={navCollapsed ? 'Expand editor navigation' : 'Collapse editor navigation'}>{navCollapsed ? <PanelLeftOpen size={16}/> : <PanelLeftClose size={16}/>}</button>{tabItems.map(item => { const Icon = navIcons[item.id as keyof typeof navIcons]; return <button key={item.id} type="button" onClick={() => setActiveTab(item.id as Tab)} className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm transition ${activeTab === item.id ? 'bg-violet-500/15 text-violet-200 ring-1 ring-violet-400/30' : 'text-slate-400 hover:bg-white/[.04] hover:text-white'}`} title={item.label}><Icon size={16}/>{!navCollapsed && <span className="min-w-0 flex-1 truncate">{item.label}</span>}{!navCollapsed && item.badge}</button>; })}</nav>;
 
   if (loading) return <div className="grid min-h-[60vh] place-items-center"><Loader2 className="animate-spin text-violet-400"/></div>;
-  return <AdminEditorShell header={header} tabs={<div className="xl:hidden"><AdminEditorTabs tabs={tabItems} active={activeTab} onChange={tab => setActiveTab(tab as Tab)}/></div>} sidebar={sidebar} preview={<EquipmentSandboxPreview draft={draft}/>}> 
+  return <AdminEditorShell header={header} tabs={<div className="xl:hidden"><AdminEditorTabs tabs={tabItems} active={activeTab} onChange={tab => setActiveTab(tab as Tab)}/></div>} sidebar={sidebar} preview={activeTab !== 'preview' ? <EquipmentSandboxPreview draft={draft}/> : undefined}> 
     {error && <AdminErrorState details={error} title={saveState === 'failed' ? 'Could not save changes' : 'Could not complete request'} onRetry={() => id ? window.location.reload() : void save()}/>} 
     {activeTab === 'details' && <EquipmentDetails draft={draft} onChange={change}/>} 
     {activeTab === 'localization' && <EquipmentLocalization draft={draft} dirtyLocales={dirtyLocales} onChange={(contentLocale, value) => { setDirtyLocales(current => current.includes(contentLocale) ? current : [...current, contentLocale]); change({ translations: { ...draft.translations, [contentLocale]: value } }); }}/>} 
@@ -89,5 +90,18 @@ export default function EquipmentEditor({ id }: { id?: string }) {
     {activeTab === 'preview' && <EquipmentSandboxPreview draft={draft}/>} 
     {activeTab === 'validation' && <EquipmentValidation issues={issues} onOpenIssue={openIssue}/>} 
     {activeTab === 'advanced' && <FormSection title={t('rawBackendRecord')} description={t('rawBackendHelp')}><pre className="max-h-[620px] overflow-auto rounded-xl border border-white/[.06] bg-black/30 p-4 text-xs leading-5 text-slate-300">{JSON.stringify(equipmentPayload(draft), null, 2)}</pre></FormSection>}
+    {pendingNavigation && (
+      <div className="fixed inset-0 z-[400] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm" role="dialog" aria-modal="true">
+        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0b101a] p-6 shadow-2xl">
+          <h3 className="text-lg font-semibold text-white">{t('discardChanges')}</h3>
+          <p className="mt-2 text-sm text-slate-400">You have unsaved changes. What would you like to do?</p>
+          <div className="mt-6 flex justify-end gap-2">
+            <button onClick={() => setPendingNavigation(null)} className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-white/5">Stay</button>
+            <button onClick={() => { setPendingNavigation(null); }} className="rounded-lg border border-rose-400/30 px-4 py-2 text-sm text-rose-200 hover:bg-rose-500/10">Discard</button>
+            <button onClick={() => { void save().then(() => { if (pendingNavigation) window.location.href = pendingNavigation; setPendingNavigation(null); }); }} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500">Save</button>
+          </div>
+        </div>
+      </div>
+    )}
   </AdminEditorShell>;
 }

@@ -1,2 +1,2 @@
-import AdminLearningLevelCreateForm from '@/widgets/admin/AdminLearningLevelCreateForm';
-export default function Page(){return <AdminLearningLevelCreateForm/>}
+import LearningLevelEditor from '@/widgets/admin/learning-level/LearningLevelEditor';
+export default function Page(){return <LearningLevelEditor/>}

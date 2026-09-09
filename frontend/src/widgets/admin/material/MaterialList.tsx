@@ -19,7 +19,7 @@ const translations = (row: JsonObject) => Object.fromEntries(CONTENT_LOCALES.map
 const select = 'rounded-lg border border-white/10 bg-[#101624] px-3 py-2 text-sm text-slate-200 outline-none focus:border-violet-400';
 
 export default function MaterialList() {
-  const locale=useLocale() as Locale;
+  const locale='en';
   const router=useRouter();
   const [rows,setRows]=useState<JsonObject[]>([]);
   const [query,setQuery]=useState(''); const [status,setStatus]=useState(''); const [kind,setKind]=useState(''); const [phase,setPhase]=useState('');
