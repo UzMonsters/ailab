@@ -1,15 +1,16 @@
 package com.ailab.workspace.controller;
 
 import com.ailab.workspace.dto.*;
+import com.ailab.workspace.security.WorkspaceAccessResolver;
 import com.ailab.workspace.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -29,6 +30,7 @@ public class WorkspaceController {
     private final WorkspaceChatService chatService;
     private final WorkspaceCommentService commentService;
     private final MeasurementService measurementService;
+    private final WorkspaceAccessResolver accessResolver;
 
     public WorkspaceController(
             WorkspaceService workspaceService,
@@ -37,7 +39,8 @@ public class WorkspaceController {
             WorkspacePreviewService previewService,
             WorkspaceChatService chatService,
             WorkspaceCommentService commentService,
-            MeasurementService measurementService
+            MeasurementService measurementService,
+            WorkspaceAccessResolver accessResolver
     ) {
         this.workspaceService = workspaceService;
         this.memberService = memberService;
@@ -46,14 +49,15 @@ public class WorkspaceController {
         this.chatService = chatService;
         this.commentService = commentService;
         this.measurementService = measurementService;
+        this.accessResolver = accessResolver;
     }
 
     private String getCurrentUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth.getName() == null || auth.getName().isBlank() || "anonymousUser".equalsIgnoreCase(auth.getName())) {
-            throw new org.springframework.security.authentication.InsufficientAuthenticationException("User must be authenticated");
-        }
-        return auth.getName();
+        return accessResolver.requireUser();
+    }
+
+    private String getWorkspaceActorId(String workspaceId) {
+        return accessResolver.requireWorkspaceActor(workspaceId);
     }
 
     @GetMapping
@@ -71,7 +75,7 @@ public class WorkspaceController {
     @GetMapping("/{id}")
     @Operation(summary = "Get workspace details", description = "Retrieve metadata, permissions, and preview reference of a workspace.")
     public WorkspaceDetails getWorkspace(@PathVariable String id) {
-        return workspaceService.getWorkspace(id, getCurrentUserId());
+        return workspaceService.getWorkspace(id, getWorkspaceActorId(id));
     }
 
     @PostMapping
@@ -86,7 +90,7 @@ public class WorkspaceController {
     public WorkspaceDetails updateWorkspace(
             @PathVariable String id,
             @RequestBody UpdateWorkspaceRequest request) {
-        return workspaceService.updateWorkspace(id, getCurrentUserId(), request);
+        return workspaceService.updateWorkspace(id, getWorkspaceActorId(id), request);
     }
 
     @PostMapping("/{id}/duplicate")
@@ -94,20 +98,20 @@ public class WorkspaceController {
     public WorkspaceDetails duplicateWorkspace(
             @PathVariable String id,
             @RequestBody(required = false) DuplicateWorkspaceRequest request) {
-        return workspaceService.duplicateWorkspace(id, getCurrentUserId(), request != null ? request : new DuplicateWorkspaceRequest(null));
+        return workspaceService.duplicateWorkspace(id, getWorkspaceActorId(id), request != null ? request : new DuplicateWorkspaceRequest(null));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Permanently delete workspace", description = "Permanently delete workspace and associated data.")
-    public Map<String, String> deleteWorkspace(@PathVariable String id) {
-        workspaceService.deleteWorkspace(id, getCurrentUserId());
-        return Map.of("message", "Workspace permanently deleted");
+    @Operation(summary = "Delete workspace", description = "Soft delete a workspace. Administrators can permanently purge deleted workspaces.")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteWorkspace(@PathVariable String id) {
+        workspaceService.deleteWorkspace(id, getWorkspaceActorId(id));
     }
 
     @PostMapping("/{id}/restore")
     @Operation(summary = "Restore workspace from trash", description = "Restore soft-deleted workspace.")
     public WorkspaceDetails restoreWorkspace(@PathVariable String id) {
-        return workspaceService.restoreWorkspace(id, getCurrentUserId());
+        return workspaceService.restoreWorkspace(id, getWorkspaceActorId(id));
     }
 
     @PostMapping("/{id}/thumbnail")
@@ -115,7 +119,7 @@ public class WorkspaceController {
     public Map<String, Object> updateThumbnail(
             @PathVariable String id,
             @RequestBody ThumbnailRequest request) {
-        return workspaceService.updateThumbnail(id, getCurrentUserId(), request);
+        return workspaceService.updateThumbnail(id, getWorkspaceActorId(id), request);
     }
 
     // === SANDBOX / CANVAS STATE & EVENTS ===
@@ -123,7 +127,7 @@ public class WorkspaceController {
     @GetMapping("/{id}/state")
     @Operation(summary = "Get canonical workspace state", description = "Load full canonical Sandbox state for canvas rendering.")
     public WorkspaceStateDto getWorkspaceState(@PathVariable String id) {
-        return workspaceService.getState(id, getCurrentUserId());
+        return workspaceService.getState(id, getWorkspaceActorId(id));
     }
 
     @PutMapping("/{id}/state")
@@ -132,7 +136,7 @@ public class WorkspaceController {
             @PathVariable String id,
             @RequestParam(required = false) Long expectedVersion,
             @RequestBody WorkspaceStateDto stateDto) {
-        return workspaceService.saveState(id, getCurrentUserId(), expectedVersion, stateDto);
+        return workspaceService.saveState(id, getWorkspaceActorId(id), expectedVersion, stateDto);
     }
 
     @PostMapping("/{id}/events")
@@ -140,7 +144,7 @@ public class WorkspaceController {
     public WorkspaceEventAck appendEvent(
             @PathVariable String id,
             @Valid @RequestBody SandboxEventCommand cmd) {
-        return workspaceService.appendEvent(id, getCurrentUserId(), cmd);
+        return workspaceService.appendEvent(id, getWorkspaceActorId(id), cmd);
     }
 
     @GetMapping("/{id}/events")
@@ -149,7 +153,7 @@ public class WorkspaceController {
             @PathVariable String id,
             @RequestParam(required = false) Long afterVersion,
             @RequestParam(required = false) Integer limit) {
-        return workspaceService.getEvents(id, getCurrentUserId(), afterVersion, limit);
+        return workspaceService.getEvents(id, getWorkspaceActorId(id), afterVersion, limit);
     }
 
     @PostMapping("/{id}/undo")
@@ -157,7 +161,7 @@ public class WorkspaceController {
     public WorkspaceStateDto undo(
             @PathVariable String id,
             @RequestParam(required = false) Long expectedVersion) {
-        return workspaceService.undo(id, getCurrentUserId(), expectedVersion);
+        return workspaceService.undo(id, getWorkspaceActorId(id), expectedVersion);
     }
 
     @PostMapping("/{id}/redo")
@@ -165,7 +169,7 @@ public class WorkspaceController {
     public WorkspaceStateDto redo(
             @PathVariable String id,
             @RequestParam(required = false) Long expectedVersion) {
-        return workspaceService.redo(id, getCurrentUserId(), expectedVersion);
+        return workspaceService.redo(id, getWorkspaceActorId(id), expectedVersion);
     }
 
     @PostMapping("/{id}/publish")
@@ -173,7 +177,7 @@ public class WorkspaceController {
     public Map<String, Object> publishWorkspace(
             @PathVariable String id,
             @RequestBody(required = false) PublishWorkspaceRequest request) {
-        return workspaceService.publishWorkspace(id, getCurrentUserId(), request);
+        return workspaceService.publishWorkspace(id, getWorkspaceActorId(id), request);
     }
 
     @PostMapping("/{id}/autosave")
@@ -181,7 +185,7 @@ public class WorkspaceController {
     public Map<String, Object> autosave(
             @PathVariable String id,
             @RequestBody AutosaveRequest request) {
-        return workspaceService.autosave(id, getCurrentUserId(), request);
+        return workspaceService.autosave(id, getWorkspaceActorId(id), request);
     }
 
     // === PERMISSIONS & MEMBERSHIP ===
@@ -189,13 +193,13 @@ public class WorkspaceController {
     @GetMapping("/{id}/permissions")
     @Operation(summary = "Get workspace permissions", description = "Retrieve current user's role and capabilities in this workspace.")
     public WorkspacePermissionsDto getPermissions(@PathVariable String id) {
-        return memberService.getPermissions(id, getCurrentUserId());
+        return memberService.getPermissions(id, getWorkspaceActorId(id));
     }
 
     @GetMapping("/{id}/members")
     @Operation(summary = "List workspace members", description = "List all members with roles and masked emails.")
     public List<WorkspaceMemberDto> listMembers(@PathVariable String id) {
-        return memberService.listMembers(id, getCurrentUserId());
+        return memberService.listMembers(id, getWorkspaceActorId(id));
     }
 
     @PatchMapping("/{id}/members/{memberUserId}")
@@ -205,7 +209,7 @@ public class WorkspaceController {
             @PathVariable String memberUserId,
             @RequestBody Map<String, String> body) {
         String role = body.getOrDefault("role", "VIEWER");
-        return memberService.updateMemberRole(id, getCurrentUserId(), memberUserId, role);
+        return memberService.updateMemberRole(id, getWorkspaceActorId(id), memberUserId, role);
     }
 
     @DeleteMapping("/{id}/members/{memberUserId}")
@@ -213,7 +217,7 @@ public class WorkspaceController {
     public Map<String, String> removeMember(
             @PathVariable String id,
             @PathVariable String memberUserId) {
-        memberService.removeMember(id, getCurrentUserId(), memberUserId);
+        memberService.removeMember(id, getWorkspaceActorId(id), memberUserId);
         return Map.of("message", "Member removed");
     }
 
@@ -225,13 +229,13 @@ public class WorkspaceController {
     public Map<String, Object> createInvitation(
             @PathVariable String id,
             @Valid @RequestBody CreateInvitationRequest request) {
-        return memberService.createInvitation(id, getCurrentUserId(), request);
+        return memberService.createInvitation(id, getWorkspaceActorId(id), request);
     }
 
     @GetMapping("/{id}/invitations")
     @Operation(summary = "List pending invitations", description = "List active workspace invitations.")
     public List<WorkspaceInvitationDto> listInvitations(@PathVariable String id) {
-        return memberService.listInvitations(id, getCurrentUserId());
+        return memberService.listInvitations(id, getWorkspaceActorId(id));
     }
 
     @DeleteMapping("/{id}/invitations/{invitationId}")
@@ -239,7 +243,7 @@ public class WorkspaceController {
     public Map<String, String> revokeInvitation(
             @PathVariable String id,
             @PathVariable String invitationId) {
-        memberService.revokeInvitation(id, getCurrentUserId(), invitationId);
+        memberService.revokeInvitation(id, getWorkspaceActorId(id), invitationId);
         return Map.of("message", "Invitation revoked");
     }
 
@@ -251,13 +255,13 @@ public class WorkspaceController {
     public Map<String, Object> createShareLink(
             @PathVariable String id,
             @RequestBody(required = false) CreateShareLinkRequest request) {
-        return shareService.createShareLink(id, getCurrentUserId(), request != null ? request : new CreateShareLinkRequest("VIEWER", null, null, null, true, true));
+        return shareService.createShareLink(id, getWorkspaceActorId(id), request != null ? request : new CreateShareLinkRequest("VIEWER", null, null, null, true, true));
     }
 
     @GetMapping("/{id}/share-links")
     @Operation(summary = "List share links", description = "List active share links (raw secrets excluded).")
     public List<WorkspaceShareLinkDto> listShareLinks(@PathVariable String id) {
-        return shareService.listShareLinks(id, getCurrentUserId());
+        return shareService.listShareLinks(id, getWorkspaceActorId(id));
     }
 
     @PatchMapping("/{id}/share-links/{linkId}")
@@ -266,7 +270,7 @@ public class WorkspaceController {
             @PathVariable String id,
             @PathVariable String linkId,
             @RequestBody UpdateShareLinkRequest request) {
-        return shareService.updateShareLink(id, getCurrentUserId(), linkId, request);
+        return shareService.updateShareLink(id, getWorkspaceActorId(id), linkId, request);
     }
 
     @DeleteMapping("/{id}/share-links/{linkId}")
@@ -274,7 +278,7 @@ public class WorkspaceController {
     public Map<String, String> revokeShareLink(
             @PathVariable String id,
             @PathVariable String linkId) {
-        shareService.revokeShareLink(id, getCurrentUserId(), linkId);
+        shareService.revokeShareLink(id, getWorkspaceActorId(id), linkId);
         return Map.of("message", "Share link revoked");
     }
 
@@ -285,7 +289,7 @@ public class WorkspaceController {
     public PreviewUploadUrlsResponse createPreviewUploadUrls(
             @PathVariable String id,
             @RequestBody PreviewUploadUrlsRequest request) {
-        return previewService.createUploadUrls(id, getCurrentUserId(), request);
+        return previewService.createUploadUrls(id, getWorkspaceActorId(id), request);
     }
 
     @PostMapping("/{id}/previews/{previewId}/complete")
@@ -294,13 +298,33 @@ public class WorkspaceController {
             @PathVariable String id,
             @PathVariable String previewId,
             @RequestBody CompletePreviewRequest request) {
-        return previewService.completePreview(id, getCurrentUserId(), previewId, request);
+        return previewService.completePreview(id, getWorkspaceActorId(id), previewId, request);
+    }
+
+    @PutMapping("/{id}/previews/{previewId}/assets/{assetId}/upload")
+    @Operation(summary = "Upload preview asset", description = "Upload a generated preview binary to the backend-managed preview asset store.")
+    public Map<String, Object> uploadPreviewAsset(
+            @PathVariable String id,
+            @PathVariable String previewId,
+            @PathVariable String assetId,
+            @RequestBody byte[] body,
+            @RequestHeader(name = "Content-Type", required = false) String contentType) {
+        return previewService.uploadAsset(id, getWorkspaceActorId(id), previewId, assetId, body, contentType);
+    }
+
+    @GetMapping("/{id}/previews/{previewId}/assets/{assetId}")
+    @Operation(summary = "Get preview asset", description = "Fetch a stored workspace preview asset.")
+    public ResponseEntity<ByteArrayResource> getPreviewAsset(
+            @PathVariable String id,
+            @PathVariable String previewId,
+            @PathVariable String assetId) {
+        return previewService.getAsset(id, getWorkspaceActorId(id), previewId, assetId);
     }
 
     @GetMapping("/{id}/preview")
     @Operation(summary = "Get current workspace preview", description = "Retrieve current dark/light preview URLs and fallback keys.")
     public WorkspacePreviewDto getPreview(@PathVariable String id) {
-        return previewService.getPreview(id, getCurrentUserId());
+        return previewService.getPreview(id, getWorkspaceActorId(id));
     }
 
     // === MEASUREMENTS ===
@@ -313,7 +337,7 @@ public class WorkspaceController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
             @RequestParam(defaultValue = "100") int limit) {
-        memberService.requirePermission(id, getCurrentUserId(), "USE_MEASUREMENTS");
+        memberService.requirePermission(id, getWorkspaceActorId(id), "USE_MEASUREMENTS");
         return measurementService.getMeasurements(null, id, kind, from, to, limit);
     }
 
@@ -325,7 +349,7 @@ public class WorkspaceController {
             @PathVariable String id,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant before,
             @RequestParam(defaultValue = "50") int limit) {
-        return chatService.listMessages(id, getCurrentUserId(), before, limit);
+        return chatService.listMessages(id, getWorkspaceActorId(id), before, limit);
     }
 
     @PostMapping("/{id}/chat/messages")
@@ -334,7 +358,7 @@ public class WorkspaceController {
     public WorkspaceChatMessageDto sendChatMessage(
             @PathVariable String id,
             @Valid @RequestBody SendChatMessageRequest request) {
-        return chatService.sendMessage(id, getCurrentUserId(), request);
+        return chatService.sendMessage(id, getWorkspaceActorId(id), request);
     }
 
     @PatchMapping("/{id}/chat/messages/{messageId}")
@@ -343,7 +367,7 @@ public class WorkspaceController {
             @PathVariable String id,
             @PathVariable String messageId,
             @Valid @RequestBody UpdateChatMessageRequest request) {
-        return chatService.updateMessage(id, getCurrentUserId(), messageId, request);
+        return chatService.updateMessage(id, getWorkspaceActorId(id), messageId, request);
     }
 
     @DeleteMapping("/{id}/chat/messages/{messageId}")
@@ -351,7 +375,7 @@ public class WorkspaceController {
     public Map<String, String> deleteChatMessage(
             @PathVariable String id,
             @PathVariable String messageId) {
-        chatService.deleteMessage(id, getCurrentUserId(), messageId);
+        chatService.deleteMessage(id, getWorkspaceActorId(id), messageId);
         return Map.of("message", "Message deleted");
     }
 
@@ -361,7 +385,7 @@ public class WorkspaceController {
             @PathVariable String id,
             @RequestBody Map<String, String> body) {
         String messageId = body.get("messageId");
-        chatService.markRead(id, getCurrentUserId(), messageId);
+        chatService.markRead(id, getWorkspaceActorId(id), messageId);
         return Map.of("status", "ok");
     }
 
@@ -370,7 +394,7 @@ public class WorkspaceController {
     @GetMapping("/{id}/comments")
     @Operation(summary = "List comment threads", description = "List all anchored comment threads and replies.")
     public List<WorkspaceCommentThreadDto> listComments(@PathVariable String id) {
-        return commentService.listThreads(id, getCurrentUserId());
+        return commentService.listThreads(id, getWorkspaceActorId(id));
     }
 
     @PostMapping("/{id}/comments")
@@ -379,7 +403,7 @@ public class WorkspaceController {
     public WorkspaceCommentThreadDto createCommentThread(
             @PathVariable String id,
             @Valid @RequestBody CreateCommentThreadRequest request) {
-        return commentService.createThread(id, getCurrentUserId(), request);
+        return commentService.createThread(id, getWorkspaceActorId(id), request);
     }
 
     @PostMapping("/{id}/comments/{threadId}/replies")
@@ -389,7 +413,7 @@ public class WorkspaceController {
             @PathVariable String id,
             @PathVariable String threadId,
             @Valid @RequestBody AddCommentReplyRequest request) {
-        return commentService.addReply(id, threadId, getCurrentUserId(), request);
+        return commentService.addReply(id, threadId, getWorkspaceActorId(id), request);
     }
 
     @PatchMapping("/{id}/comments/{threadId}")
@@ -398,6 +422,6 @@ public class WorkspaceController {
             @PathVariable String id,
             @PathVariable String threadId,
             @Valid @RequestBody UpdateCommentThreadStatusRequest request) {
-        return commentService.updateStatus(id, threadId, getCurrentUserId(), request);
+        return commentService.updateStatus(id, threadId, getWorkspaceActorId(id), request);
     }
 }

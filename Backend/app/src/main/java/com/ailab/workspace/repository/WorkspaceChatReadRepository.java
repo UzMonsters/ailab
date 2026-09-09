@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface WorkspaceChatReadRepository extends JpaRepository<WorkspaceChatReadEntity, WorkspaceMemberId> {
 
     Optional<WorkspaceChatReadEntity> findByWorkspaceIdAndUserId(String workspaceId, String userId);
+
+    void deleteByWorkspaceId(String workspaceId);
 }

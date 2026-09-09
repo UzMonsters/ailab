@@ -17,4 +17,6 @@ public interface MeasurementRepository extends JpaRepository<MeasurementEntity, 
     List<MeasurementEntity> findBySessionIdOrderByRecordedAtAsc(String sessionId, Pageable pageable);
 
     List<MeasurementEntity> findBySessionIdAndKindOrderByRecordedAtAsc(String sessionId, String kind, Pageable pageable);
+
+    void deleteByWorkspaceId(String workspaceId);
 }

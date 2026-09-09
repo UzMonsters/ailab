@@ -37,6 +37,8 @@ class OpenApiContractVerificationIntegrationTest {
                 .andExpect(jsonPath("$.paths['/api/v1/workspaces/{id}/comments']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/workspaces/{id}/measurements']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/workspaces/{id}/preview-upload-urls']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/workspaces/{id}/previews/{previewId}/assets/{assetId}/upload']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/admin/workspaces']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/chemistry/equipment/catalog']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/chemistry/experiments/{sessionId}/measurements']").exists());
     }

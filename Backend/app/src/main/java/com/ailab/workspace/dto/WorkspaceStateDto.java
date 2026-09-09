@@ -1,10 +1,14 @@
 package com.ailab.workspace.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 import java.util.Map;
 
 public record WorkspaceStateDto(
         String workspaceId,
+        String experimentSessionId,
+        @JsonProperty("sessionId")
         String sessionId,
         long stateVersion,
         Map<String, Object> viewport,

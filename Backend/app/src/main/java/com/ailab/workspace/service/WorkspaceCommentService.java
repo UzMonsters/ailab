@@ -162,10 +162,12 @@ public class WorkspaceCommentService {
                 r.getBody(),
                 r.getCreatedAt()
         )).toList();
+        String body = replies.isEmpty() ? "" : replies.get(0).body();
 
         return new WorkspaceCommentThreadDto(
                 t.getId(),
                 t.getWorkspaceId(),
+                body,
                 new WorkspaceCommentThreadDto.Author(t.getAuthorId(), t.getAuthorName(), t.getAuthorAvatar()),
                 anchor,
                 t.getStatus(),

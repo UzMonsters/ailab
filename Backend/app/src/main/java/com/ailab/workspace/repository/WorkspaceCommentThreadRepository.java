@@ -15,4 +15,6 @@ public interface WorkspaceCommentThreadRepository extends JpaRepository<Workspac
     List<WorkspaceCommentThreadEntity> findByWorkspaceIdWithReplies(String workspaceId);
 
     Optional<WorkspaceCommentThreadEntity> findByIdAndWorkspaceId(String id, String workspaceId);
+
+    void deleteByWorkspaceId(String workspaceId);
 }
