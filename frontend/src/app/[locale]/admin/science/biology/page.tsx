@@ -5,23 +5,16 @@ import AdminPageHeader from '@/widgets/admin/AdminPageHeader';
 import AdminDataTable, { Column } from '@/widgets/admin/AdminDataTable';
 import AdminDrawer from '@/widgets/admin/AdminDrawer';
 import { Plus } from 'lucide-react';
+import demoCatalogs from '@/mocks/data/demo-catalogs.json';
 
 const TABS = ['Specimens', 'Processes', 'Equipment'];
 
 // Mock Data
 type Specimen = { id: string; name: string; species: string; classification: string };
-const mockSpecimens: Specimen[] = [
-  { id: 'sp1', name: 'Amoeba Proteus', species: 'A. proteus', classification: 'Protista' },
-  { id: 'sp2', name: 'Human Cheek Cell', species: 'H. sapiens', classification: 'Animalia' },
-  { id: 'sp3', name: 'Onion Epidermis', species: 'A. cepa', classification: 'Plantae' },
-];
+const mockSpecimens: Specimen[] = demoCatalogs.biology.specimens;
 
 type Process = { id: string; name: string; type: string; duration: string };
-const mockProcesses: Process[] = [
-  { id: 'pr1', name: 'Photosynthesis', type: 'Metabolic', duration: 'Continuous' },
-  { id: 'pr2', name: 'Cellular Respiration', type: 'Metabolic', duration: 'Continuous' },
-  { id: 'pr3', name: 'Mitosis', type: 'Cell Division', duration: '~2 hours' },
-];
+const mockProcesses: Process[] = demoCatalogs.biology.processes;
 
 export default function AdminBiologyPage() {
   const [activeTab, setActiveTab] = useState('Specimens');

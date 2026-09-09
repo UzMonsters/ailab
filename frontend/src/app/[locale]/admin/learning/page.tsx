@@ -1,201 +1,95 @@
 'use client';
-import React, { useState } from 'react';
+
+import Link from 'next/link';
+import { useLocale } from 'next-intl';
+import { useCallback, useEffect, useState, type ComponentType } from 'react';
+import { AlertCircle, BookOpen, ChevronLeft, ChevronRight, Languages, Loader2, RefreshCw, Route, Search, Users } from 'lucide-react';
 import AdminPageHeader from '@/widgets/admin/AdminPageHeader';
-import { mockLevels } from '@/mocks/admin/learning';
-import { useParams } from 'next/navigation';
-import { LearningPanel } from '@/widgets/admin/AdminCatalogPanels';
-import { 
-  BookOpen, 
-  Layers, 
-  Award, 
-  CheckCircle2, 
-  Globe, 
-  TrendingUp,
-  BarChart3,
-  Beaker,
-  Atom,
-  Dna
-} from 'lucide-react';
-import AdminDataTable from '@/widgets/admin/AdminDataTable';
+import { adminLearningApi } from '@/entities/learning/api/learning.api';
+import type { JsonObject } from '@/shared/api/contracts/platform';
+import { errorMessage } from '@/shared/utils/errorMessage';
 
-const tabs = [
-  { id: 'overview', label: 'Overview', icon: <BarChart3 size={16} /> },
-  { id: 'levels', label: 'Levels', icon: <Layers size={16} /> },
-  { id: 'chapters', label: 'Chapters', icon: <BookOpen size={16} /> },
-  { id: 'tasks', label: 'Tasks', icon: <CheckCircle2 size={16} /> },
-  { id: 'rewards', label: 'Rewards', icon: <Award size={16} /> },
-  { id: 'progress', label: 'Progress', icon: <TrendingUp size={16} /> },
-  { id: 'localization', label: 'Localization', icon: <Globe size={16} /> },
-];
+const records = (value: unknown): JsonObject[] => {
+  if (Array.isArray(value)) return value.filter((item): item is JsonObject => Boolean(item) && typeof item === 'object' && !Array.isArray(item));
+  if (value && typeof value === 'object') {
+    const source = value as JsonObject;
+    return records(source.items ?? source.content ?? []);
+  }
+  return [];
+};
+const label = (item: JsonObject, key: string, fallback = '—') => String(item[key] ?? fallback);
 
-export default function AdminLearningDashboard() {
-  const params = useParams();
-  const locale = typeof params.locale === 'string' ? params.locale : 'ru';
-  const [activeTab, setActiveTab] = useState('overview');
-  const [timeframe, setTimeframe] = useState('7D');
+function Kpi({ icon: Icon, label, value }: { icon: ComponentType<{ className?: string; size?: number }>; label: string; value: unknown }) {
+  return (
+    <article className="rounded-2xl border border-white/[.07] bg-[#0b101a] p-5">
+      <Icon className="text-violet-300" size={19} />
+      <p className="mt-4 text-xs text-[#8490a3]">{label}</p>
+      <p className="mt-2 text-3xl font-bold text-white">{String(value)}</p>
+    </article>
+  );
+}
 
-  const totalLevels = mockLevels.length;
-  const publishedCount = mockLevels.filter(l => l.status === 'Published').length;
-  const draftCount = mockLevels.filter(l => l.status === 'Draft').length;
+export default function Page() {
+  const locale = useLocale();
+  const [data, setData] = useState<JsonObject>({});
+  const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const recentContentColumns = [
-    { header: 'Title', accessorKey: 'title' as const },
-    { header: 'Subject', accessorKey: 'subject' as const },
-    { header: 'Status', accessorKey: 'status' as const },
-    { header: 'Last Modified', accessorKey: 'lastModified' as const }
-  ];
-  
-  const recentContent = mockLevels.slice(0, 4).map((l, index) => ({
-    ...l,
-    lastModified: new Date(1718000000000 - index * 86400000).toLocaleDateString()
-  }));
+  const load = useCallback(async () => {
+    setLoading(true); setError(null);
+    try {
+      const [overview, tracks, progress, localization] = await Promise.all([
+      adminLearningApi.overview(),
+      adminLearningApi.tracks({ size: 100 }),
+      adminLearningApi.progress({ size: 10, page, q: query || undefined }),
+      adminLearningApi.localization({ locale, size: 10 }),
+      ]);
+      setData({ overview, tracks, progress, localization });
+    } catch (reason) { setError(errorMessage(reason, 'Learning data could not be loaded.')); }
+    finally { setLoading(false); }
+  }, [locale, page, query]);
+  useEffect(() => { const timer=window.setTimeout(()=>void load(),250); return()=>window.clearTimeout(timer); }, [load]);
+
+  const overview = data.overview as JsonObject | undefined;
+  const levels = overview?.levels as JsonObject | undefined;
+  const tracks = records(data.tracks);
+  const localization = records(data.localization);
+  const progress = records(data.progress);
+  const progressEnvelope = data.progress as JsonObject | undefined;
+  const progressPage = progressEnvelope?.page;
+  const nestedTotalPages = progressPage && typeof progressPage === 'object' && !Array.isArray(progressPage) ? (progressPage as JsonObject).totalPages : undefined;
+  const totalPages = Number(progressEnvelope?.totalPages ?? nestedTotalPages ?? 1);
 
   return (
-    <div className="p-4 md:p-6 min-h-screen bg-[#070b14] text-white">
-      <AdminPageHeader 
-        title="Learning Content" 
-        description="Manage curriculum, track engagement, and oversee content creation."
+    <div className="space-y-6 pb-12">
+      <AdminPageHeader
+        title="Learning"
+        description="Tracks, attempts, progress and localization from the learning backend."
+        actions={<Link href={`/${locale}/admin/learning/levels`} className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white"><Route size={16} />Manage levels</Link>}
       />
-
-      <div className="flex space-x-1 border-b border-[rgba(255,255,255,0.05)] mb-6 overflow-x-auto pb-px">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-              activeTab === tab.id 
-                ? 'border-[#8b5cf6] text-white' 
-                : 'border-transparent text-[#8490a3] hover:text-white hover:border-[rgba(255,255,255,0.1)]'
-            }`}
-          >
-            {tab.icon}
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === 'overview' && (
-        <div className="space-y-6">
-          {/* Curriculum Overview Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-[#0b101a] border border-[rgba(255,255,255,0.05)] p-4 rounded-xl flex items-center gap-4">
-              <div className="p-3 bg-cyan-500/10 rounded-lg">
-                <Beaker className="text-cyan-500" size={24} />
-              </div>
-              <div>
-                <p className="text-[#8490a3] text-sm">Chemistry</p>
-                <div className="flex items-end gap-2">
-                  <h3 className="text-2xl font-bold">24</h3>
-                  <span className="text-sm text-[#8490a3] mb-1">Levels</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-[#0b101a] border border-[rgba(255,255,255,0.05)] p-4 rounded-xl flex items-center gap-4">
-              <div className="p-3 bg-purple-500/10 rounded-lg">
-                <Atom className="text-purple-500" size={24} />
-              </div>
-              <div>
-                <p className="text-[#8490a3] text-sm">Physics</p>
-                <div className="flex items-end gap-2">
-                  <h3 className="text-2xl font-bold">18</h3>
-                  <span className="text-sm text-[#8490a3] mb-1">Levels</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-[#0b101a] border border-[rgba(255,255,255,0.05)] p-4 rounded-xl flex items-center gap-4">
-              <div className="p-3 bg-green-500/10 rounded-lg">
-                <Dna className="text-green-500" size={24} />
-              </div>
-              <div>
-                <p className="text-[#8490a3] text-sm">Biology</p>
-                <div className="flex items-end gap-2">
-                  <h3 className="text-2xl font-bold">12</h3>
-                  <span className="text-sm text-[#8490a3] mb-1">Levels</span>
-                </div>
-              </div>
-            </div>
+      {error ? (
+        <div className="flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-300"><AlertCircle size={17} /><span className="flex-1">{error}</span><button onClick={()=>void load()} className="flex items-center gap-1 rounded-lg border border-red-300/20 px-3 py-1.5 text-xs"><RefreshCw size={14}/>Retry</button></div>
+      ) : loading && !overview ? (
+        <div className="grid min-h-64 place-items-center"><Loader2 className="animate-spin text-violet-400" /></div>
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+            <Kpi icon={BookOpen} label="Published levels" value={levels?.published ?? levels?.PUBLISHED ?? 0} />
+            <Kpi icon={BookOpen} label="Draft levels" value={levels?.draft ?? levels?.DRAFT ?? 0} />
+            <Kpi icon={Users} label="Attempts" value={overview.attempts ?? 0} />
+            <Kpi icon={Route} label="Completed" value={`${Number(overview.completionRate ?? 0).toFixed(1)}%`} />
+            <Kpi icon={Languages} label="Hints used" value={overview.hintUsage ?? 0} />
+            <Kpi icon={Route} label="Average duration" value={`${Number(overview.averageDurationSeconds ?? 0).toFixed(0)} s`} />
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-[#0b101a] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 min-h-[300px] flex flex-col">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-white">Student Engagement</h3>
-                <div className="flex gap-2">
-                  {['7D', '30D', '90D'].map(t => (
-                    <button 
-                      key={t}
-                      onClick={() => setTimeframe(t)}
-                      className={`px-3 py-1 text-xs rounded-md ${timeframe === t ? 'bg-[#8b5cf6] text-white' : 'bg-[#141b2a] text-[#8490a3]'}`}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="flex-1 flex flex-col justify-end rounded-lg border border-[rgba(255,255,255,0.07)] bg-gradient-to-b from-violet-500/[.04] to-transparent p-4 text-[#8490a3]">
-                <div className="flex h-40 items-end gap-2 md:gap-3">{[38,52,47,69,62,84,73,91,78,96,86,100].map((height,index) => <div key={index} className="group relative flex h-full flex-1 items-end"><div className="w-full rounded-t bg-gradient-to-t from-violet-600/70 to-cyan-400 transition-opacity group-hover:opacity-80" style={{height:`${height}%`}}/><span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px]">{index + 1}</span></div>)}</div>
-                <div className="flex flex-wrap gap-4 mt-9 text-xs">
-                  <span className="flex items-center gap-1"><div className="w-2 h-2 bg-blue-500 rounded-full"></div> Active Learners</span>
-                  <span className="flex items-center gap-1"><div className="w-2 h-2 bg-green-500 rounded-full"></div> Completed Levels</span>
-                  <span className="flex items-center gap-1"><div className="w-2 h-2 bg-purple-500 rounded-full"></div> Scenario Attempts</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="lg:col-span-1 bg-[#0b101a] border border-[rgba(255,255,255,0.05)] rounded-xl p-4 flex flex-col">
-              <h3 className="font-semibold mb-4 text-white">Curriculum Completion</h3>
-              <div className="flex-1 flex flex-col gap-6 justify-center">
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-[#8490a3]">Beginner Curriculum</span>
-                    <span className="text-white">78%</span>
-                  </div>
-                  <div className="h-2 bg-[#141b2a] rounded-full overflow-hidden">
-                    <div className="h-full bg-cyan-500 rounded-full" style={{ width: '78%' }}></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-[#8490a3]">Intermediate Curriculum</span>
-                    <span className="text-white">45%</span>
-                  </div>
-                  <div className="h-2 bg-[#141b2a] rounded-full overflow-hidden">
-                    <div className="h-full bg-purple-500 rounded-full" style={{ width: '45%' }}></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-[#8490a3]">Advanced Curriculum</span>
-                    <span className="text-white">12%</span>
-                  </div>
-                  <div className="h-2 bg-[#141b2a] rounded-full overflow-hidden">
-                    <div className="h-full bg-pink-500 rounded-full" style={{ width: '12%' }}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <section className="rounded-2xl border border-white/[.07] bg-[#0b101a] p-5"><div className="flex items-center justify-between"><h2 className="font-semibold text-white">Localization completeness</h2><span className="text-xs uppercase text-[#8490a3]">{locale}</span></div><div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{localization.map(item=><article key={label(item,'entityId')} className="rounded-xl border border-white/[.06] bg-white/[.02] p-3"><div className="flex items-center justify-between gap-3"><span className="font-mono text-xs text-white">{label(item,'entityId')}</span><strong className={`text-sm ${Number(item.completeness)>=100?'text-emerald-300':'text-amber-300'}`}>{Number(item.completeness??0).toFixed(0)}%</strong></div><p className="mt-2 text-xs text-[#8490a3]">{Array.isArray(item.missingKeys)&&item.missingKeys.length?`Missing: ${item.missingKeys.join(', ')}`:'Complete'}</p></article>)}</div></section>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <section className="rounded-2xl border border-white/[.07] bg-[#0b101a] p-5"><div className="flex items-center justify-between"><h2 className="font-semibold text-white">Tracks</h2><span className="text-xs text-[#8490a3]">{tracks.length} loaded</span></div><div className="mt-4 space-y-2">{tracks.length ? tracks.map(track=><article key={label(track,'id')} className="rounded-xl border border-white/[.06] bg-white/[.02] p-3"><div className="flex justify-between gap-3"><strong className="text-sm text-white">{label(track,'title',label(track,'code'))}</strong><span className="text-xs text-violet-300">{label(track,'status')}</span></div><p className="mt-1 text-xs text-[#8490a3]">{label(track,'description','No description')}</p><p className="mt-2 font-mono text-[11px] text-cyan-300">{label(track,'code')}</p></article>):<p className="py-10 text-center text-sm text-[#8490a3]">No tracks returned by the backend.</p>}</div></section>
+            <section className="rounded-2xl border border-white/[.07] bg-[#0b101a] p-5"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-semibold text-white">Learner progress</h2><div className="relative min-w-52"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8490a3]" size={14}/><input aria-label="Search learners" value={query} onChange={event=>{setQuery(event.target.value);setPage(0)}} placeholder="Search user…" className="w-full rounded-lg border border-white/10 bg-black/20 py-2 pl-9 pr-3 text-xs text-white outline-none focus:border-violet-400"/></div></div>{progress.length?<div className="mt-4 overflow-x-auto"><table className="w-full text-left text-xs"><thead className="border-b border-white/[.08] text-[#8490a3]"><tr><th className="pb-2">Learner</th><th className="pb-2">Track</th><th className="pb-2">Level</th><th className="pb-2">Attempt</th><th className="pb-2">Updated</th></tr></thead><tbody>{progress.map((entry,index)=><tr key={label(entry,'id',String(index))} className="border-b border-white/[.05] text-[#d7deeb]"><td className="py-3">{label(entry,'displayName',label(entry,'userId'))}</td><td className="py-3">{label(entry,'trackId')}</td><td className="py-3"><Link className="text-violet-300 hover:underline" href={`/${locale}/admin/learning/levels?level=${encodeURIComponent(label(entry,'currentLevelId',''))}`}>{label(entry,'currentLevelId')}</Link></td><td className="py-3"><span className="text-cyan-300">{label(entry,'latestAttemptId')}</span></td><td className="py-3">{label(entry,'updatedAt')}</td></tr>)}</tbody></table></div>:<p className="py-10 text-center text-sm text-[#8490a3]">No progress records match these filters.</p>}<div className="mt-4 flex items-center justify-between border-t border-white/[.06] pt-3 text-xs text-[#8490a3]"><span>Page {page+1} of {Math.max(1,totalPages)}</span><div className="flex gap-2"><button aria-label="Previous page" disabled={page===0||loading} onClick={()=>setPage(value=>Math.max(0,value-1))} className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 disabled:opacity-30"><ChevronLeft size={15}/></button><button aria-label="Next page" disabled={page+1>=totalPages||loading} onClick={()=>setPage(value=>value+1)} className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 disabled:opacity-30"><ChevronRight size={15}/></button></div></div></section>
           </div>
-
-          <div className="bg-[#0b101a] border border-[rgba(255,255,255,0.05)] rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-[rgba(255,255,255,0.05)]">
-              <h3 className="font-semibold text-white">Recent Content Updates</h3>
-            </div>
-            <AdminDataTable 
-              data={recentContent} 
-              columns={recentContentColumns} 
-              itemsPerPageOptions={[4]}
-              searchPlaceholder="Search recent content..."
-            />
-          </div>
-        </div>
+        </>
       )}
-
-      {['levels', 'chapters', 'tasks', 'rewards', 'progress', 'localization'].includes(activeTab) && (
-        <LearningPanel tab={activeTab} locale={locale} />
-      )}
-
     </div>
   );
 }

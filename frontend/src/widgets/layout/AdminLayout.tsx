@@ -4,16 +4,18 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Atom, LayoutDashboard, Users, FlaskConical, Settings,
-  Bell, Search, Database, ChevronLeft, ChevronRight,
-  TestTube2, Zap, Microscope, BookOpen, ShieldAlert,
+  Atom, LayoutDashboard, FlaskConical, Settings,
+  Bell, Database, ChevronLeft, ChevronRight,
+  TestTube2, Zap, Microscope, BookOpen,
   List, LogOut
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
-import { useTranslations } from 'next-intl';
 import ToastProvider from '@/widgets/admin/ToastProvider';
+import AdminGlobalSearch from '@/widgets/admin/AdminGlobalSearch';
+import { useTranslations } from 'next-intl';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const t = useTranslations('admin.navigation');
   const pathname = usePathname() || '';
   const router = useRouter();
   
@@ -24,7 +26,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const [collapsed, setCollapsed] = useState(false);
   const { user, logout, fetchUser } = useAuthStore();
-  const t = useTranslations('admin');
 
   useEffect(() => {
     // Admin is a frontend prototype in this phase. User hydration is best-effort
@@ -41,30 +42,47 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     {
       title: null,
       links: [
-        { href: `/${locale}/admin/dashboard`, label: 'Dashboard', icon: LayoutDashboard },
-        { href: `/${locale}/admin/users`, label: 'Users', icon: Users },
-        { href: `/${locale}/admin/laboratories`, label: 'Laboratories', icon: FlaskConical },
-        { href: `/${locale}/admin/learning`, label: 'Learning Content', icon: BookOpen },
-        { href: `/${locale}/admin/book`, label: 'Book Studio', icon: BookOpen },
+        { href: `/${locale}/admin/dashboard`, label: t('dashboard'), icon: LayoutDashboard },
       ]
     },
     {
-      title: 'Science Catalog',
+      title: t('learningGroup'),
       links: [
-        { href: `/${locale}/admin/science/chemistry`, label: 'Chemistry', icon: TestTube2 },
-        { href: `/${locale}/admin/equipment`, label: 'Equipment', icon: Database },
-        { href: `/${locale}/admin/materials`, label: 'Materials & Samples', icon: List },
+        { href: `/${locale}/admin/learning`, label: t('learningContent'), icon: BookOpen },
+        { href: `/${locale}/admin/learning/levels`, label: t('levels'), icon: Zap },
+        { href: `/${locale}/admin/scenarios`, label: t('scenarios'), icon: Microscope },
       ]
     },
     {
-      title: 'System',
+      title: t('scienceCatalogGroup'),
       links: [
-        { href: `/${locale}/admin/scenarios`, label: 'Scenarios', icon: BookOpen },
-        { href: `/${locale}/admin/audit`, label: 'Audit Log', icon: List },
-        { href: `/${locale}/admin/settings`, label: 'Settings', icon: Settings },
+        { href: `/${locale}/admin/science/chemistry`, label: t('chemistry'), icon: TestTube2 },
+        { href: `/${locale}/admin/equipment`, label: t('equipment'), icon: Database },
+        { href: `/${locale}/admin/materials`, label: t('materials'), icon: FlaskConical },
+      ]
+    },
+    {
+      title: t('contentGroup'),
+      links: [
+        { href: `/${locale}/admin/book`, label: t('bookStudio'), icon: BookOpen },
+      ]
+    },
+    {
+      title: 'Collaboration',
+      links: [
+        { href: `/${locale}/admin/sharing`, label: 'Sharing', icon: Bell },
+      ]
+    },
+    {
+      title: t('systemGroup'),
+      links: [
+        { href: `/${locale}/admin/audit`, label: t('auditLog'), icon: List },
+        { href: `/${locale}/admin/settings`, label: t('settings'), icon: Settings },
       ]
     }
   ];
+  const allLinks = navGroups.flatMap(group => group.links);
+  const activeHref = allLinks.filter(link => pathname === link.href || pathname.startsWith(`${link.href}/`)).sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -94,7 +112,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {group.title && collapsed && <div className="h-4"></div>}
               
               {group.links.map(link => {
-                const isActive = pathname.startsWith(link.href);
+                const isActive = activeHref === link.href;
                 return (
                   <Link key={link.href} href={link.href} onClick={() => setMobileMenuOpen(false)} className={`sidebar-link ${isActive ? 'active' : ''}`} title={collapsed ? link.label : undefined}>
                     <link.icon size={18} className="shrink-0" />
@@ -111,7 +129,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
           </button>
           {!collapsed && (
-            <button onClick={handleLogout} className="header-icon p-2 hover:text-[#ef4444]" title="Logout">
+            <button onClick={handleLogout} className="header-icon p-2 hover:text-[#ef4444]" title={t('logout')} aria-label={t('logout')}>
               <LogOut size={18} />
             </button>
           )}
@@ -128,14 +146,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
             </button>
-            <div className="global-search hidden sm:flex">
-              <Search size={16} color="var(--admin-secondary)" />
-              <input type="text" placeholder="Search users, equipment, scenarios..." />
-            </div>
+            <AdminGlobalSearch locale={locale}/>
           </div>
           
           <div className="header-actions">
-            <span className="text-xs font-bold bg-[var(--admin-panel-2)] px-2 py-1 rounded text-[var(--admin-secondary)]">RU</span>
             <Bell size={18} className="header-icon" />
             <div className="w-8 h-8 rounded-full bg-[#8b5cf6] flex items-center justify-center font-bold text-xs text-white">
               {user?.username?.charAt(0).toUpperCase() || 'A'}

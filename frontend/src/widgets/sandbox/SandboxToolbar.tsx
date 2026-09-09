@@ -27,8 +27,6 @@ interface SandboxToolbarProps {
   canRedo?: boolean;
   helpActive?: boolean;
   helpTool?: string;
-  speed: number;
-  setSpeed: (speed: number) => void;
   showNavbar?: boolean;
 }
 
@@ -57,7 +55,7 @@ export function SandboxToolbar({
   onRedo,
   canUndo,
   canRedo
-  , speed, setSpeed, showNavbar = true
+  , showNavbar = true
 }: SandboxToolbarProps) {
   const ts = useTranslations("sandbox");
   const [collapsed, setCollapsed] = useState(false);
@@ -119,16 +117,11 @@ export function SandboxToolbar({
       </div>
       <div className="mx-1.5 h-6 w-px bg-[var(--border)]" />
       <ToolButton label="Сетка" active={showGrid} onClick={() => setShowGrid(!showGrid)}><Grid3X3 size={17} /></ToolButton>
-      <ToolButton label="Библиотека" active={leftPanelVisible} onClick={() => setLeftPanelVisible(!leftPanelVisible)}><PanelLeft size={17} /></ToolButton>
-      <ToolButton label="Инспектор" active={rightPanelVisible} onClick={() => setRightPanelVisible(!rightPanelVisible)}><SlidersHorizontal size={17} /></ToolButton>
+      <ToolButton label="Библиотека" active={leftPanelVisible} onClick={() => window.innerWidth < 1600 ? setMobilePanel('library') : setLeftPanelVisible(!leftPanelVisible)}><PanelLeft size={17} /></ToolButton>
+      <ToolButton label="Инспектор" active={rightPanelVisible} onClick={() => window.innerWidth < 1600 ? setMobilePanel('inspector') : setRightPanelVisible(!rightPanelVisible)}><SlidersHorizontal size={17} /></ToolButton>
       <div className="mx-1.5 h-6 w-px bg-[var(--border)]" />
-      <select aria-label="Simulation speed" value={speed} onChange={e => setSpeed(Number(e.target.value))} className="h-8 rounded-lg border border-border bg-card px-2 text-[11px] font-semibold text-foreground">
-        {[0.25, 0.5, 1, 2, 5].map(value => <option key={value} value={value}>{value}×</option>)}
-      </select>
-      <div className="mx-1.5 h-6 w-px shrink-0 bg-[var(--border)] xl:hidden" />
-      <div className="flex shrink-0 gap-1.5 xl:hidden">
-        <ToolButton label="Оборудование" onClick={() => setMobilePanel('library')}><PanelLeft size={17} /></ToolButton>
-        <ToolButton label="Инспектор" onClick={() => setMobilePanel('inspector')}><SlidersHorizontal size={17} /></ToolButton>
+      <div className="mx-1.5 h-6 w-px shrink-0 bg-[var(--border)] min-[1600px]:hidden" />
+      <div className="flex shrink-0 gap-1.5 min-[1600px]:hidden">
         <ToolButton label="Измерения" onClick={() => { setBottomDockTab('Measurements'); setMobilePanel('dock'); }}><BarChart3 size={17} /></ToolButton>
       </div>
       

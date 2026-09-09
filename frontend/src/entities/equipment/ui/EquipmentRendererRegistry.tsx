@@ -36,6 +36,13 @@ export type EquipmentIconProps = {
 
 export type EquipmentCanvasRenderer = (props: EquipmentIconProps) => ReactNode;
 
+export type EquipmentRendererMetadata = {
+  key: string;
+  label: string;
+  component: EquipmentCanvasRenderer;
+  previewAspectRatio: number;
+};
+
 function asCanvasRenderer<T extends object>(renderer: (props: T) => ReactNode): EquipmentCanvasRenderer {
   return (props) => renderer(props as unknown as T);
 }
@@ -60,10 +67,15 @@ function SimpleLabRenderer({ size = 100, type = 'equipment' }: EquipmentIconProp
   </svg>;
 }
 
-const rendererRegistry = new Map<string, EquipmentCanvasRenderer>();
+const rendererRegistry = new Map<string, EquipmentRendererMetadata>();
 
-export function registerEquipmentRenderer(rendererId: string, renderer: EquipmentCanvasRenderer) {
-  rendererRegistry.set(rendererId, renderer);
+export function registerEquipmentRenderer(rendererId: string, renderer: EquipmentCanvasRenderer, options: { label?: string; previewAspectRatio?: number } = {}) {
+  rendererRegistry.set(rendererId, {
+    key: rendererId,
+    label: options.label ?? rendererId.replaceAll('_', ' ').replace(/\b\w/g, letter => letter.toUpperCase()),
+    component: renderer,
+    previewAspectRatio: options.previewAspectRatio ?? 1,
+  });
 }
 
 // Initial registrations
@@ -106,10 +118,18 @@ registerEquipmentRenderer('coolingbath', SimpleLabRenderer);
 registerEquipmentRenderer('refrigerator', SimpleLabRenderer);
 
 const rendererAliases: Record<string, string> = {
+  beaker50: 'beaker', beaker100: 'beaker', beaker250: 'beaker', beaker500: 'beaker',
+  beaker_standard: 'beaker', test_tube: 'testtube', hotplate_stirrer: 'hotplate', ph_meter: 'phmeter',
   round_flask: 'roundflask', round_bottom_flask: 'roundflask', distillation_flask: 'distillationflask',
   bunsen_burner: 'burner', bunsenburner: 'burner', magnetic_stirrer: 'magneticstirrer',
   digital_balance: 'digitalbalance', analytical_balance: 'analyticalbalance', graduated_cylinder: 'graduatedcylinder',
   volumetric_flask: 'volumetricflask', separatoryfunnel: 'separatory_funnel', ring_stand: 'ringstand',
+  scales: 'analyticalbalance',
+  Beaker250Renderer: 'beaker', BeakerRenderer: 'beaker', ErlenmeyerRenderer: 'erlenmeyer',
+  RoundFlaskRenderer: 'roundflask', VolumetricFlaskRenderer: 'volumetricflask',
+  DistillationFlaskRenderer: 'distillationflask', GraduatedCylinderRenderer: 'graduatedcylinder',
+  TestTubeRenderer: 'testtube', CondenserRenderer: 'condenser', BunsenBurnerRenderer: 'burner',
+  HotPlateRenderer: 'hotplate', ThermometerRenderer: 'thermometer', pHMeterRenderer: 'phmeter',
 };
 
 export function canonicalRendererId(rendererId: string) {
@@ -120,12 +140,26 @@ export function hasEquipmentRenderer(rendererId: string) {
   return Boolean(rendererRegistry.get(canonicalRendererId(rendererId)));
 }
 
+export function listEquipmentRenderers(): EquipmentRendererMetadata[] {
+  return [...rendererRegistry.values()]
+    .filter(metadata => canonicalRendererId(metadata.key) === metadata.key)
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
+
+export function getEquipmentRendererMetadata(rendererId: string): EquipmentRendererMetadata | undefined {
+  return rendererRegistry.get(canonicalRendererId(rendererId));
+}
+
+export function getEquipmentRenderer(rendererId: string): EquipmentCanvasRenderer | undefined {
+  return getEquipmentRendererMetadata(rendererId)?.component;
+}
+
 const defaultRenderer: EquipmentCanvasRenderer = (props) =>
   <UnknownEquipmentRenderer {...props} />;
 
 export function renderEquipmentCanvas(rendererId: string | undefined, props: EquipmentIconProps) {
   const canonical = rendererId ? canonicalRendererId(rendererId) : undefined;
-  return (canonical ? rendererRegistry.get(canonical) : undefined)?.(props) ?? defaultRenderer({ ...props, type: canonical ?? props.type });
+  return (canonical ? rendererRegistry.get(canonical)?.component : undefined)?.(props) ?? defaultRenderer({ ...props, type: canonical ?? props.type });
 }
 
 export function EquipmentThumbnail(props: EquipmentIconProps) {

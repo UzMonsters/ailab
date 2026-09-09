@@ -7,8 +7,10 @@ import type { WorkspaceSnapshot } from '@/engine/workspace/Workspace';
 import type { WorkspaceRepository } from '@/engine/workspace/WorkspaceRepository';
 import type { SceneSnapshot } from '@/engine/scene/Scene';
 import { connectWorkspaceRealtime } from '@/entities/workspace/api/realtime/workspace-realtime';
+import { workspacesApi } from '@/entities/workspace/api/workspace.api';
 
 type UnknownRecord = Record<string, unknown>;
+export type SandboxRuntimeEvent = { time: string; event: string; detail: string; payload?: UnknownRecord };
 export type SandboxSyncStatus = 'idle' | 'loading' | 'hydrating' | 'ready' | 'reconciling' | 'offline' | 'conflict' | 'saving' | 'saved' | 'error';
 type RealtimeEvent = { stateVersion?: number; stateDelta?: UnknownRecord };
 
@@ -33,6 +35,25 @@ function record(value: unknown): UnknownRecord {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as UnknownRecord : {};
 }
 
+function restoreEquipmentType(data: UnknownRecord, registry: EquipmentRegistry): string {
+  const metadata = record(data.metadata);
+  const rendererTypes: Record<string, string> = {
+    beaker250renderer: 'beaker', erlenmeyerrenderer: 'erlenmeyer',
+    graduatedcylinderrenderer: 'graduated_cylinder', pipetterenderer: 'pipette',
+    funnelrenderer: 'funnel', roundbottomflaskrenderer: 'roundflask',
+  };
+  const candidates = [data.equipmentType, metadata.equipmentType, data.rendererKey, metadata.rendererKey, data.type];
+  for (const candidate of candidates) {
+    const raw = String(candidate ?? '').trim();
+    if (!raw) continue;
+    const normalized = raw.toLowerCase().replace(/[\s-]+/g, '_');
+    const renderer = rendererTypes[raw.toLowerCase()];
+    if (renderer && registry.get(renderer)) return renderer;
+    if (registry.get(normalized)) return normalized;
+  }
+  return 'unsupported';
+}
+
 function asRealtimeEvent(value: unknown): RealtimeEvent | null {
   const event = record(value);
   const version = Number(event.stateVersion);
@@ -44,11 +65,28 @@ function isConflictError(error: unknown): boolean {
   return Number(record(error).status) === 409;
 }
 
+function isValidationError(error: unknown): boolean {
+  const details = record(error);
+  return Number(details.status) === 422 || String(details.code ?? '') === 'UNPROCESSABLE_ENTITY';
+}
+
 function isConnectionSnapshot(value: unknown): value is SceneSnapshot['connections'][number] {
   const item = record(value);
   const from = record(item.from);
   const to = record(item.to);
   return typeof item.id === 'string' && typeof from.objectId === 'string' && typeof from.portId === 'string' && typeof to.objectId === 'string' && typeof to.portId === 'string' && typeof item.type === 'string' && typeof item.style === 'string';
+}
+
+function thumbnailData(engine: Engine): string {
+  const items = Array.from(engine.workspace.scene.objects.values());
+  const labels = items.slice(0, 12).map((item, index) => {
+    const x = 72 + (index % 4) * 215;
+    const y = 112 + Math.floor(index / 4) * 145;
+    const name = String(item.metadata.displayName ?? item.type).replace(/[<>&]/g, '');
+    return `<g><rect x="${x}" y="${y}" width="132" height="88" rx="16" fill="#172033" stroke="#8b5cf6" stroke-width="2"/><path d="M${x + 44} ${y + 18}h44v18l16 32a16 16 0 0 1-14 24H46a16 16 0 0 1-14-24l16-32z" fill="#94e6ff" fill-opacity=".38" stroke="#e5e7eb" stroke-width="3"/><text x="${x + 66}" y="${y + 116}" text-anchor="middle" fill="#e5e7eb" font-size="13" font-family="Arial">${name.slice(0, 20)}</text></g>`;
+  }).join('');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540"><defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#334155" stroke-opacity=".55"/></pattern><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0b1020"/><stop offset="1" stop-color="#160b2a"/></linearGradient></defs><rect width="960" height="540" fill="url(#bg)"/><rect width="960" height="540" fill="url(#grid)"/><text x="36" y="48" fill="#f8fafc" font-size="24" font-family="Arial" font-weight="700">Chemistry workspace</text><text x="36" y="74" fill="#a78bfa" font-size="14" font-family="Arial">${items.length} object${items.length === 1 ? '' : 's'} · saved preview</text>${labels}</svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
 async function retry<T>(operation: () => Promise<T>, attempts = 4): Promise<T> {
@@ -70,7 +108,7 @@ export function useSandboxSync({
   const repository = engine.repository as WorkspaceRepository | undefined;
   const [syncStatus, setSyncStatus] = useState<SandboxSyncStatus>('idle');
   const [realtimeEpoch, setRealtimeEpoch] = useState(0);
-  const [eventLog, setEventLog] = useState<Array<{ time: string; event: string; detail: string }>>([]);
+  const [eventLog, setEventLog] = useState<SandboxRuntimeEvent[]>([]);
   const stateVersionRef = useRef(0);
   const lifecycleRef = useRef<SandboxSyncStatus>('idle');
   const hydrated = useRef(false);
@@ -81,6 +119,9 @@ export function useSandboxSync({
   const persistenceQueue = useRef(Promise.resolve());
   const saveTimer = useRef<number | null>(null);
   const realtimeRef = useRef<ReturnType<typeof connectWorkspaceRealtime> | null>(null);
+  const thumbnailTimer = useRef<number | null>(null);
+  const processRealtimeEventRef = useRef<(event: RealtimeEvent) => Promise<void>>(async () => undefined);
+  const showToastRef = useRef(showToast);
   const [, setVersionTick] = useState(0);
 
   const setLifecycle = useCallback((status: SandboxSyncStatus) => {
@@ -94,7 +135,7 @@ export function useSandboxSync({
     for (const item of state.items ?? []) {
       const data = record(item);
       try {
-        const object = registry.create(String(data.type ?? data.equipmentType ?? 'unsupported'), { id: String(data.id) });
+        const object = registry.create(restoreEquipmentType(data, registry), { id: String(data.id) });
         object.position.x = Number(data.x ?? record(data.position).x ?? 0);
         object.position.y = Number(data.y ?? record(data.position).y ?? 0);
         if (typeof data.displayName === 'string' || typeof data.name === 'string') object.metadata.displayName = String(data.displayName ?? data.name);
@@ -131,7 +172,7 @@ export function useSandboxSync({
       const id = String(item.id);
       let object = engine.workspace.scene.objects.get(id);
       if (!object) {
-        try { object = registry.create(String(item.type ?? item.equipmentType ?? 'unsupported'), { id }); engine.workspace.scene.add(object); } catch { object = undefined; }
+        try { object = registry.create(restoreEquipmentType(item, registry), { id }); engine.workspace.scene.add(object); } catch { object = undefined; }
       }
       if (object) {
         if (item.x !== undefined) object.position.x = Number(item.x);
@@ -190,6 +231,11 @@ export function useSandboxSync({
     applyRealtimeDelta(event);
   }, [applyRealtimeDelta, reconcile]);
 
+  // A realtime connection must not be torn down merely because a callback was
+  // recreated after scene state changed. Keep the current callbacks in refs.
+  useEffect(() => { processRealtimeEventRef.current = processRealtimeEvent; }, [processRealtimeEvent]);
+  useEffect(() => { showToastRef.current = showToast; }, [showToast]);
+
   const drainIncomingEvents = useCallback(async () => {
     const queued = [...incomingEvents.current].sort((a, b) => Number(a.stateVersion) - Number(b.stateVersion));
     incomingEvents.current = [];
@@ -206,6 +252,15 @@ export function useSandboxSync({
         pendingEvents.current.shift();
         if (queueStorageKey) localStorage.setItem(queueStorageKey, JSON.stringify(pendingEvents.current));
       } catch (error) {
+        if (isValidationError(error)) {
+          // A rejected event is deterministic (for example an old mock-only
+          // material code). Retrying it forever blocks the whole queue.
+          pendingEvents.current.shift();
+          if (queueStorageKey) localStorage.setItem(queueStorageKey, JSON.stringify(pendingEvents.current));
+          setEventLog((current) => [...current.slice(-39), { time: new Date().toLocaleTimeString(), event: 'EVENT_REJECTED', detail: String(record(error).message ?? 'The server rejected this event') }]);
+          showToastRef.current(String(record(error).message ?? 'The server rejected this event'), 'error');
+          continue;
+        }
         setLifecycle(isConflictError(error) ? 'conflict' : 'offline');
         return;
       }
@@ -216,13 +271,19 @@ export function useSandboxSync({
   const queueWorkspaceEvent = useCallback((eventType: string, payload: UnknownRecord) => {
     // Keep the local Recent log useful even in a standalone/offline Sandbox
     // without a workspace query parameter. Persistence remains conditional.
-    setEventLog((current) => [...current.slice(-39), { time: new Date().toLocaleTimeString(), event: eventType, detail: String(payload.message ?? payload.itemId ?? payload.materialId ?? '') }]);
+    setEventLog((current) => [...current.slice(-39), { time: new Date().toLocaleTimeString(), event: eventType, detail: String(payload.message ?? payload.itemId ?? payload.materialId ?? ''), payload }]);
     if (!workspaceId || !hydrated.current) return;
     pendingEvents.current.push({ clientEventId: crypto.randomUUID(), expectedVersion: stateVersionRef.current, eventType, payload });
     if (queueStorageKey) localStorage.setItem(queueStorageKey, JSON.stringify(pendingEvents.current));
     setLifecycle('saving');
     persistenceQueue.current = persistenceQueue.current.catch(() => undefined).then(flushPendingEvents);
-  }, [flushPendingEvents, queueStorageKey, setLifecycle, workspaceId]);
+    // This is intentionally a lightweight SVG thumbnail: it is persisted by
+    // the existing backend endpoint and shown on Dashboard immediately.
+    if (thumbnailTimer.current !== null) window.clearTimeout(thumbnailTimer.current);
+    thumbnailTimer.current = window.setTimeout(() => {
+      void workspacesApi.saveThumbnail(workspaceId, { imageData: thumbnailData(engine), width: 960, height: 540 }).catch(() => undefined);
+    }, 1200);
+  }, [engine, flushPendingEvents, queueStorageKey, setLifecycle, workspaceId]);
 
   const historyAction = useCallback(async (direction: 'undo' | 'redo') => {
     if (workspaceId && repository?.[direction]) {
@@ -277,18 +338,18 @@ export function useSandboxSync({
   useEffect(() => {
     if (!workspaceId || !authChecked || !isAuthenticated || lifecycleRef.current !== 'ready') return;
     const connection = connectWorkspaceRealtime(workspaceId, sessionId, {
-      onWorkspaceEvent: (event) => { const parsed = asRealtimeEvent(event); if (parsed) void processRealtimeEvent(parsed); },
+      onWorkspaceEvent: (event) => { const parsed = asRealtimeEvent(event); if (parsed) void processRealtimeEventRef.current(parsed); },
       onAck: (event) => { const ack = record(event) as Partial<WorkspaceEventAck>; if (typeof ack.stateVersion === 'number') stateVersionRef.current = Math.max(stateVersionRef.current, ack.stateVersion); },
       onError: (event) => {
         const error = record(event);
         setLifecycle('offline');
-        if (typeof error.message === 'string') showToast(error.message, 'error');
+        if (typeof error.message === 'string') showToastRef.current(error.message, 'error');
         window.setTimeout(() => { setLifecycle('ready'); setRealtimeEpoch((value) => value + 1); }, 1000);
       },
     });
     realtimeRef.current = connection;
     return () => { connection.close(); realtimeRef.current = null; };
-  }, [authChecked, isAuthenticated, processRealtimeEvent, realtimeEpoch, sessionId, setLifecycle, showToast, workspaceId]);
+  }, [authChecked, isAuthenticated, realtimeEpoch, sessionId, setLifecycle, workspaceId]);
 
   useEffect(() => {
     const online = () => { setLifecycle('ready'); setRealtimeEpoch((value) => value + 1); void flushPendingEvents(); };

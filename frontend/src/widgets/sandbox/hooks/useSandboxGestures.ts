@@ -145,10 +145,11 @@ export function useSandboxGestures({
     // canvas context menu and never start a hidden drag from it.
     if (event.button !== 0) return;
 
-    // A pan started on equipment is intentionally a no-op. The Move tool
-    // pans only when the user presses empty canvas; object clicks are reserved
-    // for the Select tool.
     if (tool === "pan") {
+      panRef.current = { x: pan.x, y: pan.y, startX: event.clientX, startY: event.clientY };
+      setIsPanning(true);
+      event.currentTarget.setPointerCapture(event.pointerId);
+      if (canvasRef.current) canvasRef.current.style.cursor = "grabbing";
       return;
     }
 

@@ -4,34 +4,37 @@
 import { useLocale, useTranslations } from "next-intl";
 import React from 'react';
 import { renderEquipmentCanvas } from '@/entities/equipment/ui/EquipmentRendererRegistry';
+import { resolvePortScreenPosition, resolvePortWorldPosition } from '@/entities/equipment/lib/equipmentRenderBounds';
 import type { Item, Connection, Port as PortType } from '@/widgets/sandbox/types';
 import { Copy, Trash2, EyeOff, Link2, Plus, Droplets, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { type ReactNode, useMemo, useRef, useState } from 'react';
 import { ContextMenu } from './ContextMenu';
 
-import { isLiquidConduit, isVessel } from '@/widgets/sandbox/types';
+import { isVessel } from '@/widgets/sandbox/types';
 import { connectionPath } from './ConnectionGeometry';
+import type { TransferAnimationKind } from './animationProfiles';
 
 type CanvasSpill = { id: string; amount: number; time: number; x?: number; y?: number; color?: string; sourceId?: string };
 
 export function ToolButton({ label, active, disabled, onClick, children, labelVisible = false, className = "", guideTarget }: { label: string; active?: boolean; disabled?: boolean; onClick: () => void; children: ReactNode; labelVisible?: boolean; className?: string; guideTarget?: string }) { 
-  return <button data-help-target={guideTarget} aria-label={label} title={label} disabled={disabled} onPointerDown={(event) => event.stopPropagation()} onClick={onClick} className={`${labelVisible ? 'h-10 min-w-[74px] px-2 gap-1.5' : 'h-10 w-10'} shrink-0 flex items-center justify-center rounded-xl transition-colors ${disabled ? 'opacity-30 cursor-not-allowed text-muted-foreground' : active ? 'bg-[var(--primary)] text-white shadow-md' : 'text-muted-foreground hover:bg-muted hover:text-foreground'} ${className}`}>{children}{labelVisible && <span className="text-[10px] font-semibold">{label}</span>}</button>; 
+  return <button data-help-target={guideTarget} aria-label={label} title={label} disabled={disabled} onPointerDown={(event) => event.stopPropagation()} onClick={onClick} className={`${labelVisible ? 'sandbox-tool-with-label h-10 min-w-[74px] px-2 gap-1.5' : 'h-10 w-10'} shrink-0 flex items-center justify-center rounded-xl transition-colors ${disabled ? 'opacity-30 cursor-not-allowed text-muted-foreground' : active ? 'bg-[var(--primary)] text-white shadow-md' : 'text-muted-foreground hover:bg-muted hover:text-foreground'} ${className}`}>{children}{labelVisible && <span className="sandbox-tool-label text-[10px] font-semibold">{label}</span>}</button>;
 }
 
 export function Port({ name, color, onClick }: { name: string; color: string; onClick: () => void }) { 
   return <button aria-label={`${name} port`} title={`${name} port — click to connect`} onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); onClick(); }} className="group flex min-h-7 items-center gap-1"><span className={`h-5 w-5 shrink-0 rounded-full border-2 border-[var(--card)] shadow-sm ${color}`} /><span className="pointer-events-none absolute right-6 hidden whitespace-nowrap rounded bg-card px-1.5 py-0.5 text-[10px] font-semibold shadow-md group-hover:block">{name}</span></button>; 
 }
 
-function portPoint(item: Item, port: { x: number; y: number }) {
+function itemPortLayout(item: Item, port: { id: string; type: string; x: number; y: number }) {
+  return resolvePortScreenPosition({ x: port.x, y: port.y });
+}
+
+function portPoint(item: Item, port: { id: string; type: string; x: number; y: number }) {
   const width = item.w * (item.scaleX ?? item.scale);
   const height = item.h * (item.scaleY ?? item.scale);
-  const localX = port.x * width - width / 2;
-  const localY = port.y * height - height / 2;
-  const radians = item.rotation * Math.PI / 180;
-  return {
-    x: item.x + width / 2 + localX * Math.cos(radians) - localY * Math.sin(radians),
-    y: item.y + height / 2 + localX * Math.sin(radians) + localY * Math.cos(radians),
-  };
+  return resolvePortWorldPosition(
+    { x: port.x, y: port.y },
+    { x: item.x, y: item.y, width, height, rotation: item.rotation },
+  );
 }
 
 function SvgDefs() {
@@ -45,6 +48,7 @@ export function SelectionToolbar({
   duplicate,
   remove,
   onPourExecute,
+  onBeginPour,
   updateItem,
   onMix,
   onClose,
@@ -55,15 +59,13 @@ export function SelectionToolbar({
   duplicate: () => void;
   remove: () => void;
   onPourExecute?: (sourceId: string, targetId: string, amount: number) => void;
+  onBeginPour?: (sourceId: string) => void;
   updateItem?: (id: string, patch: Partial<Item>) => void;
   onMix?: (id: string) => void;
   onClose?: () => void;
 }) {
   const ts = useTranslations("sandbox");
 
-  const [mode, setMode] = useState<"idle" | "pouring">("idle");
-  const [pourAmount, setPourAmount] = useState<number>(Math.min(10, item.volumeMl));
-  const [targetId, setTargetId] = useState<string | null>(null);
   const [actionOffset, setActionOffset] = useState({ x: 0, y: 0 });
   const dragStart = useRef<{ x: number; y: number; offsetX: number; offsetY: number } | null>(null);
   const dragActionStart = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -80,47 +82,6 @@ export function SelectionToolbar({
 
   const canPour = !!onPourExecute && isVessel(item) && item.liquidLevel > 0;
   
-  if (mode === "pouring") {
-    const connectedTargets = connections
-      .filter(c => c.from === item.id || c.to === item.id)
-      .map(c => {
-        const target = items.find(i => i.id === (c.from === item.id ? c.to : c.from));
-        return target && (isVessel(target) || isLiquidConduit(target)) ? { id: target.id, name: target.name } : null;
-      })
-      .filter((t): t is {id: string, name: string} => t !== null);
-
-    return (
-      <div style={actionStyle} className="quick-actions-panel absolute top-[126px] z-[100] left-1/2 flex min-w-[260px] max-w-[520px] max-h-[220px] resize both flex-col gap-2 overflow-auto rounded-2xl border border-border bg-card/95 p-3 shadow-2xl backdrop-blur-md pointer-events-auto" onPointerDown={e => e.stopPropagation()}>
-        <div className="cursor-grab select-none text-[11px] font-bold text-center tracking-wide text-muted-foreground mb-1 uppercase active:cursor-grabbing" onPointerDown={dragActionStart} onPointerMove={dragActionMove} onPointerUp={stopActionDrag}>{ts.has("quickActions.pourTo") ? ts("quickActions.pourTo") : "Куда перелить"}</div>
-        {connectedTargets.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 p-2">
-            <span className="text-sm font-semibold text-red-400">{ts("quickActions.noConnected")}</span>
-            <button className="text-xs font-bold bg-foreground/10 text-foreground px-3 py-2 rounded-lg hover:bg-white/20 transition-colors" onClick={() => setMode("idle")}>{ts("quickActions.cancel")}</button>
-          </div>
-        ) : (
-          <>
-            <div className="flex gap-2 w-full">
-              <select className="flex-1 rounded-lg bg-black/40 border border-border text-sm p-2 outline-none focus:ring-1 focus:ring-[var(--primary)]" value={targetId || ""} onChange={e => setTargetId(e.target.value)}>
-                {connectedTargets.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </select>
-              <button className="text-xs font-bold bg-[var(--primary)] text-white px-4 py-2 rounded-lg hover:bg-[var(--primary)]/90 transition-colors shadow-sm" onClick={() => {
-                if(targetId && onPourExecute) {
-                  onPourExecute(item.id, targetId, pourAmount);
-                  setMode("idle");
-                }
-              }}>{ts("quickActions.pour")}</button>
-              <button className="text-xs font-bold bg-foreground/10 text-foreground px-3 py-2 rounded-lg hover:bg-white/20 transition-colors" onClick={() => setMode("idle")}>{ts("quickActions.cancel")}</button>
-            </div>
-            <div className="flex gap-3 items-center bg-black/40 p-2 rounded-lg border border-border">
-              <span className="text-xs font-bold w-14 text-foreground text-right">{pourAmount} мл</span>
-              <input type="range" min="1" max={item.volumeMl} value={pourAmount} onChange={e => setPourAmount(Number(e.target.value))} className="flex-1 accent-[var(--primary)]" />
-            </div>
-          </>
-        )}
-      </div>
-    );
-  }
-
   const canStir = item.capabilities?.stirrable;
 
   return (
@@ -136,13 +97,7 @@ export function SelectionToolbar({
           }`}
           onClick={() => {
             if (!canPour) return;
-            setMode("pouring");
-            const connectedTargets = connections
-              .filter(c => c.from === item.id || c.to === item.id)
-              .map(c => items.find(i => i.id === (c.from === item.id ? c.to : c.from)))
-              .filter((i): i is Item => i !== undefined && (isVessel(i) || isLiquidConduit(i)));
-            if (connectedTargets.length > 0) setTargetId(connectedTargets[0].id);
-            setPourAmount(Math.min(10, item.volumeMl));
+            onBeginPour?.(item.id);
           }}
           disabled={!canPour}
           title={canPour ? ts("quickActions.pourTooltip") : ts("quickActions.noPour")}
@@ -196,6 +151,7 @@ interface SandboxCanvasProps {
   canvasRef: React.RefObject<HTMLDivElement>;
   zoom: number;
   pan: { x: number; y: number };
+  setPan: (pan: { x: number; y: number }) => void;
   tool: 'select' | 'pan' | 'connect';
   items: Item[];
   connections: Connection[];
@@ -208,7 +164,7 @@ interface SandboxCanvasProps {
   connectionSnap: { itemId: string; portId: string; x: number; y: number } | null;
   portCompatibility: Record<string, 'compatible' | 'adapter' | 'incompatible'>;
   connectionPointer: { x: number; y: number } | null;
-  pourAnimation: string | null;
+  pourAnimation: { sourceId: string; targetId: string; amountMl: number; kind: TransferAnimationKind; durationMs: number; arcLift: number; streamWidth: number } | null;
   spillAnimation?: string | null;
   spills?: CanvasSpill[];
   centers: Map<string, { x: number; y: number }>;
@@ -231,6 +187,9 @@ interface SandboxCanvasProps {
   remove: () => void;
   emptyItem?: (id: string) => void;
   setPourSource?: (id: string | null) => void;
+  pourSource?: string | null;
+  pourAmount?: number;
+  setPourAmount?: (amount: number) => void;
   onPourExecute?: (sourceId: string, targetId: string, amount: number) => void;
   temperatureConnected: (id: string) => boolean;
   temperatureReading?: (id: string) => number | null;
@@ -253,6 +212,7 @@ export function SandboxCanvas({
   canvasRef,
   zoom,
   pan,
+  setPan,
   tool,
   items,
   connections,
@@ -288,6 +248,9 @@ export function SandboxCanvas({
   remove,
   emptyItem,
   setPourSource,
+  pourSource,
+  pourAmount = 10,
+  setPourAmount,
   onPourExecute,
   temperatureConnected,
   temperatureReading,
@@ -311,10 +274,12 @@ export function SandboxCanvas({
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; itemId: string } | null>(null);
   const [routeDraft, setRouteDraft] = useState<{ id: string; points: Array<{ x: number; y: number }> } | null>(null);
   const [resizeDraft, setResizeDraft] = useState<{ id: string; scaleX: number; scaleY: number } | null>(null);
+  const [rotationDraft, setRotationDraft] = useState<{ id: string; rotation: number } | null>(null);
   const [miniMapOpen, setMiniMapOpen] = useState(true);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
   const [spillNow, setSpillNow] = useState(() => Date.now());
   const resizeRef = React.useRef<{ id: string; startX: number; startY: number; startScaleX: number; startScaleY: number; minScale: number; maxScale: number; width: number; height: number } | null>(null);
+  const rotationRef = React.useRef<{ id: string; centerX: number; centerY: number; pointerAngle: number; startRotation: number } | null>(null);
   const connectionDragRef = React.useRef<{ id: string; startX: number; startY: number; points: Array<{ x: number; y: number }> } | null>(null);
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -335,6 +300,14 @@ export function SandboxCanvas({
     const maxY = Math.max(700, ...items.map((item) => item.y + item.h * (item.scaleY ?? item.scale)));
     return { maxX, maxY };
   }, [items]);
+  const activePourSource = pourSource ? items.find((item) => item.id === pourSource) : undefined;
+  const navigateMiniMap = React.useCallback((event: React.PointerEvent<SVGSVGElement>) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const worldX = ((event.clientX - bounds.left) / bounds.width) * miniMapBounds.maxX;
+    const worldY = ((event.clientY - bounds.top) / bounds.height) * miniMapBounds.maxY;
+    setPan({ x: canvasSize.width / (2 * zoom) - worldX, y: canvasSize.height / (2 * zoom) - worldY });
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  }, [canvasSize.height, canvasSize.width, miniMapBounds.maxX, miniMapBounds.maxY, setPan, zoom]);
 
   const handleContextMenuAction = (action: string, itemId: string) => {
     if (action === 'empty' && emptyItem) {
@@ -351,7 +324,14 @@ export function SandboxCanvas({
   return (
     <div 
       ref={canvasRef} 
-      onPointerDown={(e) => { setSelectedId(null); cancelConnection(false); onCanvasPointerDown(e); }} 
+      onPointerDown={(e) => {
+        if (pourSource) setPourSource?.(null);
+        setSelectedId(null);
+        // Pan must stay active after a canvas click. Previously this reset the
+        // connection state unconditionally, which also forced the tool back to Select.
+        if (tool === 'connect') cancelConnection(false);
+        onCanvasPointerDown(e);
+      }}
       onPointerMove={onPointerMove} 
       onPointerUp={(e) => {
           if (marquee) setMarquee(null);
@@ -375,6 +355,14 @@ export function SandboxCanvas({
       <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
         <SvgDefs />
       </svg>
+      {activePourSource && (
+        <div className="sandbox-pour-guidance pointer-events-auto absolute left-1/2 top-5 z-[110] flex min-w-[330px] -translate-x-1/2 items-center gap-3 rounded-2xl border border-cyan-300/40 bg-card/95 px-4 py-2 text-xs font-semibold text-foreground shadow-[0_12px_32px_rgba(6,182,212,.2)] backdrop-blur-xl">
+          <Droplets size={16} className="text-cyan-400" />
+          <label className="min-w-0 flex-1"><span className="flex justify-between gap-3"><span>Объём переливания</span><b className="font-mono text-cyan-300">{Math.min(pourAmount,activePourSource.volumeMl).toFixed(0)} мл</b></span><input aria-label="Объём переливания в миллилитрах" type="range" min="1" max={Math.max(1,Math.floor(activePourSource.volumeMl))} value={Math.min(pourAmount,Math.max(1,activePourSource.volumeMl))} onChange={event=>setPourAmount?.(Number(event.target.value))} className="mt-1 w-full accent-cyan-400"/></label>
+          <button type="button" className="ml-1 grid h-6 w-6 place-items-center rounded-full bg-muted text-muted-foreground hover:text-foreground" onClick={(event) => { event.stopPropagation(); setPourSource?.(null); }} aria-label="Отменить переливание">×</button>
+        </div>
+      )}
+      {pourAnimation && (()=>{const source=items.find(item=>item.id===pourAnimation.sourceId);const target=items.find(item=>item.id===pourAnimation.targetId);if(!source||!target||source.id===target.id)return null;const x1=(source.x+source.w/2+pan.x)*zoom;const y1=(source.y+source.h*.45+pan.y)*zoom;const x2=(target.x+target.w/2+pan.x)*zoom;const y2=(target.y+target.h*.18+pan.y)*zoom;const color=source.material?.color??'#22d3ee';const path=`M ${x1} ${y1} Q ${(x1+x2)/2} ${Math.min(y1,y2)-pourAnimation.arcLift} ${x2} ${y2}`;return <svg className="pointer-events-none absolute inset-0 z-40 h-full w-full overflow-visible" aria-label={`${pourAnimation.kind} liquid transfer`}><path d={path} fill="none" stroke={color} strokeWidth={Math.max(2,pourAnimation.streamWidth*zoom)} strokeLinecap="round" className={`sandbox-transfer-stream sandbox-transfer-${pourAnimation.kind}`} style={{animationDuration:`${Math.max(280,pourAnimation.durationMs/3)}ms, ${pourAnimation.durationMs}ms`}}/>{pourAnimation.kind==='pipette'&&<><circle cx={x2} cy={y2-24} r="4" fill={color} className="sandbox-transfer-drop"/><circle cx={x2} cy={y2-42} r="2.5" fill={color} className="sandbox-transfer-drop animation-delay-300"/></>}<circle cx={x2} cy={y2} r="10" fill="none" stroke={color} strokeWidth="3" className="sandbox-transfer-ripple"/></svg>})()}
       {/* Layer 1: Connection lines (SVG, behind everything) */}
       <svg className="pointer-events-none absolute inset-0 h-full w-full z-0" style={{ overflow: 'visible' }}>
         <defs><marker id="arrow-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#22D3EE" /></marker><marker id="arrow-violet" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#A78BFA" /></marker><marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#FB923C" /></marker><marker id="arrow-emerald" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#34D399" /></marker><marker id="arrow-glass" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(255,255,255,0.7)" /></marker></defs>{connections.map((link) => { const fromItem = items.find((item) => item.id === link.from); const toItem = items.find((item) => item.id === link.to); const fromPort = fromItem?.ports.find((port) => port.id === link.fromPort);
@@ -533,14 +521,33 @@ export function SandboxCanvas({
         const screenH = item.h * renderScaleY * zoom;
         const measuredTemperature = item.type === 'thermometer' ? temperatureReading?.(item.id) : null;
         const displayedTemperature = measuredTemperature ?? item.measuredTemperatureC;
+        const displayRotation = rotationDraft?.id === item.id ? rotationDraft.rotation : item.rotation;
+        const visibleLiquid = item.contents.find((content) => content.phase === 'liquid' || content.phase === 'aqueous');
+          const visibleSolid = item.contents.find((content) => content.phase === 'solid');
+          const isVaporizing = item.contents.some((content) => content.phase === 'gas') || Boolean(visibleLiquid && item.temperature >= Number(item.material?.boilingPointC ?? 100));
+          const isPourTarget = Boolean(activePourSource && item.id !== activePourSource.id && isVessel(item) && !item.broken && item.volumeMl < (item.capacityMl ?? Number.POSITIVE_INFINITY));
+          const isPourDimmed = Boolean(activePourSource && item.id !== activePourSource.id && !isPourTarget);
         
         const isHelpTarget = helpActive && helpTargets.includes(item.type);
         return (
         <div 
           key={item.id} 
           data-sandbox-item={item.id}
+          data-scenario-alias={String(item.metadata?.scenarioAlias ?? '') || undefined}
           title={`${item.name}\nОбъём: ${item.volumeMl?.toFixed(1) ?? '0.0'} / ${item.capacityMl ?? '-'} мл\nСодержимое: ${item.contents?.length ? item.contents.map(c => c.name ?? c.formula).join(', ') : 'пусто'}`}
-          onPointerDown={(event) => onPointerDown(event, item.id)} 
+          onPointerDown={(event) => {
+            if (activePourSource) {
+              event.preventDefault();
+              event.stopPropagation();
+              if (isPourTarget && onPourExecute) {
+                onPourExecute(activePourSource.id, item.id, Math.min(pourAmount, activePourSource.volumeMl));
+                setPourSource?.(null);
+                setSelectedIds(new Set([item.id]));
+              }
+              return;
+            }
+            onPointerDown(event, item.id);
+          }}
           onPointerMove={onPointerMove}
           onPointerUp={(event) => { 
             event.stopPropagation(); 
@@ -561,13 +568,14 @@ export function SandboxCanvas({
             event.stopPropagation();
             setContextMenu({ x: event.clientX, y: event.clientY, itemId: item.id });
           }}
-          style={{ left: screenX, top: screenY, width: screenW, height: screenH, transform: `rotate(${item.rotation}deg)`, touchAction: 'none' }} 
+          style={{ left: screenX, top: screenY, width: screenW, height: screenH, transform: `rotate(${displayRotation}deg)`, touchAction: 'none' }}
           data-help-target={item.type}
-          className={`group absolute rounded-xl p-1 select-none outline-none focus:ring-2 focus:ring-[var(--primary)] ${tool === 'pan' ? 'cursor-move' : tool === 'connect' ? 'cursor-crosshair' : 'cursor-default'} ${selectedId === item.id ? 'z-20 ring-2 ring-[var(--primary)]' : 'z-10 hover:ring-1 hover:ring-[var(--primary)]/60'} ${collisionItemId === item.id ? 'ring-2 ring-red-400 bg-red-500/10' : ''} ${isHelpTarget ? 'help-arrow-target ring-2 ring-violet-300 shadow-[0_0_20px_rgba(156,107,255,.55)] animate-pulse' : ''}`}
+          className={`group absolute rounded-xl p-1 select-none outline-none focus:ring-2 focus:ring-[var(--primary)] ${activePourSource ? (isPourTarget ? 'sandbox-pour-target z-30 cursor-pointer ring-4 ring-cyan-300 bg-cyan-300/10 shadow-[0_0_34px_rgba(34,211,238,.72)]' : isPourDimmed ? 'opacity-30 saturate-50' : 'z-20 ring-2 ring-cyan-400/50') : tool === 'pan' ? 'cursor-move' : tool === 'connect' ? 'cursor-crosshair' : 'cursor-default'} ${selectedId === item.id ? 'z-20 ring-2 ring-[var(--primary)]' : 'z-10 hover:ring-1 hover:ring-[var(--primary)]/60'} ${collisionItemId === item.id ? 'ring-2 ring-red-400 bg-red-500/10' : ''} ${isHelpTarget ? 'help-arrow-target ring-2 ring-violet-300 shadow-[0_0_20px_rgba(156,107,255,.55)] animate-pulse' : ''}`}
         >
-          <span className={`equipment-art pointer-events-none absolute inset-0 grid place-items-center rounded-xl ${item.operation === 'mixing' ? 'sandbox-vessel-mixing' : ''}`}>
-            {renderEquipmentCanvas(item.type, { type: item.type, width: screenW, height: screenH, size: Math.min(screenW, screenH), liquidLevel: item.contents.some((content) => content.phase === 'liquid' || content.phase === 'aqueous') ? item.liquidLevel : 0, volumeMl: item.volumeMl, capacityMl: item.capacityMl, liquidColor: item.material?.color ?? item.contents.find((content) => content.phase === 'liquid' || content.phase === 'aqueous')?.color, hasGas: item.contents.some((content) => content.phase === 'gas'), hasSolid: item.contents.some((content) => content.phase === 'solid'), solidColor: item.contents.find((content) => content.phase === 'solid')?.color, massG: item.massG, operation: item.operation, temperature: item.temperature, connected: temperatureConnected(item.id), sealed: item.sealed, broken: item.broken })}
+          <span className={`equipment-art pointer-events-none absolute inset-0 grid place-items-center rounded-xl ${item.operation === 'mixing' ? 'sandbox-vessel-mixing' : ''} ${pourAnimation?.sourceId===item.id?`sandbox-pour-source sandbox-pour-${pourAnimation.kind}`:''} ${pourAnimation?.targetId===item.id?'sandbox-pour-receiver':''}`}>
+            {renderEquipmentCanvas(item.type, { type: item.type, width: screenW, height: screenH, size: Math.min(screenW, screenH), liquidLevel: visibleLiquid ? item.liquidLevel : 0, volumeMl: item.volumeMl, capacityMl: item.capacityMl, liquidColor: item.material?.color ?? visibleLiquid?.color, hasGas: isVaporizing, hasSolid: !!visibleSolid, solidColor: visibleSolid?.color, massG: item.massG, operation: item.operation, temperature: item.temperature, connected: temperatureConnected(item.id), sealed: item.sealed, broken: item.broken })}
           </span>
+          {isVaporizing && !item.sealed && !item.broken && <span className="sandbox-steam pointer-events-none absolute left-1/2 top-0 z-20 h-20 w-16 -translate-x-1/2 -translate-y-12" aria-label="Пар"><i/><i/><i/></span>}
           {item.integrity && ['microcracked', 'cracked', 'leaking', 'shattered'].includes(item.integrity) && (
             <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Glass crack">
               <path d="M48 8 L43 30 L51 43 L38 62 L44 92 M44 35 L24 28 M49 43 L70 31 M39 62 L21 77" fill="none" stroke="rgba(255,255,255,.82)" strokeWidth={item.integrity === 'microcracked' ? 0.7 : 1.2} strokeDasharray={item.integrity === 'microcracked' ? '5 5' : undefined} />
@@ -584,7 +592,7 @@ export function SandboxCanvas({
             )}
           </div>
                     {item.type === 'thermometer' && (
-            <span className="absolute -top-8 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-md bg-slate-900/90 px-2 py-1 text-xs font-bold text-foreground shadow-md backdrop-blur-sm border border-border">
+            <span className="absolute -top-8 left-1/2 -translate-x-1/2 flex items-center gap-1 whitespace-nowrap rounded-md bg-slate-900/90 px-2 py-1 text-xs font-bold text-foreground shadow-md backdrop-blur-sm border border-border">
               {temperatureConnected(item.id) && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
               {measuredTemperature === null ? 'No valid measurement' : item.measurementStatus === 'OVER RANGE' ? 'OVER RANGE' : `${displayedTemperature.toFixed(1)}°C`}
             </span>
@@ -672,7 +680,7 @@ export function SandboxCanvas({
             </div>
           )}
 
-          {pourAnimation === item.id && (
+          {pourAnimation?.targetId === item.id && pourAnimation.sourceId !== item.id && (
             <svg className="pointer-events-none absolute left-1/2 top-0 z-30 h-20 w-12 -translate-x-1/2 -translate-y-[4.5rem] overflow-visible" viewBox="0 0 48 80" aria-label="Pouring liquid">
               <path d="M24 0 C22 18 28 30 24 48 C22 58 24 68 24 80" fill="none" stroke={item.material?.color ?? '#22D3EE'} strokeWidth="5" strokeLinecap="round" className="sandbox-pour-stream" />
               <circle cx="17" cy="16" r="2.5" fill={item.material?.color ?? '#22D3EE'} className="animate-rise" />
@@ -687,6 +695,7 @@ export function SandboxCanvas({
             </svg>
           )}
           {item.ports.map((port) => {
+            const anchor = itemPortLayout(item, port);
             const status = portCompatibility[`${item.id}:${port.id}`];
             const isSource = port.direction === 'out' || port.direction === 'bidirectional';
             const isHelpPort = helpActive && (helpTargets.includes(`port:${item.type}:${port.id}`) || helpTargets.includes(`port:${item.type}:*`));
@@ -712,6 +721,7 @@ export function SandboxCanvas({
                 key={port.id}
                 type="button"
                 data-help-target={`port:${item.type}:${port.id}`}
+                data-scenario-port={item.metadata?.scenarioAlias ? `${String(item.metadata.scenarioAlias)}:${port.id}` : undefined}
                 aria-label={`${port.name}${status === 'adapter' ? ' · доступен адаптер' : ''}`}
                 title={port.name}
                                  onPointerDown={(event) => { event.stopPropagation(); onPortPointerDown(item.id, port.id); }}
@@ -719,13 +729,55 @@ export function SandboxCanvas({
                 onClick={(event) => { event.stopPropagation(); onPortPointerUp(item.id, port.id); }}
                 onPointerEnter={() => { const point = portPoint(item, port); onPortPointerEnter(item.id, port.id, point); }}
                 className={`absolute z-[70] flex h-4 w-4 items-center justify-center -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/80 shadow-md transition-all hover:scale-135 hover:cursor-crosshair before:absolute before:inset-[-8px] before:rounded-full before:content-[''] ${guidePortClass} ${color} ${isHelpPort ? 'help-arrow-target !opacity-100 !h-6 !w-6 !border-cyan-100 !bg-cyan-400 shadow-[0_0_22px_rgba(93,220,255,.9)] animate-pulse' : ''}`}
-                style={{ left: `${port.x * 100}%`, top: `${port.y * 100}%` }}
+                style={{ left: `${anchor.x * 100}%`, top: `${anchor.y * 100}%` }}
                 >
                   <Plus size={10} className="stroke-[3]" />
                   {isSource && <span className="absolute inset-0 rounded-full animate-ping bg-inherit opacity-75" />}
-                </button>
+              </button>
             );
           })}
+          {selectedIds.has(item.id) && selectedIds.size === 1 && updateItem && (
+            <button
+              type="button"
+              aria-label="Повернуть 3D-объект"
+              title={`Повернуть · ${Math.round(displayRotation)}°`}
+              className="absolute left-1/2 top-[-28px] z-[75] grid h-7 w-7 -translate-x-1/2 place-items-center rounded-full border border-white/80 bg-[var(--primary)] text-white shadow-[0_0_12px_rgba(139,92,246,.65)] hover:scale-110"
+              onPointerDown={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const parent = event.currentTarget.parentElement;
+                if (!parent) return;
+                const bounds = parent.getBoundingClientRect();
+                const centerX = bounds.left + bounds.width / 2;
+                const centerY = bounds.top + bounds.height / 2;
+                rotationRef.current = {
+                  id: item.id,
+                  centerX,
+                  centerY,
+                  pointerAngle: Math.atan2(event.clientY - centerY, event.clientX - centerX) * 180 / Math.PI,
+                  startRotation: item.rotation,
+                };
+                event.currentTarget.setPointerCapture(event.pointerId);
+              }}
+              onPointerMove={(event) => {
+                const rotation = rotationRef.current;
+                if (!rotation || rotation.id !== item.id || !event.currentTarget.hasPointerCapture(event.pointerId)) return;
+                const nextPointerAngle = Math.atan2(event.clientY - rotation.centerY, event.clientX - rotation.centerX) * 180 / Math.PI;
+                setRotationDraft({ id: item.id, rotation: rotation.startRotation + nextPointerAngle - rotation.pointerAngle });
+              }}
+              onPointerUp={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const nextRotation = rotationDraft?.id === item.id ? rotationDraft.rotation : item.rotation;
+                updateItem(item.id, { rotation: ((nextRotation % 360) + 360) % 360 });
+                rotationRef.current = null;
+                setRotationDraft(null);
+                if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+              }}
+            >
+              <RefreshCw size={14} />
+            </button>
+          )}
           {selectedIds.has(item.id) && selectedIds.size === 1 && [
             { key: 'nw', x: '-1.5', y: '-1.5', cursor: 'nwse-resize', sx: -1, sy: -1 },
             { key: 'ne', x: '101.5', y: '-1.5', cursor: 'nesw-resize', sx: 1, sy: -1 },
@@ -802,6 +854,7 @@ export function SandboxCanvas({
             duplicate={duplicate} 
             remove={remove} 
             onPourExecute={onPourExecute}
+            onBeginPour={(sourceId) => { setPourSource?.(sourceId); setSelectedId(null); }}
             updateItem={updateItem}
             onMix={onMix}
             onClose={() => setSelectedId(null)}
@@ -812,7 +865,7 @@ export function SandboxCanvas({
       {/* Compatible ports themselves provide the connection guidance. */}
 
       <div
-        className="pointer-events-auto absolute bottom-16 right-4 z-[90]"
+        className="sandbox-minimap pointer-events-auto absolute bottom-16 right-4 z-[90] hidden md:block"
         onPointerDown={(event) => event.stopPropagation()}
       >
         {miniMapOpen ? (
@@ -821,7 +874,7 @@ export function SandboxCanvas({
               <span>Мини-карта</span>
               <button type="button" className="rounded px-1.5 py-0.5 text-muted-foreground hover:bg-muted hover:text-foreground" onClick={() => setMiniMapOpen(false)} aria-label="Скрыть мини-карту">×</button>
             </div>
-            <svg viewBox={`0 0 ${miniMapBounds.maxX} ${miniMapBounds.maxY}`} className="h-28 w-full rounded-lg border border-border/60 bg-background/70">
+            <svg viewBox={`0 0 ${miniMapBounds.maxX} ${miniMapBounds.maxY}`} className="h-28 w-full cursor-crosshair touch-none rounded-lg border border-border/60 bg-background/70" onPointerDown={navigateMiniMap} onPointerMove={(event)=>{if(event.buttons===1)navigateMiniMap(event)}} aria-label="Scene minimap. Click or drag to move the viewport.">
               {connections.map((connection) => {
                 const from = centers.get(connection.from);
                 const to = centers.get(connection.to);
@@ -830,6 +883,7 @@ export function SandboxCanvas({
               {items.map((item) => <rect key={item.id} x={item.x} y={item.y} width={Math.max(18, item.w * (item.scaleX ?? item.scale))} height={Math.max(18, item.h * (item.scaleY ?? item.scale))} rx="8" fill={selectedIds.has(item.id) ? "var(--primary)" : "var(--muted-foreground)"} opacity={selectedIds.has(item.id) ? ".95" : ".6"} />)}
               <rect x={Math.max(0, -pan.x / zoom)} y={Math.max(0, -pan.y / zoom)} width={canvasSize.width / zoom} height={canvasSize.height / zoom} fill="none" stroke="var(--primary)" strokeWidth="5" strokeDasharray="12 8" opacity=".8" />
             </svg>
+            <button type="button" className="mt-2 w-full rounded-lg border border-border bg-muted/70 px-2 py-1 text-[10px] font-semibold text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" onClick={()=>window.dispatchEvent(new CustomEvent('sandbox-zoom-to-fit'))}>Fit scene</button>
           </div>
         ) : (
           <button type="button" className="rounded-lg border border-border bg-card/90 px-2.5 py-1.5 text-[10px] font-semibold text-foreground shadow-xl backdrop-blur-xl hover:bg-muted" onClick={() => setMiniMapOpen(true)}>Мини-карта</button>

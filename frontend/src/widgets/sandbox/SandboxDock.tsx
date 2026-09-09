@@ -1,10 +1,10 @@
 ﻿"use client";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useState, useEffect } from 'react';
 import { MobileSheet, MeasurementCard, MiniChart } from "@/widgets/sandbox/SandboxPanels";
 import type { Item } from "./types";
 import type { SandboxSyncStatus } from "./hooks/useSandboxSync";
-import { SCENARIOS } from "./scenarios";
+import type { RuntimeScenario } from './runtime/runtime.types';
 
 interface SandboxDockProps {
   bottomDockOpen: boolean;
@@ -19,6 +19,7 @@ interface SandboxDockProps {
   mobilePanel: 'library' | 'inspector' | 'dock' | null;
   setMobilePanel: (panel: 'library' | 'inspector' | 'dock' | null) => void;
   activeScenario?: { id: string; step: number } | null;
+  runtimeScenario?: RuntimeScenario | null;
   scenarioIntro?: boolean;
   experimentResult?: { title: string; description: string; temperatureC?: number; volumeMl?: number } | null;
   leftOffset?: number;
@@ -28,89 +29,9 @@ interface SandboxDockProps {
   helpActive?: boolean;
   onHelp?: () => void;
   onShowHow?: () => void;
+  hintIndex?: number;
+  onNextHint?: () => void;
 }
-
-const scenarioCopy = {
-  water_intro: { name: 'Введение в песочницу', steps: [
-    { title: 'Поставьте колбу', desc: 'Добавьте пустой сосуд на рабочее поле.', hint: 'Откройте вкладку «Оборудование» и выберите колбу или стакан.' },
-    { title: 'Добавьте воду', desc: 'Добавьте воду в установленный сосуд.', hint: 'Откройте вкладку «Материалы», выберите воду и кликните по сосуду.' },
-  ] },
-  measure_water: { name: 'Измерение показателей', steps: [
-    { title: 'Поставьте стакан', desc: 'Добавьте стакан на рабочее поле.', hint: 'Выберите стакан во вкладке «Оборудование».' },
-    { title: 'Добавьте воду', desc: 'Добавьте воду в установленный стакан.', hint: 'Откройте «Материалы», выберите воду и нажмите на стакан.' },
-    { title: 'Подключите термометр', desc: 'Чтобы измерить температуру, соедините порты датчиков термометра и стакана.', hint: 'Нажмите «Соединить», выберите порт термометра, затем порт стакана.' },
-  ] },
-  heat_water: { name: 'Нагрев воды', steps: [
-    { title: 'Поставьте стакан', desc: 'Добавьте стакан на рабочее поле.', hint: 'Выберите стакан во вкладке «Оборудование».' },
-    { title: 'Добавьте воду', desc: 'Добавьте воду в стакан.', hint: 'Откройте «Материалы» и выберите воду.' },
-    { title: 'Подключите нагреватель', desc: 'Соедините тепловые порты нагревателя и стакана.', hint: 'Включите режим «Соединить» и выберите два тепловых порта.' },
-    { title: 'Нагрейте воду', desc: 'Нагрейте воду выше 35 °C.', hint: 'Включите нагреватель и подождите.' },
-    { title: 'Наблюдайте кипение', desc: 'Наблюдайте появление пара.', hint: 'Оставьте симуляцию запущенной.' },
-  ] },
-  transfer_water: { name: 'Переливание жидкости', steps: [
-    { title: 'Поставьте первый стакан', desc: 'Добавьте стакан на рабочее поле.', hint: 'Выберите стакан во вкладке «Оборудование».' },
-    { title: 'Добавьте воду', desc: 'Налейте воду в первый стакан.', hint: 'Откройте «Материалы» и выберите воду.' },
-    { title: 'Поставьте второй стакан', desc: 'Добавьте рядом пустой стакан.', hint: 'Вернитесь во вкладку «Оборудование».' },
-    { title: 'Перелейте воду', desc: 'Соедините жидкостные порты сосудов.', hint: 'Включите режим «Соединить».' },
-  ] },
-  distillation: { name: 'Простая дистилляция', steps: [
-    { title: 'Сборка установки', desc: 'Поставьте колбу с водой на стол.', hint: 'Нам понадобится колба с жидкостью.' },
-    { title: 'Добавьте оборудование', desc: 'Добавьте нагреватель, термометр и холодильник.', hint: 'Поставьте холодильник (condenser) рядом с колбой.' },
-    { title: 'Соединение цепи', desc: 'Соедините нагреватель, колбу и холодильник.', hint: 'Соедините колбу с холодильником.' },
-  ] },
-  cuso4: { name: 'Раствор CuSO₄', steps: [
-    { title: 'Поставьте стакан', desc: 'Добавьте стакан на рабочее поле.', hint: 'Выберите стакан во вкладке «Оборудование».' },
-    { title: 'Добавьте сульфат меди', desc: 'Добавьте раствор сульфата меди в стакан.', hint: 'Откройте «Материалы» и выберите CuSO₄.' },
-    { title: 'Добавьте воду', desc: 'Добавьте воду в тот же стакан.', hint: 'Выберите H₂O во вкладке «Материалы».' },
-    { title: 'Смешайте', desc: 'Получите однородный раствор.', hint: 'Выберите действие «Смешать».' },
-  ] },
-  kmno4: { name: 'Разбавление KMnO₄', steps: [
-    { title: 'Добавьте перманганат', desc: 'Добавьте перманганат калия в сосуд.', hint: 'Откройте вкладку «Вещества» и выберите KMnO₄.' },
-    { title: 'Добавьте воду', desc: 'Добавьте воду в сосуд.', hint: 'Выберите H₂O и добавьте его в сосуд.' },
-    { title: 'Смешайте', desc: 'Наблюдайте, как меняется концентрация раствора.', hint: 'Перелейте или смешайте компоненты.' },
-  ] },
-  hcl_naoh: { name: 'Нейтрализация HCl + NaOH', steps: [
-    { title: 'Добавьте кислоту', desc: 'Добавьте соляную кислоту в колбу.', hint: 'Выберите HCl и добавьте его в сосуд.' },
-    { title: 'Добавьте щёлочь', desc: 'Добавьте гидроксид натрия во второй сосуд.', hint: 'Выберите NaOH и добавьте его в другой сосуд.' },
-    { title: 'Смешайте', desc: 'Проведите реакцию нейтрализации.', hint: 'Соедините сосуды и наблюдайте результат.' },
-  ] },
-  zn_hcl: { name: 'Реакция Zn + HCl', steps: [
-    { title: 'Добавьте цинк', desc: 'Поместите цинк в сосуд.', hint: 'Откройте вкладку «Вещества» и выберите Zn.' },
-    { title: 'Добавьте кислоту', desc: 'Добавьте соляную кислоту к цинку.', hint: 'Выберите HCl и добавьте его в сосуд.' },
-    { title: 'Наблюдайте реакцию', desc: 'Наблюдайте выделение водорода.', hint: 'Соедините компоненты и запустите эксперимент.' },
-  ] },
-  sulfur_heat: { name: 'Плавление серы', steps: [
-    { title: 'Добавьте серу', desc: 'Поместите серу в жаропрочный сосуд.', hint: 'Выберите серу во вкладке «Вещества».' },
-    { title: 'Подключите нагреватель', desc: 'Подключите нагреватель к сосуду.', hint: 'Соедините нагреватель с сосудом.' },
-    { title: 'Наблюдайте плавление', desc: 'Изучите фазовый переход серы.', hint: 'Поднимите температуру выше 115 °C.' },
-  ] },
-} as const;
-
-// Level Mode needs a stable step order even while a local dev server still has
-// an older JSON message chunk in memory. These strings intentionally mirror
-// the level definition and are used only for the guided CuSO₄ lesson.
-const levelScenarioCopy = {
-  cuso4: {
-    ru: { name: "Раствор CuSO₄", steps: [
-      { title: "Поставьте стакан", desc: "Добавьте стакан на рабочее поле.", hint: "Откройте «Оборудование» и выберите стакан." },
-      { title: "Добавьте сульфат меди", desc: "Добавьте медный купорос в стакан.", hint: "Во вкладке «Материалы» выберите CuSO₄." },
-      { title: "Добавьте воду", desc: "Добавьте воду в тот же стакан.", hint: "Выберите H₂O во вкладке «Материалы»." },
-      { title: "Смешайте", desc: "Смешайте содержимое, чтобы получить раствор.", hint: "Выберите действие «Смешать»." },
-    ] },
-    en: { name: "CuSO₄ solution", steps: [
-      { title: "Place a beaker", desc: "Add a beaker to the workspace.", hint: "Open Equipment and choose a beaker." },
-      { title: "Add copper sulfate", desc: "Add copper sulfate to the beaker.", hint: "In Materials, choose CuSO₄." },
-      { title: "Add water", desc: "Add water to the same beaker.", hint: "Choose H₂O in Materials." },
-      { title: "Mix", desc: "Mix the contents to create a solution.", hint: "Choose the Mix action." },
-    ] },
-    uz: { name: "CuSO₄ eritmasi", steps: [
-      { title: "Stakan qo'ying", desc: "Ish maydoniga stakan qo'shing.", hint: "«Uskunalar»ni ochib, stakanni tanlang." },
-      { title: "Mis sulfat qo'shing", desc: "Stakanga mis sulfat qo'shing.", hint: "«Materiallar»dan CuSO₄ ni tanlang." },
-      { title: "Suv qo'shing", desc: "Shu stakanga suv qo'shing.", hint: "«Materiallar»dan H₂O ni tanlang." },
-      { title: "Aralashtiring", desc: "Eritma olish uchun tarkibni aralashtiring.", hint: "«Aralashtirish» amalini tanlang." },
-    ] },
-  },
-} as const;
 
 export function SandboxDock({
   bottomDockOpen,
@@ -125,6 +46,7 @@ export function SandboxDock({
   mobilePanel,
   setMobilePanel,
   activeScenario,
+  runtimeScenario,
   scenarioIntro,
   experimentResult,
   leftOffset = 360,
@@ -133,16 +55,12 @@ export function SandboxDock({
   measuredTemperature = null,
   helpActive = false,
   onHelp,
-  onShowHow
+  onShowHow,
+  hintIndex = 0,
+  onNextHint,
 }: SandboxDockProps) {
   const ts = useTranslations("sandbox");
-  const locale = useLocale();
-  const showHowLabel = locale === "ru" ? "Показать как" : locale === "uz" ? "Qandayligini ko'rsatish" : "Show how";
-  const localizedScenarioCopy = (scenarioId: string) => {
-    const directCopy = levelScenarioCopy[scenarioId as keyof typeof levelScenarioCopy];
-    return directCopy ? directCopy[locale as "ru" | "en" | "uz"] ?? directCopy.en : scenarioCopy[scenarioId as keyof typeof scenarioCopy];
-  };
-  const translateScenario = (key: string, fallback: string, useFallback = false) => useFallback || !ts.has(key) ? fallback : ts(key);
+  const showHowLabel = 'Show how';
   const eventLabel = (event: string) => {
     const key = `dock.event.${event.toLowerCase()}`;
     return ts.has(key) ? ts(key) : event.replaceAll('_', ' ');
@@ -168,6 +86,8 @@ export function SandboxDock({
 
   const openHelpDialog = () => {
     onHelp?.();
+    const count = activeScenario && runtimeScenario ? runtimeScenario.steps[activeScenario.step]?.hints.length ?? 0 : 0;
+    if (count > 1) onNextHint?.();
     // Help is an in-place guide: it must not block the workspace with a modal.
     setHelpDialogOpen(false);
   };
@@ -190,46 +110,38 @@ export function SandboxDock({
 
   return (
     <>
-      {helpDialogOpen && activeScenario && (() => {
-        const scenario = SCENARIOS[activeScenario.id];
-        if (!scenario) return null;
-        const copy = localizedScenarioCopy(activeScenario.id);
-        const useDirectCopy = Boolean(levelScenarioCopy[activeScenario.id as keyof typeof levelScenarioCopy]);
+      {helpDialogOpen && activeScenario && runtimeScenario && (() => {
+        const scenario = runtimeScenario;
         const isComplete = activeScenario.step >= scenario.steps.length;
         const stepIndex = Math.min(Math.max(activeScenario.step, 0), scenario.steps.length - 1);
         const currentStep = scenario.steps[stepIndex];
-        const currentCopy = copy?.steps[stepIndex];
-        const scenarioName = translateScenario(scenario.nameKey, copy?.name ?? activeScenario.id, useDirectCopy);
-        const stepTitle = isComplete ? 'Сценарий завершён' : translateScenario(currentStep.titleKey, currentCopy?.title ?? currentStep.titleKey, useDirectCopy);
-        const stepDescription = isComplete ? 'Все этапы выполнены. Можно повторить сценарий или перейти к следующему уровню.' : translateScenario(currentStep.descKey, currentCopy?.desc ?? currentStep.descKey, useDirectCopy);
-        const stepHint = isComplete ? 'Нажмите «Понятно», чтобы закрыть это окно.' : translateScenario(currentStep.hintKey, currentCopy?.hint ?? currentStep.hintKey, useDirectCopy);
+        const scenarioName = scenario.title;
+        const stepTitle = isComplete ? 'Scenario complete' : currentStep.title;
+        const stepDescription = isComplete ? 'Every step is complete. You can repeat this Scenario or continue to the next level.' : currentStep.instruction;
+        const stepHint = isComplete ? 'Close this panel when you are ready.' : currentStep.hints[hintIndex % Math.max(1, currentStep.hints.length)]?.text ?? 'Complete the instruction shown above.';
         return (
-          <div className="fixed inset-0 z-[260] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Инструкция сценария">
-            <button type="button" aria-label="Закрыть инструкцию" className="absolute inset-0 cursor-default" onClick={() => setHelpDialogOpen(false)} />
+          <div className="fixed inset-0 z-[260] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Scenario instructions">
+            <button type="button" aria-label="Close instructions" className="absolute inset-0 cursor-default" onClick={() => setHelpDialogOpen(false)} />
             <div className="relative z-10 w-full max-w-xl overflow-hidden rounded-3xl border border-lime-300/40 bg-[#101723] text-foreground shadow-[0_0_80px_rgba(163,230,53,.18)]">
               <div className="h-1.5 bg-gradient-to-r from-cyan-400 via-lime-300 to-violet-400" />
               <div className="flex items-start justify-between gap-4 p-5 pb-3 sm:p-7 sm:pb-4">
-                <div><span className="text-[10px] font-bold uppercase tracking-[.2em] text-lime-300">Инструкция сценария</span><h2 className="mt-2 text-xl font-black sm:text-2xl">{scenarioName}</h2></div>
-                <button type="button" onClick={() => setHelpDialogOpen(false)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border text-lg text-foreground/70 transition hover:bg-white/10 hover:text-white" aria-label="Закрыть">×</button>
+                <div><span className="text-[10px] font-bold uppercase tracking-[.2em] text-lime-300">Scenario instructions</span><h2 className="mt-2 text-xl font-black sm:text-2xl">{scenarioName}</h2></div>
+                <button type="button" onClick={() => setHelpDialogOpen(false)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border text-lg text-foreground/70 transition hover:bg-white/10 hover:text-white" aria-label="Close">×</button>
               </div>
               <div className="space-y-4 px-5 pb-5 sm:px-7 sm:pb-7">
-                <div className="flex items-center gap-2 text-xs font-semibold text-foreground/60"><span className="rounded-full bg-[var(--primary)]/20 px-2.5 py-1 text-[var(--primary-bright)]">{isComplete ? 'Готово' : `Шаг ${activeScenario.step + 1} из ${scenario.steps.length}`}</span><span>Подсказка показывает, что делать сейчас</span></div>
-                <div className="rounded-2xl border border-white/10 bg-white/[.04] p-4 sm:p-5"><h3 className="text-lg font-bold text-white sm:text-xl">{stepTitle}</h3><p className="mt-3 text-sm leading-6 text-foreground/75 sm:text-base">{stepDescription}</p><div className="mt-4 rounded-xl border border-cyan-300/20 bg-cyan-300/[.08] p-3.5 text-sm leading-6 text-cyan-100"><span className="mr-1 font-bold text-cyan-300">Что сделать:</span>{stepHint}</div></div>
-                {!isComplete && <p className="text-xs leading-5 text-foreground/50">После выполнения действия интерфейс автоматически перейдёт к следующему шагу. Если нужный объект находится в другой вкладке, она будет подсвечена.</p>}
-                <button type="button" onClick={() => setHelpDialogOpen(false)} className="w-full rounded-xl bg-[var(--primary)] px-4 py-3 text-sm font-bold text-white transition hover:brightness-110">Понятно</button>
+                <div className="flex items-center gap-2 text-xs font-semibold text-foreground/60"><span className="rounded-full bg-[var(--primary)]/20 px-2.5 py-1 text-[var(--primary-bright)]">{isComplete ? 'Complete' : `Step ${activeScenario.step + 1} of ${scenario.steps.length}`}</span><span>The hint is specific to the current step</span></div>
+                <div className="rounded-2xl border border-white/10 bg-white/[.04] p-4 sm:p-5"><h3 className="text-lg font-bold text-white sm:text-xl">{stepTitle}</h3><p className="mt-3 text-sm leading-6 text-foreground/75 sm:text-base">{stepDescription}</p><div className="mt-4 rounded-xl border border-cyan-300/20 bg-cyan-300/[.08] p-3.5 text-sm leading-6 text-cyan-100"><span className="mr-1 font-bold text-cyan-300">Next action:</span>{stepHint}</div></div>
+                {!isComplete && <p className="text-xs leading-5 text-foreground/50">The workspace advances automatically after the completion rule becomes true.</p>}
+                <button type="button" onClick={() => setHelpDialogOpen(false)} className="w-full rounded-xl bg-[var(--primary)] px-4 py-3 text-sm font-bold text-white transition hover:brightness-110">Got it</button>
               </div>
             </div>
           </div>
         );
       })()}
-      {scenarioIntro && activeScenario && (() => {
-        const scenario = SCENARIOS[activeScenario.id];
-        if (!scenario) return null;
-        const copy = localizedScenarioCopy(activeScenario.id);
-        const useDirectCopy = Boolean(levelScenarioCopy[activeScenario.id as keyof typeof levelScenarioCopy]);
+      {scenarioIntro && activeScenario && runtimeScenario && (() => {
+        const scenario = runtimeScenario;
         const isComplete = activeScenario.step >= scenario.steps.length;
         const currentStep = isComplete ? scenario.steps[scenario.steps.length - 1] : scenario.steps[activeScenario.step];
-        const currentCopy = copy?.steps[isComplete ? copy.steps.length - 1 : activeScenario.step];
         return (
           <div className="pointer-events-auto fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4 backdrop-blur-md animate-scenario-intro" role="dialog" aria-modal="true" aria-label="Введение в сценарий" onContextMenu={(event) => event.preventDefault()}>
               <div className="relative flex w-full max-w-2xl flex-col items-center justify-center gap-4 overflow-hidden rounded-[2.5rem] border border-cyan-500/30 bg-slate-950/90 p-10 text-center shadow-[0_0_100px_rgba(34,211,238,0.15)] drop-shadow-2xl backdrop-blur-xl">
@@ -239,16 +151,16 @@ export function SandboxDock({
                 <div className="absolute -bottom-24 -right-24 h-48 w-48 rounded-full bg-violet-500/20 blur-3xl" />
                 
                 <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-cyan-300">
-                   {isComplete ? "Этап завершён" : `Шаг ${activeScenario.step + 1}`}
+                   {isComplete ? "Scenario complete" : `Step ${activeScenario.step + 1}`}
                 </div>
 
                 <h1 className="max-w-full text-3xl font-black tracking-tight text-white md:text-5xl">
-                  {translateScenario(scenario.nameKey, copy?.name ?? activeScenario.id)}
+                  {scenario.title}
                 </h1>
                 
                 <div className="mt-4 flex flex-col items-center gap-2">
-                  <p className="max-w-lg text-lg font-bold text-white/90 md:text-2xl">{translateScenario(currentStep.titleKey, currentCopy?.title ?? currentStep.titleKey, useDirectCopy)}</p>
-                  <p className="max-w-lg text-sm leading-relaxed text-white/60 md:text-base">{translateScenario(currentStep.descKey, currentCopy?.desc ?? currentStep.descKey, useDirectCopy)}</p>
+                  <p className="max-w-lg text-lg font-bold text-white/90 md:text-2xl">{currentStep.title}</p>
+                  <p className="max-w-lg text-sm leading-relaxed text-white/60 md:text-base">{currentStep.instruction}</p>
                 </div>
               </div>
             </div>
@@ -260,47 +172,44 @@ export function SandboxDock({
           <div 
             className="absolute left-0 right-0 top-0 z-50 h-2 cursor-row-resize hover:bg-foreground/10" 
             onPointerDown={handlePointerDown} 
-            title="Изменить высоту"
+            title="Resize dock"
             />
           )}
         {/* Active Scenario Guidance */}
-        {bottomDockOpen && activeScenario && (() => {
-           const scenario = SCENARIOS[activeScenario.id];
-           if (!scenario) return null;
-           const copy = localizedScenarioCopy(activeScenario.id);
-           const useDirectCopy = Boolean(levelScenarioCopy[activeScenario.id as keyof typeof levelScenarioCopy]);
+         {bottomDockOpen && activeScenario && runtimeScenario && (() => {
+           const scenario = runtimeScenario;
            const isComplete = activeScenario.step >= scenario.steps.length;
            const currentStep = isComplete ? scenario.steps[scenario.steps.length - 1] : scenario.steps[activeScenario.step];
-           const currentCopy = copy?.steps[isComplete ? copy.steps.length - 1 : activeScenario.step];
+           if (!currentStep) return null;
            return (
       <>
         {/* Normal Dock Content */}
                <div className={`flex flex-col gap-1 border-b border-[var(--primary)]/20 bg-[var(--primary)]/10 p-3 text-sm text-foreground transition-opacity duration-500 ${scenarioIntro ? 'opacity-0' : 'opacity-100'}`}>
                  <div className="flex items-center justify-between">
                    <div className="min-w-0">
-                     <span className="block text-[10px] font-semibold uppercase tracking-[.16em] text-[var(--muted-foreground)]">ХОД СЦЕНАРИЯ</span>
-                     <span className="block truncate font-bold text-[var(--primary-bright)]">{translateScenario(scenario.nameKey, copy?.name ?? activeScenario.id)}</span>
+                     <span className="block text-[10px] font-semibold uppercase tracking-[.16em] text-[var(--muted-foreground)]">SCENARIO PROGRESS</span>
+                     <span className="block truncate font-bold text-[var(--primary-bright)]">{scenario.title}</span>
                    </div>
                    <div className="flex items-center gap-2">
-                     {activeScenario.id === "measure_water" && activeScenario.step === 2 && <button type="button" onClick={onShowHow} className="rounded-lg border border-violet-300/50 bg-violet-500/10 px-2.5 py-1 text-[10px] font-semibold text-violet-100 transition hover:bg-violet-500/20">{showHowLabel}</button>}
-                     <button type="button" onClick={openHelpDialog} className={`rounded-lg border px-2.5 py-1 text-[10px] font-semibold transition ${helpActive ? 'border-lime-300/70 bg-lime-300/20 text-lime-200' : 'border-white/15 text-foreground/80 hover:bg-foreground/10'}`}>ПОМОЩЬ</button>
+                     {currentStep.hints.some((hint) => hint.type !== 'TEXT') && <button type="button" onClick={onShowHow} className="rounded-lg border border-violet-300/50 bg-violet-500/10 px-2.5 py-1 text-[10px] font-semibold text-violet-100 transition hover:bg-violet-500/20">{showHowLabel}</button>}
+                     <button type="button" onClick={openHelpDialog} className={`rounded-lg border px-2.5 py-1 text-[10px] font-semibold transition ${helpActive ? 'border-lime-300/70 bg-lime-300/20 text-lime-200' : 'border-white/15 text-foreground/80 hover:bg-foreground/10'}`}>HELP</button>
                    <span className="text-xs text-[var(--muted-foreground)]">
-                   {isComplete ? 'ЗАВЕРШЕН' : `ШАГ ${activeScenario.step + 1} ИЗ ${scenario.steps.length}`}
+                   {isComplete ? 'COMPLETE' : `STEP ${activeScenario.step + 1} OF ${scenario.steps.length}`}
                    </span>
                  </div>
                </div>
-               <p className="font-semibold text-xs mb-1">{isComplete ? 'ОТЛИЧНО, СЦЕНАРИЙ ЗАВЕРШЕН!' : translateScenario(currentStep.titleKey, currentCopy?.title ?? currentStep.titleKey, useDirectCopy)}</p>
-               {!isComplete && <p className="text-[10px] text-[var(--muted-foreground)] mb-2">{translateScenario(currentStep.descKey, currentCopy?.desc ?? currentStep.descKey, useDirectCopy)} <span className="text-[var(--primary)]">{translateScenario(currentStep.hintKey, currentCopy?.hint ?? currentStep.hintKey, useDirectCopy)}</span></p>}
+               <p className="font-semibold text-xs mb-1">{isComplete ? 'SCENARIO COMPLETE' : currentStep.title}</p>
+               {!isComplete && <p className="text-[10px] text-[var(--muted-foreground)] mb-2">{currentStep.instruction} <span className="text-[var(--primary)]">{currentStep.hints[hintIndex % Math.max(1, currentStep.hints.length)]?.text}</span></p>}
                
                {/* Step indicators */}
                <div className="flex gap-2">
-                 {scenario.steps.map((step: any, idx: number) => {
+                 {scenario.steps.map((step, idx) => {
                    const isPast = activeScenario.step > idx;
                    const isCurrent = activeScenario.step === idx;
                    return (
                      <button type="button" key={idx} onClick={openHelpDialog} className={`flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold transition-all ${isPast ? 'bg-emerald-500/20 text-emerald-300' : isCurrent ? 'bg-[var(--primary)]/30 text-[var(--primary-bright)] border border-[var(--primary)]/50' : 'bg-white/5 text-muted-foreground'}`}>
                        {isPast ? <span>✓</span> : <span>{idx + 1}</span>}
-                       <span className="truncate max-w-[100px]">{translateScenario(step.titleKey, copy?.steps[idx]?.title ?? step.titleKey, useDirectCopy)}</span>
+                       <span className="truncate max-w-[100px]">{step.title}</span>
                      </button>
                    );
                  })}
