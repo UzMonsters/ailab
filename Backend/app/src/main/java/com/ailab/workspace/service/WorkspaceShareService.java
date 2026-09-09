@@ -5,6 +5,7 @@ import com.ailab.workspace.domain.WorkspaceShareLinkEntity;
 import com.ailab.workspace.dto.*;
 import com.ailab.workspace.repository.WorkspaceRepository;
 import com.ailab.workspace.repository.WorkspaceShareLinkRepository;
+import com.ailab.workspace.security.WorkspaceShareSessionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,18 +23,21 @@ public class WorkspaceShareService {
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberService memberService;
     private final PasswordEncoder passwordEncoder;
+    private final WorkspaceShareSessionService shareSessionService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public WorkspaceShareService(
             WorkspaceShareLinkRepository shareLinkRepository,
             WorkspaceRepository workspaceRepository,
             WorkspaceMemberService memberService,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            WorkspaceShareSessionService shareSessionService
     ) {
         this.shareLinkRepository = shareLinkRepository;
         this.workspaceRepository = workspaceRepository;
         this.memberService = memberService;
         this.passwordEncoder = passwordEncoder;
+        this.shareSessionService = shareSessionService;
     }
 
     @Transactional
@@ -72,9 +76,12 @@ public class WorkspaceShareService {
         resp.put("hasPassword", passwordHash != null);
         resp.put("expiresAt", link.getExpiresAt());
         resp.put("maxUses", link.getMaxUses());
+        resp.put("useCount", link.getUseCount());
         resp.put("allowChat", link.isAllowChat());
         resp.put("allowComments", link.isAllowComments());
         resp.put("capabilities", getShareLinkCapabilities(link));
+        resp.put("status", WorkspaceShareSessionService.statusOf(link));
+        resp.put("revokedAt", link.getRevokedAt());
         resp.put("createdAt", link.getCreatedAt());
         return resp;
     }
@@ -93,7 +100,9 @@ public class WorkspaceShareService {
                 l.isAllowComments(),
                 getShareLinkCapabilities(l),
                 l.getLastUsedAt(),
-                l.getCreatedAt()
+                l.getCreatedAt(),
+                WorkspaceShareSessionService.statusOf(l),
+                l.getRevokedAt()
         )).toList();
     }
 
@@ -122,7 +131,9 @@ public class WorkspaceShareService {
                 link.isAllowComments(),
                 getShareLinkCapabilities(link),
                 link.getLastUsedAt(),
-                link.getCreatedAt()
+                link.getCreatedAt(),
+                WorkspaceShareSessionService.statusOf(link),
+                link.getRevokedAt()
         );
     }
 
@@ -142,13 +153,13 @@ public class WorkspaceShareService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SHARE_LINK_NOT_FOUND: Invalid share token"));
 
         if (link.getRevokedAt() != null) {
-            throw new ResponseStatusException(HttpStatus.GONE, "SHARE_LINK_EXPIRED_OR_REVOKED: This share link has been revoked");
+            throw new ResponseStatusException(HttpStatus.GONE, "SHARE_LINK_REVOKED: This share link has been revoked");
         }
         if (link.getExpiresAt() != null && link.getExpiresAt().isBefore(Instant.now())) {
-            throw new ResponseStatusException(HttpStatus.GONE, "SHARE_LINK_EXPIRED_OR_REVOKED: This share link has expired");
+            throw new ResponseStatusException(HttpStatus.GONE, "SHARE_LINK_EXPIRED: This share link has expired");
         }
         if (link.getMaxUses() != null && link.getUseCount() >= link.getMaxUses()) {
-            throw new ResponseStatusException(HttpStatus.GONE, "SHARE_LINK_EXPIRED_OR_REVOKED: Maximum uses exceeded");
+            throw new ResponseStatusException(HttpStatus.GONE, "SHARE_LINK_LIMIT_REACHED: Maximum uses exceeded");
         }
 
         if (link.getPasswordHash() != null) {
@@ -156,7 +167,7 @@ public class WorkspaceShareService {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "SHARE_PASSWORD_REQUIRED: Password required to access this share link");
             }
             if (!passwordEncoder.matches(request.password(), link.getPasswordHash())) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "SHARE_PASSWORD_INVALID: Incorrect password");
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "SHARE_PASSWORD_INVALID: Incorrect password");
             }
         }
 
@@ -169,9 +180,7 @@ public class WorkspaceShareService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Workspace not found"));
 
         List<String> capabilities = getShareLinkCapabilities(link);
-        String sessionToken = "guest_sess_" + Base64.getUrlEncoder().withoutPadding().encodeToString(
-                (link.getWorkspaceId() + ":" + link.getRole() + ":" + System.currentTimeMillis()).getBytes()
-        );
+        String sessionToken = shareSessionService.issue(link);
 
         return new ResolveShareLinkResponse(
                 ws.getId(),
@@ -187,15 +196,6 @@ public class WorkspaceShareService {
     }
 
     public List<String> getShareLinkCapabilities(WorkspaceShareLinkEntity link) {
-        List<String> caps = new ArrayList<>();
-        caps.add("READ_WORKSPACE");
-        caps.add("USE_MEASUREMENTS");
-        if ("EDITOR".equalsIgnoreCase(link.getRole())) {
-            caps.add("EDIT_SCENE");
-            caps.add("RUN_EXPERIMENT");
-        }
-        if (link.isAllowChat()) caps.add("CHAT");
-        if (link.isAllowComments()) caps.add("COMMENT");
-        return caps;
+        return WorkspaceShareSessionService.capabilitiesForShareLink(link);
     }
 }

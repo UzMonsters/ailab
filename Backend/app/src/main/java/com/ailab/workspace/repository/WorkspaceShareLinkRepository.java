@@ -15,4 +15,6 @@ public interface WorkspaceShareLinkRepository extends JpaRepository<WorkspaceSha
     Optional<WorkspaceShareLinkEntity> findByTokenHash(String tokenHash);
 
     Optional<WorkspaceShareLinkEntity> findByIdAndWorkspaceId(String id, String workspaceId);
+
+    void deleteByWorkspaceId(String workspaceId);
 }

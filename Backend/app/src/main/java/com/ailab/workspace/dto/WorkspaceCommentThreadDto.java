@@ -7,6 +7,7 @@ import java.util.Map;
 public record WorkspaceCommentThreadDto(
         String id,
         String workspaceId,
+        String body,
         Author author,
         Map<String, Object> anchor,
         String status, // OPEN, RESOLVED

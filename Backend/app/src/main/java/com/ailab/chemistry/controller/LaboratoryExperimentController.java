@@ -11,9 +11,13 @@ import com.ailab.chemistry.domain.simulationengine.SimulationExecutionResult;
 import com.ailab.chemistry.domain.simulationstate.CreateSimulationSessionRequest;
 import com.ailab.chemistry.domain.simulationstate.SimulationSessionId;
 import com.ailab.chemistry.domain.simulationstate.SimulationState;
+import com.ailab.workspace.domain.WorkspaceEntity;
 import com.ailab.workspace.dto.MeasurementPointDto;
+import com.ailab.workspace.repository.WorkspaceRepository;
+import com.ailab.workspace.security.WorkspaceAccessResolver;
 import com.ailab.workspace.service.LaboratoryAccessService;
 import com.ailab.workspace.service.MeasurementService;
+import com.ailab.workspace.service.WorkspaceMemberService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -27,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -39,37 +44,61 @@ public class LaboratoryExperimentController {
     private final SimulationEngineService engineService;
     private final LaboratoryAccessService accessService;
     private final MeasurementService measurementService;
+    private final WorkspaceMemberService memberService;
+    private final WorkspaceRepository workspaceRepository;
+    private final WorkspaceAccessResolver accessResolver;
 
     public LaboratoryExperimentController(
             SimulationSessionService sessionService,
             SimulationEngineService engineService,
             LaboratoryAccessService accessService,
-            MeasurementService measurementService
+            MeasurementService measurementService,
+            WorkspaceMemberService memberService,
+            WorkspaceRepository workspaceRepository,
+            WorkspaceAccessResolver accessResolver
     ) {
         this.sessionService = sessionService;
         this.engineService = engineService;
         this.accessService = accessService;
         this.measurementService = measurementService;
+        this.memberService = memberService;
+        this.workspaceRepository = workspaceRepository;
+        this.accessResolver = accessResolver;
     }
 
     private String getCurrentUserId() {
+        return accessResolver.requireUser();
+    }
+
+    private String getExperimentActorId(String sessionId, String requiredPermission) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth.getName() == null || auth.getName().isBlank() || "anonymousUser".equalsIgnoreCase(auth.getName())) {
-            throw new org.springframework.security.authentication.InsufficientAuthenticationException("User must be authenticated");
+        Optional<WorkspaceEntity> workspace = workspaceRepository.findByExperimentSessionId(sessionId);
+        if (auth != null && auth.getName() != null && !auth.getName().isBlank()
+                && !"anonymousUser".equalsIgnoreCase(auth.getName())
+                && !auth.getName().startsWith("share_session:")) {
+            workspace.ifPresent(w -> memberService.requirePermission(w.getId(), auth.getName(), requiredPermission));
+            return auth.getName();
         }
-        return auth.getName();
+        String workspaceId = workspace
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "WORKSPACE_NOT_FOUND: Workspace for experiment not found"))
+                .getId();
+        String actorUserId = accessResolver.requireExperimentActor(workspaceId);
+        memberService.requirePermission(workspaceId, actorUserId, requiredPermission);
+        return actorUserId;
     }
 
     @PostMapping
     @Operation(summary = "Create experiment simulation session", description = "Initialize a new virtual laboratory experiment session with initial apparatus, containers, and environmental conditions.")
     public SimulationState createExperiment(@Valid @RequestBody CreateSimulationSessionRequest request) {
+        getCurrentUserId();
         return sessionService.createSession(request);
     }
 
     @GetMapping("/{sessionId}")
     @Operation(summary = "Get experiment current state", description = "Retrieve current state, reactants, apparatus, temperature, pressure, and version of an active experiment session.")
     public SimulationState getExperimentState(@PathVariable String sessionId) {
-        accessService.verifyExperimentAccess(sessionId, getCurrentUserId());
+        accessService.verifyExperimentAccess(sessionId, getExperimentActorId(sessionId, "READ_WORKSPACE"));
         return sessionService.getCurrentState(new SimulationSessionId(sessionId));
     }
 
@@ -78,7 +107,7 @@ public class LaboratoryExperimentController {
     public SimulationExecutionResult executeOperation(
             @PathVariable String sessionId,
             @Valid @RequestBody SimulationOperationRequest request) {
-        accessService.verifyExperimentAccess(sessionId, getCurrentUserId());
+        accessService.verifyExperimentAccess(sessionId, getExperimentActorId(sessionId, "RUN_EXPERIMENT"));
         IdempotencyKey key = request.idempotencyKey() != null && !request.idempotencyKey().isBlank()
                 ? new IdempotencyKey(request.idempotencyKey())
                 : new IdempotencyKey(UUID.randomUUID().toString());
@@ -95,7 +124,7 @@ public class LaboratoryExperimentController {
     public SimulationState appendEvent(
             @PathVariable String sessionId,
             @Valid @RequestBody AppendEventRequest request) {
-        accessService.verifyExperimentAccess(sessionId, getCurrentUserId());
+        accessService.verifyExperimentAccess(sessionId, getExperimentActorId(sessionId, "RUN_EXPERIMENT"));
         IdempotencyKey key = request.idempotencyKey() != null && !request.idempotencyKey().isBlank()
                 ? new IdempotencyKey(request.idempotencyKey())
                 : new IdempotencyKey(UUID.randomUUID().toString());
@@ -110,7 +139,7 @@ public class LaboratoryExperimentController {
     @PostMapping("/{sessionId}/replay")
     @Operation(summary = "Replay experiment simulation session", description = "Replay all events in an experiment session from initial snapshot deterministically.")
     public SimulationState replayExperiment(@PathVariable String sessionId) {
-        accessService.verifyExperimentAccess(sessionId, getCurrentUserId());
+        accessService.verifyExperimentAccess(sessionId, getExperimentActorId(sessionId, "READ_WORKSPACE"));
         return sessionService.replay(new SimulationSessionId(sessionId));
     }
 
@@ -119,7 +148,7 @@ public class LaboratoryExperimentController {
     public SimulationCalculationAudit getCalculationAudit(
             @PathVariable String sessionId,
             @PathVariable String eventId) {
-        accessService.verifyExperimentAccess(sessionId, getCurrentUserId());
+        accessService.verifyExperimentAccess(sessionId, getExperimentActorId(sessionId, "READ_WORKSPACE"));
         return engineService.audit(
                 new SimulationSessionId(sessionId),
                 new LaboratoryEventId(eventId)
@@ -134,7 +163,7 @@ public class LaboratoryExperimentController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
             @RequestParam(defaultValue = "100") int limit) {
-        accessService.verifyExperimentAccess(sessionId, getCurrentUserId());
+        accessService.verifyExperimentAccess(sessionId, getExperimentActorId(sessionId, "USE_MEASUREMENTS"));
         return measurementService.getMeasurements(sessionId, null, kind, from, to, limit);
     }
 
