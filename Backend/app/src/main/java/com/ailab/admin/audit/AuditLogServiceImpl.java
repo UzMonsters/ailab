@@ -177,7 +177,12 @@ public class AuditLogServiceImpl implements AuditLogService {
         if (sort == null || sort.isBlank()) {
             return Sort.by(Sort.Direction.DESC, "occurredAt");
         }
-        String[] parts = sort.split(",");
+        try {
+            if (sort.contains("%")) {
+                sort = java.net.URLDecoder.decode(sort, java.nio.charset.StandardCharsets.UTF_8);
+            }
+        } catch (Exception ignored) {}
+        String[] parts = sort.split("[,:]");
         String field = parts[0].trim();
         if (!ALLOWED_SORT_FIELDS.contains(field)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "INVALID_QUERY: Invalid sort field: " + field);

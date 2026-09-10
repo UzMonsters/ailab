@@ -167,6 +167,9 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
 
     @Override
     public Map<String, Object> createDraft(String entityType, Map<String, Object> body, String actorId, String actorName) {
+        if (body == null) {
+            body = new LinkedHashMap<>();
+        }
         String code = body.get("code") != null ? String.valueOf(body.get("code"))
                 : body.get("symbol") != null ? String.valueOf(body.get("symbol"))
                 : "item_" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
@@ -174,10 +177,13 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
         validatePayload(entityType, body);
 
         AdminCatalogDraftEntity draft = new AdminCatalogDraftEntity(entityType.toUpperCase(), code, "DRAFT", body);
-        repository.save(draft);
+        draft = repository.save(draft);
+
+        String safeActorId = (actorId != null && !actorId.isBlank()) ? actorId : "usr_admin";
+        String safeActorName = (actorName != null && !actorName.isBlank()) ? actorName : "Admin User";
 
         auditLogService.logEvent(
-                actorId, actorName, "ADMIN",
+                safeActorId, safeActorName, "ADMIN",
                 entityType.toLowerCase() + ".created", entityType.toUpperCase(), draft.getId(), draft.getCode(),
                 "CATALOG", "ADMIN_WEB", "SUCCESS", "MEDIUM",
                 null, new LinkedHashMap<>(body), List.of("all"), null, null, null, Map.of("version", draft.getVersion())
@@ -451,7 +457,12 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
         if (sort == null || sort.isBlank()) {
             return Sort.by(Sort.Direction.DESC, "updatedAt");
         }
-        String[] parts = sort.split(",");
+        try {
+            if (sort.contains("%")) {
+                sort = java.net.URLDecoder.decode(sort, java.nio.charset.StandardCharsets.UTF_8);
+            }
+        } catch (Exception ignored) {}
+        String[] parts = sort.split("[,:]");
         String field = parts[0].trim();
         if (!ALLOWED_SORT_FIELDS.contains(field)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "INVALID_QUERY: Invalid sort field: " + field);
@@ -469,8 +480,8 @@ public class AdminCatalogServiceImpl implements AdminCatalogService {
         m.put("version", e.getVersion());
         m.put("publishedVersion", e.getPublishedVersion());
         m.put("publishedAt", e.getPublishedAt());
-        m.put("createdAt", e.getCreatedAt());
-        m.put("updatedAt", e.getUpdatedAt());
+        m.put("createdAt", e.getCreatedAt() != null ? e.getCreatedAt() : Instant.now());
+        m.put("updatedAt", e.getUpdatedAt() != null ? e.getUpdatedAt() : Instant.now());
 
         Map<String, Object> data = e.getData();
         if (data != null) {

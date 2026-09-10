@@ -1,21 +1,20 @@
 package com.ailab.admin.catalog;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
+import org.springframework.data.domain.Persistable;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
 @Entity
 @Table(name = "admin_catalog_drafts")
-public class AdminCatalogDraftEntity {
+public class AdminCatalogDraftEntity implements Persistable<String> {
 
     @Id
     @Column(length = 64, nullable = false, updatable = false)
@@ -32,7 +31,7 @@ public class AdminCatalogDraftEntity {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb", nullable = false)
-    private Map<String, Object> data;
+    private Map<String, Object> data = new LinkedHashMap<>();
 
     @Column(nullable = false)
     private Long version = 1L;
@@ -48,13 +47,18 @@ public class AdminCatalogDraftEntity {
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    private Instant createdAt = Instant.now();
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
+    private Instant updatedAt = Instant.now();
+
+    @Transient
+    private boolean isNew = false;
 
     protected AdminCatalogDraftEntity() {
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
     }
 
     public AdminCatalogDraftEntity(String entityType, String code, String status, Map<String, Object> data) {
@@ -62,8 +66,40 @@ public class AdminCatalogDraftEntity {
         this.entityType = entityType;
         this.code = code;
         this.status = status != null ? status : "DRAFT";
-        this.data = data;
+        this.data = data != null ? data : new LinkedHashMap<>();
         this.version = 1L;
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+        this.isNew = true;
+    }
+
+    @Override
+    public boolean isNew() {
+        return isNew || createdAt == null;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = Instant.now();
+        }
+        if (this.updatedAt == null) {
+            this.updatedAt = Instant.now();
+        }
+        if (this.version == null) {
+            this.version = 1L;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = Instant.now();
+    }
+
+    @PostPersist
+    @PostLoad
+    protected void markNotNew() {
+        this.isNew = false;
     }
 
     public String getId() { return id; }

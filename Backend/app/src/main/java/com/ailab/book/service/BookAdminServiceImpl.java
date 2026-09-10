@@ -8,9 +8,11 @@ import com.ailab.book.dto.BookDtos;
 import com.ailab.book.repository.BookRepository;
 import com.ailab.book.repository.ChapterRepository;
 import com.ailab.book.repository.PageRepository;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +47,12 @@ public class BookAdminServiceImpl implements BookAdminService {
     public BookDtos.BookListResponse listBooks(int page, int size, String query, BookStatus status, String sort) {
         Sort sortObj = Sort.by(Sort.Direction.DESC, "updatedAt");
         if (sort != null && !sort.isBlank()) {
-            String[] parts = sort.split(",");
+            try {
+                if (sort.contains("%")) {
+                    sort = java.net.URLDecoder.decode(sort, java.nio.charset.StandardCharsets.UTF_8);
+                }
+            } catch (Exception ignored) {}
+            String[] parts = sort.split("[,:]");
             String field = parts[0].trim();
             if (!ALLOWED_BOOK_SORT_FIELDS.contains(field)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "INVALID_QUERY: Invalid sort field: " + field);
@@ -57,7 +64,17 @@ public class BookAdminServiceImpl implements BookAdminService {
         }
 
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size), sortObj);
-        org.springframework.data.domain.Page<Book> bookPage = bookRepository.findAllWithFilter(status, query, pageable);
+        Specification<Book> spec = (root, qry, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+            if (query != null && !query.isBlank()) {
+                predicates.add(cb.like(cb.lower(root.get("slug")), "%" + query.trim().toLowerCase() + "%"));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+        org.springframework.data.domain.Page<Book> bookPage = bookRepository.findAll(spec, pageable);
 
         List<BookDtos.BookSummary> summaries = bookPage.getContent().stream()
                 .map(this::toBookSummary)

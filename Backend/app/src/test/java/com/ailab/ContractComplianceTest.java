@@ -268,6 +268,57 @@ public class ContractComplianceTest {
                 });
     }
 
+    @Autowired
+    private com.ailab.auth.security.JwtService jwtService;
+
+    @Test
+    void testAdminLearningEndpointsAndEquipmentCreation() {
+        User adminUser = userRepository.findByEmailIgnoreCase("admin_compliance@ailab.local").orElseGet(() -> {
+            User u = new User("admin_compliance", "admin_compliance@ailab.local", "hash123", Role.ADMIN);
+            return userRepository.save(u);
+        });
+        String adminToken = "Bearer " + jwtService.issue(adminUser);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", adminToken);
+
+        // 1. GET /api/v1/admin/learning/progress?size=10&page=0
+        HttpEntity<Void> progressReq = new HttpEntity<>(headers);
+        ResponseEntity<String> progressRes = restTemplate.exchange(
+                baseUrl() + "/api/v1/admin/learning/progress?size=10&page=0",
+                HttpMethod.GET, progressReq, String.class
+        );
+        assertThat(progressRes.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(progressRes.getBody()).contains("items");
+
+        // 2. GET /api/v1/admin/learning/levels?size=100&sort=sortOrder%2Casc
+        ResponseEntity<String> levelsRes = restTemplate.exchange(
+                baseUrl() + "/api/v1/admin/learning/levels?size=100&sort=sortOrder%2Casc",
+                HttpMethod.GET, progressReq, String.class
+        );
+        assertThat(levelsRes.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(levelsRes.getBody()).contains("items");
+
+        // 3. POST /api/v1/admin/equipment
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        Map<String, Object> eqBody = Map.of(
+                "code", "eq_beaker_test_" + java.util.UUID.randomUUID().toString().substring(0, 6),
+                "name", "Beaker 250ml Test",
+                "category", "CONTAINER",
+                "ports", List.of(
+                        Map.of("id", "INLET", "type", "FLUID", "direction", "INPUT")
+                )
+        );
+        HttpEntity<Map<String, Object>> eqReq = new HttpEntity<>(eqBody, headers);
+        ResponseEntity<Map> eqRes = restTemplate.postForEntity(
+                baseUrl() + "/api/v1/admin/equipment",
+                eqReq, Map.class
+        );
+        assertThat(eqRes.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(eqRes.getBody()).isNotNull();
+        assertThat(eqRes.getBody().get("id")).isNotNull();
+        assertThat(eqRes.getBody().get("createdAt")).isNotNull();
+    }
+
     @Test
     void testUnifiedApiErrorSchema() {
         ApiError err = ApiError.ofProblem(404, "RESOURCE_NOT_FOUND", "Not Found", "Item missing", "/api/v1/test", "corr-123", Map.of());

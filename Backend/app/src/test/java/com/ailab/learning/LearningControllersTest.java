@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -168,7 +169,7 @@ class LearningControllersTest {
     @Test
     void testAdminOverview() {
         when(levelRepository.findAll()).thenReturn(List.of(level1, level2));
-        when(attemptRepository.findAll()).thenReturn(List.of());
+        when(attemptRepository.findAll(any(Specification.class))).thenReturn(List.of());
 
         LearningOverviewResponse res = adminController.getOverview(null, null, null);
 

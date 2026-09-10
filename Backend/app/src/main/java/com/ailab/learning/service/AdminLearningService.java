@@ -11,10 +11,12 @@ import com.ailab.workspace.repository.WorkspaceRepository;
 import com.ailab.workspace.repository.WorkspaceStateRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -131,7 +133,12 @@ public class AdminLearningService {
     ) {
         Sort sortObj = Sort.by(Sort.Direction.ASC, "sortOrder");
         if (sort != null && !sort.isBlank()) {
-            String[] parts = sort.split(",");
+            try {
+                if (sort.contains("%")) {
+                    sort = java.net.URLDecoder.decode(sort, java.nio.charset.StandardCharsets.UTF_8);
+                }
+            } catch (Exception ignored) {}
+            String[] parts = sort.split("[,:]");
             String field = parts[0].trim();
             if (!ALLOWED_LEVEL_SORT_FIELDS.contains(field)) {
                 throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "INVALID_QUERY: Invalid sort field: " + field);
@@ -141,7 +148,24 @@ public class AdminLearningService {
         }
 
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size), sortObj);
-        Page<LearningLevelEntity> p = levelRepository.findLevelsFiltered(trackId, status, q, pageable);
+        Specification<LearningLevelEntity> spec = (root, qry, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (trackId != null && !trackId.isBlank()) {
+                predicates.add(cb.equal(root.get("trackId"), trackId));
+            }
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+            if (q != null && !q.isBlank()) {
+                String pattern = "%" + q.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("id")), pattern),
+                        cb.like(cb.lower(root.get("trackId")), pattern)
+                ));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+        Page<LearningLevelEntity> p = levelRepository.findAll(spec, pageable);
 
         List<LevelSummary> items = p.getContent().stream().map(l -> {
             Map<String, Object> translations = parseJsonMap(l.getTranslationsJson());
@@ -595,7 +619,20 @@ public class AdminLearningService {
     @Transactional(readOnly = true)
     public AdminProgressPageResponse listProgress(String trackId, String levelId, String status, String q, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size), Sort.by(Sort.Direction.DESC, "updatedAt"));
-        Page<LearningUserProgressEntity> p = progressRepository.findProgressFiltered(trackId, q, pageable);
+        Specification<LearningUserProgressEntity> spec = (root, qry, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (trackId != null && !trackId.isBlank()) {
+                predicates.add(cb.equal(root.get("trackId"), trackId));
+            }
+            if (levelId != null && !levelId.isBlank()) {
+                predicates.add(cb.equal(root.get("currentLevelId"), levelId));
+            }
+            if (q != null && !q.isBlank()) {
+                predicates.add(cb.like(cb.lower(root.get("userId")), "%" + q.trim().toLowerCase() + "%"));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+        Page<LearningUserProgressEntity> p = progressRepository.findAll(spec, pageable);
 
         List<AdminProgressItemDto> items = p.getContent().stream().map(pr -> {
             List<LearningUserAttemptEntity> attempts = attemptRepository.findAllByUserIdAndLevelIdOrderByStartedAtDesc(
