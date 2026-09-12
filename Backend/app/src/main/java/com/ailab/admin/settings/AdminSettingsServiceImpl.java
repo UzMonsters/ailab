@@ -271,7 +271,8 @@ public class AdminSettingsServiceImpl implements AdminSettingsService {
         String safeActorId = actorId != null ? actorId : "usr_admin";
         String safeActorName = actorName != null ? actorName : "Admin";
 
-        Map<String, Object> restoredData = history.getSettingsSnapshot();
+        Map<String, Object> beforeState = new LinkedHashMap<>(currentEntity.getSettingsData());
+        Map<String, Object> restoredData = new LinkedHashMap<>(history.getSettingsSnapshot());
         currentEntity.update(restoredData, newVersion, newEtag, now, safeActorId, safeActorName);
         settingsRepository.save(currentEntity);
 
@@ -281,7 +282,7 @@ public class AdminSettingsServiceImpl implements AdminSettingsService {
                 safeActorId, safeActorName, "ADMIN",
                 "setting.restored", "SYSTEM_SETTINGS", "global", "System settings",
                 "SETTINGS", "ADMIN_WEB", "SUCCESS", "HIGH",
-                currentEntity.getSettingsData(), restoredData, List.of("version_restore"),
+                beforeState, restoredData, List.of("version_restore"),
                 null, null, null, Map.of("restoredFromVersion", version, "reason", reason != null ? reason : "Version restored")
         );
 
@@ -339,14 +340,17 @@ public class AdminSettingsServiceImpl implements AdminSettingsService {
     }
 
     private void validateIfMatch(Long currentVersion, String ifMatch) {
-        if (ifMatch == null || ifMatch.isBlank()) return;
+        if (ifMatch == null || ifMatch.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.PRECONDITION_REQUIRED, "PRECONDITION_REQUIRED: If-Match header is required for settings mutation");
+        }
         String clean = ifMatch.replace("\"", "").replace("W/", "").replace("settings-v", "").trim();
         try {
             long parsed = Long.parseLong(clean);
             if (!Objects.equals(currentVersion, parsed)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "VERSION_CONFLICT: Expected version " + parsed + " but found " + currentVersion);
+                throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "PRECONDITION_FAILED: VERSION_CONFLICT: Expected version " + parsed + " but found " + currentVersion);
             }
-        } catch (NumberFormatException ignored) {
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "INVALID_PRECONDITION: Malformed If-Match header: " + ifMatch);
         }
     }
 

@@ -10,4 +10,6 @@ public interface AuthService {
     AuthDtos.AuthenticationResult refresh(String token);
 
     void logout(String token);
+
+    void logoutAll(String userId);
 }

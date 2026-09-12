@@ -21,10 +21,22 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AuditLogServiceImpl implements AuditLogService {
 
     private final AdminAuditRepository repository;
+    private final com.ailab.admin.dashboard.AdminExportJobRepository exportJobRepository;
+    private final com.ailab.admin.assets.AssetStorageService storageService;
     private final Map<String, Map<String, Object>> exportJobs = new ConcurrentHashMap<>();
+    private final Map<String, byte[]> exportFiles = new ConcurrentHashMap<>();
 
     public AuditLogServiceImpl(AdminAuditRepository repository) {
+        this(repository, null, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public AuditLogServiceImpl(AdminAuditRepository repository,
+                               @org.springframework.beans.factory.annotation.Autowired(required = false) com.ailab.admin.dashboard.AdminExportJobRepository exportJobRepository,
+                               @org.springframework.beans.factory.annotation.Autowired(required = false) com.ailab.admin.assets.AssetStorageService storageService) {
         this.repository = repository;
+        this.exportJobRepository = exportJobRepository;
+        this.storageService = storageService;
     }
 
     @Override
@@ -135,14 +147,42 @@ public class AuditLogServiceImpl implements AuditLogService {
         Instant expiresAt = Instant.now().plus(24, ChronoUnit.HOURS);
         String downloadUrl = "/api/v1/admin/audit-exports/" + jobId + "/download";
 
+        String fmt = format != null ? format.toUpperCase() : "CSV";
+        StringBuilder csv = new StringBuilder("occurredAt,action,actorName,entityType,entityId,result,severity\n");
+        Page<AdminAuditEventEntity> page = repository.findAll(PageRequest.of(0, 100, Sort.by(Sort.Direction.DESC, "occurredAt")));
+        List<AdminAuditEventEntity> recent = page != null ? page.getContent() : List.of();
+        for (AdminAuditEventEntity e : recent) {
+            csv.append(e.getOccurredAt()).append(",")
+                    .append(e.getAction()).append(",")
+                    .append(e.getActorName() != null ? e.getActorName() : "").append(",")
+                    .append(e.getEntityType()).append(",")
+                    .append(e.getEntityId()).append(",")
+                    .append(e.getResult()).append(",")
+                    .append(e.getSeverity()).append("\n");
+        }
+        byte[] csvBytes = csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+        if (storageService != null) {
+            try {
+                storageService.store(jobId, csvBytes, "text/csv");
+            } catch (Exception ignored) {}
+        }
+        exportFiles.put(jobId, csvBytes);
+
+        if (exportJobRepository != null) {
+            com.ailab.admin.dashboard.AdminExportJobEntity entity = new com.ailab.admin.dashboard.AdminExportJobEntity(
+                    jobId, "AUDIT_EXPORT", fmt, "READY", downloadUrl, expiresAt
+            );
+            exportJobRepository.save(entity);
+        }
+
         Map<String, Object> job = new LinkedHashMap<>();
         job.put("jobId", jobId);
         job.put("status", "READY");
-        job.put("format", format != null ? format.toUpperCase() : "CSV");
+        job.put("format", fmt);
         job.put("downloadUrl", downloadUrl);
         job.put("expiresAt", expiresAt);
         job.put("createdAt", Instant.now());
-
         exportJobs.put(jobId, job);
 
         return Map.of(
@@ -153,11 +193,41 @@ public class AuditLogServiceImpl implements AuditLogService {
 
     @Override
     public Map<String, Object> getExportJob(String jobId) {
+        if (exportJobRepository != null) {
+            var entityOpt = exportJobRepository.findById(jobId);
+            if (entityOpt.isPresent()) {
+                var entity = entityOpt.get();
+                if (entity.getExpiresAt() != null && entity.getExpiresAt().isBefore(Instant.now())) {
+                    throw new ResponseStatusException(HttpStatus.GONE, "Export job has expired: " + jobId);
+                }
+                return Map.of(
+                        "jobId", entity.getId(),
+                        "status", entity.getStatus(),
+                        "format", entity.getFormat(),
+                        "downloadUrl", entity.getDownloadUrl() != null ? entity.getDownloadUrl() : "",
+                        "expiresAt", entity.getExpiresAt() != null ? entity.getExpiresAt() : Instant.now(),
+                        "createdAt", entity.getCreatedAt()
+                );
+            }
+        }
         Map<String, Object> job = exportJobs.get(jobId);
         if (job == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Export job not found: " + jobId);
         }
         return job;
+    }
+
+    @Override
+    public byte[] downloadExport(String jobId) {
+        if (storageService != null) {
+            try {
+                byte[] data = storageService.load(jobId);
+                if (data != null) return data;
+            } catch (Exception ignored) {}
+        }
+        byte[] mem = exportFiles.get(jobId);
+        if (mem != null) return mem;
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Export file not found: " + jobId);
     }
 
     @Override

@@ -13,4 +13,6 @@ import java.util.Optional;
 public interface LearningUserProgressRepository extends JpaRepository<LearningUserProgressEntity, String>, JpaSpecificationExecutor<LearningUserProgressEntity> {
 
     Optional<LearningUserProgressEntity> findByUserIdAndTrackId(String userId, String trackId);
+
+    java.util.List<LearningUserProgressEntity> findAllByUserId(String userId);
 }

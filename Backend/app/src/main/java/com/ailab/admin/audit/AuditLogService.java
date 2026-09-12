@@ -22,5 +22,7 @@ public interface AuditLogService {
 
     Map<String, Object> getExportJob(String jobId);
 
+    byte[] downloadExport(String jobId);
+
     Map<String, Object> getRetentionPolicy();
 }

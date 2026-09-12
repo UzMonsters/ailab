@@ -37,8 +37,8 @@ class AdminSettingsControllerTest {
         when(service.getSubjects()).thenReturn(List.of(Map.of("id", "chemistry")));
         when(service.patchSubject(eq("chemistry"), anyMap(), eq("admin-1"), anyString())).thenReturn(Map.of("id", "chemistry", "enabled", true));
 
-        assertThat(controller.getSettings()).isEqualTo(Map.of("version", 1L));
-        assertThat(controller.patchSettings(Map.of(), "1", auth)).isEqualTo(Map.of("version", 2L));
+        assertThat(controller.getSettings().getBody()).isEqualTo(Map.of("version", 1L));
+        assertThat(controller.patchSettings(Map.of(), "1", auth).getBody()).isEqualTo(Map.of("version", 2L));
         assertThat(controller.getSchema("ru")).isEqualTo(Map.of("groups", List.of()));
         assertThat(controller.getHistory(0, 20, null, null, null)).isEqualTo(Map.of("items", List.of()));
 

@@ -26,7 +26,12 @@ public class AssetStorageService {
     ) {}
 
     public AssetStorageService() {
-        this.storageDir = Paths.get(System.getProperty("java.io.tmpdir"), "ailab-assets");
+        this("./storage/assets");
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public AssetStorageService(@org.springframework.beans.factory.annotation.Value("${app.storage.dir:./storage/assets}") String storagePath) {
+        this.storageDir = Paths.get(storagePath != null ? storagePath : "./storage/assets");
         try {
             Files.createDirectories(storageDir);
         } catch (IOException e) {

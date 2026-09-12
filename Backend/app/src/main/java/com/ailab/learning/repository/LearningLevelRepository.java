@@ -22,4 +22,6 @@ public interface LearningLevelRepository extends JpaRepository<LearningLevelEnti
 
     long countByTrackId(String trackId);
     long countByTrackIdAndStatus(String trackId, LearningStatus status);
+    long countByStatus(LearningStatus status);
+    Page<LearningLevelEntity> findAllByStatus(LearningStatus status, Pageable pageable);
 }

@@ -16,4 +16,10 @@ public interface AdminAuditRepository extends JpaRepository<AdminAuditEventEntit
 
     @Query("SELECT DISTINCT e.source FROM AdminAuditEventEntity e ORDER BY e.source")
     List<String> findDistinctSources();
+
+    List<AdminAuditEventEntity> findTop10ByOrderByOccurredAtDesc();
+
+    List<AdminAuditEventEntity> findTop20ByActorIdOrderByOccurredAtDesc(String actorId);
+
+    long countByOccurredAtBetween(java.time.Instant from, java.time.Instant to);
 }

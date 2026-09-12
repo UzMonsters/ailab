@@ -48,7 +48,15 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void logout(String token) {
-        refreshTokens.revoke(token).ifPresent(users::invalidateSessions);
+        refreshTokens.revoke(token);
+    }
+
+    @Override
+    public void logoutAll(String userId) {
+        if (userId != null && !userId.isBlank()) {
+            refreshTokens.revokeAll(userId);
+            users.invalidateSessions(userId);
+        }
     }
 
     private AuthDtos.AuthenticationResult tokensFor(User user, String refreshToken) {

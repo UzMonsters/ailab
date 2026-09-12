@@ -14,4 +14,6 @@ public interface BookRepository extends JpaRepository<Book, String>, JpaSpecific
     Optional<Book> findBySlug(String slug);
 
     boolean existsBySlug(String slug);
+
+    long countByStatus(BookStatus status);
 }

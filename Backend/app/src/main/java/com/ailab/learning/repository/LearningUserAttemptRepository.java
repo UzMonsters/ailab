@@ -26,4 +26,9 @@ public interface LearningUserAttemptRepository extends JpaRepository<LearningUse
 
     long countByLevelId(String levelId);
     long countByLevelIdAndStatus(String levelId, AttemptStatus status);
+
+    long countByStatus(AttemptStatus status);
+    long countByUserId(String userId);
+    long countByUserIdAndStatus(String userId, AttemptStatus status);
+    List<LearningUserAttemptEntity> findTop20ByUserIdOrderByStartedAtDesc(String userId);
 }

@@ -31,6 +31,9 @@ class AdminDashboardServiceTest {
         when(userRepository.count()).thenReturn(100L);
         when(workspaceRepository.count()).thenReturn(15L);
 
+        when(userRepository.countByStatus("ACTIVE")).thenReturn(42L);
+        when(workspaceRepository.countByIsDeletedFalse()).thenReturn(15L);
+
         Map<String, Object> summary = service.getSummary(null, null, "UTC", "chemistry");
         assertThat(summary.get("kpis")).isInstanceOf(Map.class);
         @SuppressWarnings("unchecked")
@@ -45,13 +48,13 @@ class AdminDashboardServiceTest {
         assertThat(dist.get("items")).isInstanceOf(List.class);
 
         Map<String, Object> learning = service.getLearningSummary(null, null, null);
-        assertThat(learning.get("enrollments")).isEqualTo(38);
+        assertThat(learning.get("attempts")).isEqualTo(0L);
 
         Map<String, Object> labSummary = service.getLaboratorySummary(null, null);
         assertThat(labSummary.get("activeNow")).isEqualTo(15L);
 
         Map<String, Object> actSummary = service.getActivitySummary(null, "UTC");
-        assertThat(actSummary.get("onlineNow")).isEqualTo(14);
+        assertThat(actSummary.get("onlineNow")).isEqualTo(42L);
 
         Map<String, Object> report = service.createReport(Map.of("format", "CSV"));
         assertThat(report.get("status")).isEqualTo("QUEUED");

@@ -31,9 +31,16 @@ public class WorkspaceShareSessionService {
     public WorkspaceShareSessionService(
             WorkspaceShareLinkRepository shareLinkRepository,
             ObjectMapper objectMapper,
-            @Value("${app.share-session.secret:dev-share-session-secret-change-me}") String secret,
+            @Value("${app.share-session.secret:local-dev-share-session-secret-must-be-at-least-256-bits-long-32-bytes}") String secret,
             @Value("${app.share-session.ttl-seconds:43200}") long sessionTtlSeconds
     ) {
+        if (secret == null || secret.isBlank() || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("Share session secret must be configured and at least 32 bytes (256 bits) long.");
+        }
+        String activeProfile = System.getProperty("spring.profiles.active", System.getenv().getOrDefault("SPRING_PROFILES_ACTIVE", ""));
+        if ("production".equalsIgnoreCase(activeProfile) && (secret.contains("change-me") || secret.contains("local-dev"))) {
+            throw new IllegalStateException("Default share session secret cannot be used in production.");
+        }
         this.shareLinkRepository = shareLinkRepository;
         this.objectMapper = objectMapper;
         this.secret = secret.getBytes(StandardCharsets.UTF_8);
@@ -132,7 +139,7 @@ public class WorkspaceShareSessionService {
         if (link.getExpiresAt() != null && link.getExpiresAt().isBefore(Instant.now())) {
             throw new ResponseStatusException(HttpStatus.GONE, "SHARE_LINK_EXPIRED: This share link has expired");
         }
-        if (link.getMaxUses() != null && link.getUseCount() > link.getMaxUses()) {
+        if (link.getMaxUses() != null && link.getUseCount() >= link.getMaxUses()) {
             throw new ResponseStatusException(HttpStatus.GONE, "SHARE_LINK_LIMIT_REACHED: Maximum uses exceeded");
         }
     }

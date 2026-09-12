@@ -174,8 +174,8 @@ public class ContractComplianceTest {
 
     @Test
     void testAdminAssetStorageLifecycle() throws Exception {
-        // Section 7.5: Generate upload URLs
-        byte[] content = "test-image-content".getBytes(StandardCharsets.UTF_8);
+        // Valid PNG header bytes for magic-byte inspection
+        byte[] content = new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52};
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         String checksum = "sha256:" + HexFormat.of().formatHex(digest.digest(content));
 

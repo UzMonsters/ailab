@@ -19,8 +19,8 @@ public class JwtService implements AccessTokenIssuer {
 
     public JwtService(@Value("${app.security.jwt-secret}") String secret,
                       @Value("${app.security.access-token-ttl}") Duration ttl) {
-        if (secret.getBytes(StandardCharsets.UTF_8).length < 32) {
-            throw new IllegalArgumentException("JWT_SECRET must be at least 256 bits");
+        if (secret == null || secret.isBlank() || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalArgumentException("JWT_SECRET must be configured and at least 256 bits (32 bytes)");
         }
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.ttl = ttl;
