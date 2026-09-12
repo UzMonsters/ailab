@@ -12,4 +12,6 @@ public interface AdminLaboratoryMonitoringService {
     Map<String, Object> pauseSession(String id, String reason, String actorId, String actorName);
 
     Map<String, Object> terminateSession(String id, String reason, boolean notifyOwner, String actorId, String actorName);
+
+    Map<String, Object> getLaboratoryEvents(String id, Long afterVersion, int limit);
 }

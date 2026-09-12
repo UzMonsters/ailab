@@ -29,21 +29,27 @@ public class AdminAssetServiceImpl implements AdminAssetService {
 
     private final BookAssetRepository assetRepository;
     private final AssetStorageService storageService;
+    private final AssetUploadTicketService ticketService;
 
     public AdminAssetServiceImpl() {
         this.assetRepository = null;
         this.storageService = new AssetStorageService();
+        this.ticketService = new AssetUploadTicketService("local-dev-jwt-secret-key-must-be-at-least-256-bits-long-32-bytes");
     }
 
     public AdminAssetServiceImpl(BookAssetRepository assetRepository) {
         this.assetRepository = assetRepository;
         this.storageService = new AssetStorageService();
+        this.ticketService = new AssetUploadTicketService("local-dev-jwt-secret-key-must-be-at-least-256-bits-long-32-bytes");
     }
 
     @org.springframework.beans.factory.annotation.Autowired
-    public AdminAssetServiceImpl(BookAssetRepository assetRepository, AssetStorageService storageService) {
+    public AdminAssetServiceImpl(BookAssetRepository assetRepository,
+                                 AssetStorageService storageService,
+                                 @org.springframework.beans.factory.annotation.Autowired(required = false) AssetUploadTicketService ticketService) {
         this.assetRepository = assetRepository;
         this.storageService = storageService != null ? storageService : new AssetStorageService();
+        this.ticketService = ticketService != null ? ticketService : new AssetUploadTicketService("local-dev-jwt-secret-key-must-be-at-least-256-bits-long-32-bytes");
     }
 
     @Override
@@ -78,7 +84,8 @@ public class AdminAssetServiceImpl implements AdminAssetService {
 
             String fileId = "ast_" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
             Instant expiresAt = Instant.now().plus(1, ChronoUnit.HOURS);
-            String uploadUrl = "/api/v1/assets/upload/" + fileId;
+            String ticket = ticketService.issueTicket(fileId, "admin", "admin_asset", contentType, MAX_IMAGE_BYTES, checksum, expiresAt);
+            String uploadUrl = "/api/v1/assets/upload/" + fileId + "?ticket=" + ticket;
             String downloadUrl = "/api/v1/assets/raw/" + fileId + "/" + filename;
 
             if (assetRepository != null) {

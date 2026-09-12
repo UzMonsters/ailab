@@ -46,7 +46,7 @@ public class AdminAuditController {
         return auditLogService.getAuditEventById(eventId);
     }
 
-    @PostMapping("/audit-exports")
+    @PostMapping(value = {"/audit-exports", "/audit/export"})
     public ResponseEntity<Map<String, Object>> createAuditExport(@RequestBody(required = false) Map<String, Object> request) {
         String format = request != null && request.get("format") != null ? String.valueOf(request.get("format")) : "CSV";
         @SuppressWarnings("unchecked")
@@ -57,12 +57,21 @@ public class AdminAuditController {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(job);
     }
 
-    @GetMapping("/audit-exports/{jobId}")
+    @GetMapping(value = {"/audit-exports/{jobId}", "/audit/export/{jobId}"})
     public Map<String, Object> getAuditExportStatus(@PathVariable String jobId) {
         return auditLogService.getExportJob(jobId);
     }
 
-    @GetMapping("/audit-retention")
+    @GetMapping("/audit-exports/{jobId}/download")
+    public ResponseEntity<byte[]> downloadAuditExport(@PathVariable String jobId) {
+        byte[] data = auditLogService.downloadExport(jobId);
+        return ResponseEntity.ok()
+                .header("Content-Type", "text/csv; charset=UTF-8")
+                .header("Content-Disposition", "attachment; filename=\"audit-export-" + jobId + ".csv\"")
+                .body(data);
+    }
+
+    @GetMapping(value = {"/audit-retention", "/audit/retention"})
     public Map<String, Object> getAuditRetention() {
         return auditLogService.getRetentionPolicy();
     }

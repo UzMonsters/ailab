@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.Duration;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -25,6 +26,9 @@ public class AuthController {
     private String refreshCookieSameSite;
     @Value("${app.security.refresh-token-ttl}")
     private Duration refreshTokenTtl;
+
+    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
+    private List<String> allowedOrigins;
 
     public AuthController(AuthService service) {
         this.service = service;
@@ -47,6 +51,9 @@ public class AuthController {
             @RequestBody(required = false) AuthDtos.LogoutRequest request,
             HttpServletResponse response) {
         String cookieToken = refreshCookie(httpRequest);
+        if (cookieToken != null) {
+            validateCookieOrigin(httpRequest);
+        }
         String token = cookieToken != null ? cookieToken : request == null ? null : request.refreshToken();
         if (token == null || token.isBlank()) throw new InvalidRefreshTokenException("Refresh token is required");
         return writeTokenResponse(service.refresh(token), response);
@@ -58,10 +65,61 @@ public class AuthController {
             @RequestBody(required = false) AuthDtos.LogoutRequest request,
             HttpServletResponse response) {
         String cookieToken = refreshCookie(httpRequest);
+        if (cookieToken != null) {
+            validateCookieOrigin(httpRequest);
+        }
         String token = cookieToken != null ? cookieToken : request == null ? null : request.refreshToken();
         if (token != null && !token.isBlank()) service.logout(token);
         clearRefreshCookie(response);
         return new AuthDtos.SuccessResponse(true);
+    }
+
+    @PostMapping("/logout-all")
+    public AuthDtos.SuccessResponse logoutAll(
+            HttpServletRequest httpRequest,
+            @RequestBody(required = false) AuthDtos.LogoutRequest request,
+            org.springframework.security.core.Authentication authentication,
+            HttpServletResponse response) {
+        String cookieToken = refreshCookie(httpRequest);
+        if (cookieToken != null) {
+            validateCookieOrigin(httpRequest);
+        }
+        String userId = null;
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
+            userId = authentication.getName();
+        }
+        if (userId != null) {
+            service.logoutAll(userId);
+        } else {
+            String token = cookieToken != null ? cookieToken : request == null ? null : request.refreshToken();
+            if (token != null && !token.isBlank()) {
+                service.logout(token);
+            }
+        }
+        clearRefreshCookie(response);
+        return new AuthDtos.SuccessResponse(true);
+    }
+
+    private void validateCookieOrigin(HttpServletRequest request) {
+        if (allowedOrigins == null || allowedOrigins.isEmpty()) return;
+        String origin = request.getHeader("Origin");
+        if (origin == null || origin.isBlank()) {
+            String referer = request.getHeader("Referer");
+            if (referer != null && !referer.isBlank()) {
+                try {
+                    java.net.URI uri = java.net.URI.create(referer);
+                    origin = uri.getScheme() + "://" + uri.getAuthority();
+                } catch (Exception ignored) {}
+            }
+        }
+        if (origin != null && !origin.isBlank()) {
+            String cleanOrigin = origin.trim().replaceAll("/+$", "");
+            boolean match = allowedOrigins.stream().anyMatch(o -> o.trim().replaceAll("/+$", "").equalsIgnoreCase(cleanOrigin));
+            if (!match) {
+                throw new org.springframework.web.server.ResponseStatusException(
+                        HttpStatus.FORBIDDEN, "CSRF_DETECTED: Cross-origin request not permitted for cookie session");
+            }
+        }
     }
 
     private AuthDtos.TokenResponse writeTokenResponse(AuthDtos.AuthenticationResult result, HttpServletResponse response) {

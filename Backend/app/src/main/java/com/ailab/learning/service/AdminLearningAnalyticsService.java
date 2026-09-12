@@ -11,6 +11,8 @@ import com.ailab.learning.repository.LearningLevelRepository;
 import com.ailab.learning.repository.LearningUserAttemptRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,7 +55,17 @@ public class AdminLearningAnalyticsService {
                 "archived", archived
         );
 
-        List<LearningUserAttemptEntity> attempts = attemptRepository.findAll();
+        Specification<LearningUserAttemptEntity> attemptSpec = (root, q, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (from != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("startedAt"), from));
+            }
+            if (to != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("startedAt"), to));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+        List<LearningUserAttemptEntity> attempts = attemptRepository.findAll(attemptSpec);
         long totalAttempts = attempts.size();
         long completedAttempts = attempts.stream().filter(a -> a.getStatus() == AttemptStatus.COMPLETED).count();
 
@@ -86,7 +98,20 @@ public class AdminLearningAnalyticsService {
 
     @Transactional(readOnly = true)
     public LevelAnalyticsResponse getLevelAnalytics(String levelId, Instant from, Instant to) {
-        List<LearningUserAttemptEntity> attempts = attemptRepository.findForAnalytics(levelId, from, to);
+        Specification<LearningUserAttemptEntity> spec = (root, q, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (levelId != null && !levelId.isBlank()) {
+                predicates.add(cb.equal(root.get("levelId"), levelId));
+            }
+            if (from != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("startedAt"), from));
+            }
+            if (to != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("startedAt"), to));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+        List<LearningUserAttemptEntity> attempts = attemptRepository.findAll(spec);
 
         long starts = attempts.size();
         long completions = 0;

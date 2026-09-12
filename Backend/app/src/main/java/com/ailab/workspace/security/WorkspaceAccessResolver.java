@@ -68,9 +68,12 @@ public class WorkspaceAccessResolver {
                 return authorization.substring("Bearer ".length()).trim();
             }
         }
-        String queryToken = request.getParameter("sessionToken");
-        if (queryToken != null && !queryToken.isBlank()) {
-            return queryToken.trim();
+        String headerToken = request.getHeader("X-Share-Session");
+        if (headerToken == null || headerToken.isBlank()) {
+            headerToken = request.getHeader("Share-Session");
+        }
+        if (headerToken != null && !headerToken.isBlank()) {
+            return headerToken.trim();
         }
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getName() != null && auth.getName().startsWith(WorkspaceShareSessionService.AUTH_NAME_PREFIX)) {

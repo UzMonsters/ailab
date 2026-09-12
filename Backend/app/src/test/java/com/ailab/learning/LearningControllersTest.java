@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -168,7 +169,7 @@ class LearningControllersTest {
     @Test
     void testAdminOverview() {
         when(levelRepository.findAll()).thenReturn(List.of(level1, level2));
-        when(attemptRepository.findAll()).thenReturn(List.of());
+        when(attemptRepository.findAll(any(Specification.class))).thenReturn(List.of());
 
         LearningOverviewResponse res = adminController.getOverview(null, null, null);
 
@@ -199,5 +200,19 @@ class LearningControllersTest {
         assertThat(res).isNotNull();
         assertThat(res.trackId()).isEqualTo("track-chem");
         assertThat(res.completedLevelIds()).contains("level-1");
+    }
+
+    @Test
+    void testListPublishedLevels() {
+        org.springframework.data.domain.Page<LearningLevelEntity> p = new org.springframework.data.domain.PageImpl<>(List.of(level1));
+        when(levelRepository.findAll(any(Specification.class), any(org.springframework.data.domain.Pageable.class))).thenReturn(p);
+
+        Map<String, Object> res = publicController.listPublishedLevels("track-chem", null, 0, 20, "ru");
+        assertThat(res).isNotNull();
+        assertThat(res.get("items")).isInstanceOf(List.class);
+        @SuppressWarnings("unchecked")
+        List<LevelSummary> items = (List<LevelSummary>) res.get("items");
+        assertThat(items).hasSize(1);
+        assertThat(items.get(0).id()).isEqualTo("level-1");
     }
 }

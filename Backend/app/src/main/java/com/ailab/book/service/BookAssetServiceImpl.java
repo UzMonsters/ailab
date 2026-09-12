@@ -29,9 +29,17 @@ public class BookAssetServiceImpl implements BookAssetService {
     private static final long MAX_ASSET_BYTES = 10485760L;
 
     private final BookAssetRepository assetRepository;
+    private final com.ailab.admin.assets.AssetUploadTicketService ticketService;
 
     public BookAssetServiceImpl(BookAssetRepository assetRepository) {
+        this(assetRepository, new com.ailab.admin.assets.AssetUploadTicketService("local-dev-jwt-secret-key-must-be-at-least-256-bits-long-32-bytes"));
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public BookAssetServiceImpl(BookAssetRepository assetRepository,
+                                @org.springframework.beans.factory.annotation.Autowired(required = false) com.ailab.admin.assets.AssetUploadTicketService ticketService) {
         this.assetRepository = assetRepository;
+        this.ticketService = ticketService != null ? ticketService : new com.ailab.admin.assets.AssetUploadTicketService("local-dev-jwt-secret-key-must-be-at-least-256-bits-long-32-bytes");
     }
 
     @Override
@@ -58,7 +66,8 @@ public class BookAssetServiceImpl implements BookAssetService {
 
             String assetId = "ast_" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
             Instant expiresAt = Instant.now().plus(1, ChronoUnit.HOURS);
-            String uploadUrl = "/api/v1/assets/upload/" + assetId;
+            String ticket = ticketService.issueTicket(assetId, "system", "book_asset", contentType, MAX_ASSET_BYTES, file.checksum(), expiresAt);
+            String uploadUrl = "/api/v1/assets/upload/" + assetId + "?ticket=" + ticket;
             String downloadUrl = "/api/v1/assets/raw/" + assetId + "/" + filename;
 
             AssetKind kind = "SVG".equalsIgnoreCase(file.kind()) || contentType.contains("svg") ? AssetKind.SVG : AssetKind.IMAGE;

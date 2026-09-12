@@ -48,6 +48,9 @@ class AdminLaboratoryMonitoringServiceTest {
 
     @Test
     void testPauseAndTerminateSession() {
+        WorkspaceEntity workspace = new WorkspaceEntity("ws-1", "usr-1", "Chem Lab", "chemistry", "sess-1");
+        when(workspaceRepository.findById("ws-1")).thenReturn(Optional.of(workspace));
+
         Map<String, Object> paused = service.pauseSession("ws-1", "Safety alert", "admin-1", "Admin");
         assertThat(paused.get("status")).isEqualTo("PAUSED");
 

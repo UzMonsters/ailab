@@ -66,6 +66,18 @@ public class PublicLearningController {
         return trackService.getTrackMap(codeOrId, locale, getOptionalUserId());
     }
 
+    @GetMapping("/levels")
+    @Operation(summary = "List Published Learning Levels")
+    public java.util.Map<String, Object> listPublishedLevels(
+            @RequestParam(required = false) String trackId,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false, defaultValue = "ru") String locale
+    ) {
+        return levelService.getPublishedLevels(trackId, q, page, size, locale);
+    }
+
     @GetMapping("/levels/{id}")
     @Operation(summary = "Get Published Level Definition")
     public LevelDefinitionDto getPublishedLevel(

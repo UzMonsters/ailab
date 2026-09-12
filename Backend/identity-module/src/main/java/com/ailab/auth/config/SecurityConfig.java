@@ -92,7 +92,7 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**", "/api/v1/books/**", "/api/v1/assets/**", "/api/v1/shared-workspaces/**", "/ws/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/health").permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/learning/tracks/**", "/api/v1/learning/levels/*").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/learning/tracks/**", "/api/v1/learning/levels", "/api/v1/learning/levels/**").permitAll()
                         .requestMatchers("/api/v1/learning/levels/*/attempts", "/api/v1/learning/attempts/**").authenticated()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/users/**").hasAnyRole("USER", "ADMIN")

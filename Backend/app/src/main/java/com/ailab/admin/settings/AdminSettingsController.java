@@ -25,17 +25,21 @@ public class AdminSettingsController {
     }
 
     @GetMapping("/settings")
-    public Map<String, Object> getSettings() {
-        return service.getSettings();
+    public ResponseEntity<Map<String, Object>> getSettings() {
+        Map<String, Object> result = service.getSettings();
+        String etag = result.get("etag") != null ? String.valueOf(result.get("etag")) : "settings-v" + result.get("version");
+        return ResponseEntity.ok().eTag("\"" + etag + "\"").body(result);
     }
 
     @PatchMapping("/settings")
-    public Map<String, Object> patchSettings(
+    public ResponseEntity<Map<String, Object>> patchSettings(
             @RequestBody Map<String, Object> patch,
             @RequestHeader(value = "If-Match", required = false) String ifMatch,
             Authentication authentication) {
         String actorId = authentication != null ? authentication.getName() : "usr_admin";
-        return service.patchSettings(patch, ifMatch, actorId, "Admin User");
+        Map<String, Object> result = service.patchSettings(patch, ifMatch, actorId, "Admin User");
+        String etag = result.get("etag") != null ? String.valueOf(result.get("etag")) : "settings-v" + result.get("version");
+        return ResponseEntity.ok().eTag("\"" + etag + "\"").body(result);
     }
 
     @GetMapping("/settings/schema")
@@ -53,7 +57,7 @@ public class AdminSettingsController {
         return service.getHistory(page, size, from, to, actorId);
     }
 
-    @PostMapping("/settings/{version}/restore")
+    @PostMapping(value = {"/settings/{version}/restore", "/settings/restore/{version}"})
     public ResponseEntity<Map<String, Object>> restoreVersion(
             @PathVariable Long version,
             @RequestBody(required = false) Map<String, String> request,

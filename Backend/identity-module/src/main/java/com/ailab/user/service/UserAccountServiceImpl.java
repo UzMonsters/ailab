@@ -33,17 +33,32 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final ApplicationEventPublisher events;
     private final com.ailab.auth.token.RefreshTokenOperations refreshTokenService;
     private final ReAuthTokenOperations reAuthTokenService;
+    private final UserLearningProgressProvider learningProgressProvider;
+    private final UserActivityProvider activityProvider;
 
     public UserAccountServiceImpl(UserRepository repository,
                                   PasswordEncoder passwordEncoder,
                                   ApplicationEventPublisher events,
                                   com.ailab.auth.token.RefreshTokenOperations refreshTokenService,
                                   ReAuthTokenOperations reAuthTokenService) {
+        this(repository, passwordEncoder, events, refreshTokenService, reAuthTokenService, null, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public UserAccountServiceImpl(UserRepository repository,
+                                  PasswordEncoder passwordEncoder,
+                                  ApplicationEventPublisher events,
+                                  com.ailab.auth.token.RefreshTokenOperations refreshTokenService,
+                                  ReAuthTokenOperations reAuthTokenService,
+                                  @org.springframework.beans.factory.annotation.Autowired(required = false) UserLearningProgressProvider learningProgressProvider,
+                                  @org.springframework.beans.factory.annotation.Autowired(required = false) UserActivityProvider activityProvider) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.events = events;
         this.refreshTokenService = refreshTokenService;
         this.reAuthTokenService = reAuthTokenService;
+        this.learningProgressProvider = learningProgressProvider;
+        this.activityProvider = activityProvider;
     }
 
     @Override
@@ -152,6 +167,12 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Transactional(readOnly = true)
     public UserDtos.LearningProgressResponse getLearningProgress(String id, String track) {
         User user = findById(id);
+        if (learningProgressProvider != null) {
+            Optional<UserDtos.LearningProgressResponse> provided = learningProgressProvider.getLearningProgress(user, track);
+            if (provided.isPresent()) {
+                return provided.get();
+            }
+        }
         String selectedTrack = (track != null && !track.isBlank()) ? track.trim() : "chemistry";
         List<Map<String, Object>> tracks = List.of(
                 Map.of(
@@ -193,7 +214,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
 
         String assetId = "asset_avatar_" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-        String uploadUrl = "https://storage.ailab.local/upload/avatar/" + id + "/" + assetId;
+        String uploadUrl = "/api/v1/assets/upload/" + assetId + "?userId=" + id;
         Instant expiresAt = Instant.now().plus(Duration.ofMinutes(15));
 
         return new UserDtos.AvatarUploadTicketResponse(assetId, uploadUrl, expiresAt, MAX_AVATAR_BYTES, ALLOWED_MIME_TYPES);
@@ -205,7 +226,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (request.assetId() == null || request.assetId().isBlank()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "VALIDATION_ERROR: Asset ID is required");
         }
-        String avatarUrl = "https://cdn.ailab.local/avatar/" + id + "-" + request.assetId().trim() + ".webp";
+        String avatarUrl = "/api/v1/assets/raw/" + request.assetId().trim() + "/avatar.webp";
         user.setAvatarUrl(avatarUrl);
         return new UserDtos.AvatarCompleteResponse(avatarUrl, request.assetId().trim(), user.getUpdatedAt());
     }
@@ -476,28 +497,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         int safeSize = Math.max(1, Math.min(size, 100));
 
         List<UserDtos.UserActivity> all = new ArrayList<>();
-        Instant base = user.getCreatedAt();
-        if (base != null) {
-            all.add(new UserDtos.UserActivity(
-                    "act_" + user.getId().substring(4) + "_1",
-                    base,
-                    "AUTH",
-                    "user.registered",
-                    "Account registered",
-                    "127.0.0.1",
-                    "Mozilla/5.0"
-            ));
-        }
-        if (user.getUpdatedAt() != null && !user.getUpdatedAt().equals(base)) {
-            all.add(new UserDtos.UserActivity(
-                    "act_" + user.getId().substring(4) + "_2",
-                    user.getUpdatedAt(),
-                    "PROFILE",
-                    "user.profile_updated",
-                    "Profile or preferences updated",
-                    "127.0.0.1",
-                    "Mozilla/5.0"
-            ));
+        if (activityProvider != null) {
+            all.addAll(activityProvider.getUserActivities(user, from, to, type));
         }
 
         List<UserDtos.UserActivity> filtered = all.stream()
@@ -519,16 +520,13 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Transactional(readOnly = true)
     public UserDtos.UserLearningProgressResponse getUserLearningProgress(String id, String track) {
         User user = findById(id);
-        List<Map<String, Object>> tracks = List.of(
-                Map.of(
-                        "id", "chemistry-basics",
-                        "title", "Chemistry Fundamentals",
-                        "completedLevels", Math.min(user.getLevel(), 5),
-                        "totalLevels", 10,
-                        "progressPercentage", Math.min(100, user.getLevel() * 10)
-                )
-        );
-        return new UserDtos.UserLearningProgressResponse(tracks, user.getLevel() * 2, user.getLevel(), user.getUpdatedAt());
+        if (learningProgressProvider != null) {
+            Optional<UserDtos.UserLearningProgressResponse> custom = learningProgressProvider.getUserLearningProgress(user, track);
+            if (custom.isPresent()) {
+                return custom.get();
+            }
+        }
+        return new UserDtos.UserLearningProgressResponse(List.of(), 0, 0, user.getUpdatedAt());
     }
 
     @Override

@@ -43,6 +43,10 @@ public class UserDataSeeder implements CommandLineRunner {
     }
 
     private void seedIfMissing(SeedAccount account) {
+        if (account.password() == null || account.password().isBlank()) {
+            log.warn("Skipping seed account '{}' because password is not configured", account.username());
+            return;
+        }
         boolean emailExists = repository.existsByEmailIgnoreCase(account.email());
         boolean usernameExists = repository.existsByUsernameIgnoreCase(account.username());
         if (emailExists || usernameExists) {

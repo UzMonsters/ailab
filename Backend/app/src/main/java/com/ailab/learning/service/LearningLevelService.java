@@ -67,6 +67,63 @@ public class LearningLevelService {
     }
 
     @Transactional(readOnly = true)
+    public Map<String, Object> getPublishedLevels(String trackId, String search, int page, int size, String locale) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+                Math.max(0, page), Math.max(1, size), org.springframework.data.domain.Sort.by("sortOrder").ascending()
+        );
+        org.springframework.data.jpa.domain.Specification<LearningLevelEntity> spec = (root, query, cb) -> {
+            List<jakarta.persistence.criteria.Predicate> preds = new ArrayList<>();
+            preds.add(cb.equal(root.get("status"), LearningStatus.PUBLISHED));
+            if (trackId != null && !trackId.isBlank()) {
+                preds.add(cb.equal(root.get("trackId"), trackId));
+            }
+            if (search != null && !search.isBlank()) {
+                String pattern = "%" + search.trim().toLowerCase() + "%";
+                preds.add(cb.or(
+                        cb.like(cb.lower(root.get("id")), pattern),
+                        cb.like(cb.lower(root.get("trackId")), pattern)
+                ));
+            }
+            return cb.and(preds.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+
+        org.springframework.data.domain.Page<LearningLevelEntity> levelPage = levelRepository.findAll(spec, pageable);
+
+        String loc = locale != null && !locale.isBlank() ? locale.toLowerCase() : "ru";
+        List<LevelSummary> items = levelPage.getContent().stream().map(l -> {
+            Map<String, Object> translations = parseJsonMap(l.getTranslationsJson());
+            Map<String, Object> locMap = extractLocaleMap(translations, loc);
+            String title = extractString(locMap, "title", "name");
+            if (title == null) title = "Level " + l.getLevelNumber();
+            String summary = extractString(locMap, "summary", "description");
+            return new LevelSummary(
+                    l.getId(),
+                    l.getTrackId(),
+                    l.getLevelNumber(),
+                    l.getSortOrder(),
+                    l.getDifficulty(),
+                    l.getEstimatedMinutes(),
+                    title,
+                    summary,
+                    l.getStatus(),
+                    false,
+                    false,
+                    l.getPublishedVersion()
+            );
+        }).toList();
+
+        Map<String, Object> res = new LinkedHashMap<>();
+        res.put("items", items);
+        res.put("page", Map.of(
+                "number", levelPage.getNumber(),
+                "size", levelPage.getSize(),
+                "totalElements", levelPage.getTotalElements(),
+                "totalPages", levelPage.getTotalPages()
+        ));
+        return res;
+    }
+
+    @Transactional(readOnly = true)
     public LevelDefinitionDto getLevelSnapshotOrDraft(String levelId, Long version, String locale) {
         LearningLevelEntity level = findLevelOrThrow(levelId);
         if (version != null) {

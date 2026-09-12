@@ -23,7 +23,7 @@ public class AdminLaboratorySessionController {
         this.service = service;
     }
 
-    @GetMapping("/laboratory-sessions")
+    @GetMapping(value = {"/laboratory-sessions", "/laboratories"})
     public Map<String, Object> listSessions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -35,12 +35,20 @@ public class AdminLaboratorySessionController {
         return service.getSessions(page, size, q, science, status, ownerId, startedFrom);
     }
 
-    @GetMapping("/laboratory-sessions/{id}")
+    @GetMapping(value = {"/laboratory-sessions/{id}", "/laboratories/{id}"})
     public Map<String, Object> getSessionDetail(@PathVariable String id) {
         return service.getSessionDetails(id);
     }
 
-    @PostMapping("/laboratory-sessions/{id}/pause")
+    @GetMapping(value = {"/laboratory-sessions/{id}/events", "/laboratories/{id}/events"})
+    public Map<String, Object> getSessionEvents(
+            @PathVariable String id,
+            @RequestParam(required = false) Long afterVersion,
+            @RequestParam(defaultValue = "50") int limit) {
+        return service.getLaboratoryEvents(id, afterVersion, limit);
+    }
+
+    @PostMapping(value = {"/laboratory-sessions/{id}/pause", "/laboratories/{id}/pause"})
     public Map<String, Object> pauseSession(
             @PathVariable String id,
             @RequestBody Map<String, String> request,
@@ -50,7 +58,7 @@ public class AdminLaboratorySessionController {
         return service.pauseSession(id, reason, actorId, "Admin User");
     }
 
-    @PostMapping("/laboratory-sessions/{id}/terminate")
+    @PostMapping(value = {"/laboratory-sessions/{id}/terminate", "/laboratories/{id}/terminate"})
     public ResponseEntity<Map<String, Object>> terminateSession(
             @PathVariable String id,
             @RequestBody Map<String, Object> request,

@@ -28,16 +28,31 @@ public class WorkspacePreviewService {
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberService memberService;
     private final Map<String, PendingPreviewAsset> pendingAssets = new ConcurrentHashMap<>();
-    private final Path assetRoot = Path.of(System.getProperty("java.io.tmpdir"), "ailab-preview-assets");
+    private final Path assetRoot;
 
     public WorkspacePreviewService(
             WorkspacePreviewRepository previewRepository,
             WorkspaceRepository workspaceRepository,
             WorkspaceMemberService memberService
     ) {
+        this(previewRepository, workspaceRepository, memberService, "./storage/previews");
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public WorkspacePreviewService(
+            WorkspacePreviewRepository previewRepository,
+            WorkspaceRepository workspaceRepository,
+            WorkspaceMemberService memberService,
+            @org.springframework.beans.factory.annotation.Value("${app.storage.preview-dir:./storage/previews}") String previewDir
+    ) {
         this.previewRepository = previewRepository;
         this.workspaceRepository = workspaceRepository;
         this.memberService = memberService;
+        Path root = Path.of(previewDir != null ? previewDir : "./storage/previews");
+        try {
+            Files.createDirectories(root);
+        } catch (Exception ignored) {}
+        this.assetRoot = root;
     }
 
     public PreviewUploadUrlsResponse createUploadUrls(String workspaceId, String actorUserId, PreviewUploadUrlsRequest request) {
@@ -54,6 +69,7 @@ public class WorkspacePreviewService {
                 new PreviewUploadUrlsRequest.VariantRequest("LIGHT", "image/webp", 960, 540, null)
         );
 
+        Instant expiresAt = Instant.now().plusSeconds(900);
         for (PreviewUploadUrlsRequest.VariantRequest v : variants) {
             String theme = v.theme() != null ? v.theme().toUpperCase() : "DARK";
             String assetId = "asset_" + theme.toLowerCase() + "_" + previewId;
@@ -68,9 +84,10 @@ public class WorkspacePreviewService {
                     v.height(),
                     v.checksum(),
                     null,
-                    null
+                    null,
+                    expiresAt
             ));
-            uploads.add(new PreviewUploadUrlsResponse.UploadTarget(theme, assetId, uploadUrl, Instant.now().plusSeconds(900)));
+            uploads.add(new PreviewUploadUrlsResponse.UploadTarget(theme, assetId, uploadUrl, expiresAt));
         }
 
         previewRepository.save(new WorkspacePreviewEntity(previewId, workspaceId, stateVer, "PROCESSING", null, null, null));
@@ -83,8 +100,16 @@ public class WorkspacePreviewService {
         if (pending == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "PREVIEW_UPLOAD_NOT_FOUND: Preview upload target not found");
         }
+        if (pending.expiresAt() != null && pending.expiresAt().isBefore(Instant.now())) {
+            throw new ResponseStatusException(HttpStatus.GONE, "PREVIEW_UPLOAD_EXPIRED: Preview upload ticket has expired");
+        }
         if (bytes == null || bytes.length == 0) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "PREVIEW_UPLOAD_EMPTY: Preview asset body is empty");
+        }
+
+        String detectedMime = com.ailab.admin.assets.AssetUploadTicketService.detectMimeType(bytes);
+        if (detectedMime == null || !detectedMime.startsWith("image/")) {
+            throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "INVALID_PREVIEW_ASSET: Asset is not a valid image format");
         }
 
         try {
@@ -115,8 +140,11 @@ public class WorkspacePreviewService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "STALE_PREVIEW: sourceStateVersion " + request.sourceStateVersion() + " is older than current version " + ws.getStateVersion());
         }
 
-        previewRepository.findByIdAndWorkspaceId(previewId, workspaceId)
+        WorkspacePreviewEntity existing = previewRepository.findByIdAndWorkspaceId(previewId, workspaceId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PREVIEW_UPLOAD_NOT_FOUND: Preview not found"));
+        if ("READY".equalsIgnoreCase(existing.getStatus())) {
+            return WorkspacePreviewDto.of(existing.getSourceStateVersion(), existing.getDarkUrl(), existing.getLightUrl(), existing.getFallbackKey());
+        }
 
         String darkUrl = null;
         String lightUrl = null;
@@ -229,10 +257,11 @@ public class WorkspacePreviewService {
             Integer height,
             String expectedChecksum,
             Path path,
-            String actualChecksum
+            String actualChecksum,
+            Instant expiresAt
     ) {
         PendingPreviewAsset withUpload(Path path, String checksum) {
-            return new PendingPreviewAsset(workspaceId, previewId, assetId, theme, mimeType, width, height, expectedChecksum, path, checksum);
+            return new PendingPreviewAsset(workspaceId, previewId, assetId, theme, mimeType, width, height, expectedChecksum, path, checksum, expiresAt);
         }
     }
 }

@@ -24,6 +24,7 @@ public class WorkspaceShareService {
     private final WorkspaceMemberService memberService;
     private final PasswordEncoder passwordEncoder;
     private final WorkspaceShareSessionService shareSessionService;
+    private final com.ailab.workspace.repository.WorkspacePreviewRepository previewRepository;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public WorkspaceShareService(
@@ -33,11 +34,24 @@ public class WorkspaceShareService {
             PasswordEncoder passwordEncoder,
             WorkspaceShareSessionService shareSessionService
     ) {
+        this(shareLinkRepository, workspaceRepository, memberService, passwordEncoder, shareSessionService, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public WorkspaceShareService(
+            WorkspaceShareLinkRepository shareLinkRepository,
+            WorkspaceRepository workspaceRepository,
+            WorkspaceMemberService memberService,
+            PasswordEncoder passwordEncoder,
+            WorkspaceShareSessionService shareSessionService,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) com.ailab.workspace.repository.WorkspacePreviewRepository previewRepository
+    ) {
         this.shareLinkRepository = shareLinkRepository;
         this.workspaceRepository = workspaceRepository;
         this.memberService = memberService;
         this.passwordEncoder = passwordEncoder;
         this.shareSessionService = shareSessionService;
+        this.previewRepository = previewRepository;
     }
 
     @Transactional
@@ -171,10 +185,11 @@ public class WorkspaceShareService {
             }
         }
 
-        // Increment use count
-        link.setUseCount(link.getUseCount() + 1);
-        link.setLastUsedAt(Instant.now());
-        shareLinkRepository.save(link);
+        // Increment use count atomically
+        int updated = shareLinkRepository.incrementUseCountAtomic(link.getId(), Instant.now());
+        if (updated == 0) {
+            throw new ResponseStatusException(HttpStatus.GONE, "SHARE_LINK_LIMIT_REACHED: Maximum uses exceeded");
+        }
 
         WorkspaceEntity ws = workspaceRepository.findById(link.getWorkspaceId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Workspace not found"));
@@ -182,11 +197,24 @@ public class WorkspaceShareService {
         List<String> capabilities = getShareLinkCapabilities(link);
         String sessionToken = shareSessionService.issue(link);
 
+        WorkspacePreviewDto preview = null;
+        if (previewRepository != null) {
+            preview = previewRepository.findTopByWorkspaceIdOrderBySourceStateVersionDesc(ws.getId())
+                    .filter(p -> "READY".equalsIgnoreCase(p.getStatus()))
+                    .map(p -> WorkspacePreviewDto.of(p.getSourceStateVersion(), p.getDarkUrl(), p.getLightUrl(), p.getFallbackKey()))
+                    .orElse(null);
+        }
+        if (preview == null) {
+            preview = ws.getThumbnail() != null
+                    ? WorkspacePreviewDto.of(ws.getStateVersion(), ws.getThumbnail(), ws.getThumbnail(), "chemistry-default-01")
+                    : WorkspacePreviewDto.fallback("chemistry-default-01");
+        }
+
         return new ResolveShareLinkResponse(
                 ws.getId(),
                 ws.getName(),
                 ws.getScience(),
-                WorkspacePreviewDto.fallback("chemistry-default-01"),
+                preview,
                 link.getRole(),
                 capabilities,
                 false,

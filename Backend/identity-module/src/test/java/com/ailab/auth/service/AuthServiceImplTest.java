@@ -80,10 +80,17 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void logsOutByRevokingRefreshToken() {
+    void logsOutByRevokingRefreshTokenOnly() {
         when(refreshTokens.revoke("refresh-token")).thenReturn(java.util.Optional.of("usr_1"));
         service.logout("refresh-token");
         verify(refreshTokens).revoke("refresh-token");
+        verifyNoInteractions(users);
+    }
+
+    @Test
+    void logsOutAllDevicesByInvalidatingSessions() {
+        service.logoutAll("usr_1");
+        verify(refreshTokens).revokeAll("usr_1");
         verify(users).invalidateSessions("usr_1");
     }
 }

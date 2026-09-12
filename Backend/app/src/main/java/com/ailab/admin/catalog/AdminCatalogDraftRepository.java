@@ -13,4 +13,6 @@ public interface AdminCatalogDraftRepository extends JpaRepository<AdminCatalogD
     Optional<AdminCatalogDraftEntity> findByEntityTypeAndCode(String entityType, String code);
 
     List<AdminCatalogDraftEntity> findByEntityTypeAndStatus(String entityType, String status);
+
+    long countByStatus(String status);
 }

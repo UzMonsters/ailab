@@ -71,18 +71,18 @@ public class AdminDashboardController {
         return dashboardService.getActivitySummary(at, timezone);
     }
 
-    @PostMapping("/reports")
+    @PostMapping({"/reports", "/dashboard/reports"})
     public ResponseEntity<Map<String, Object>> createReport(@RequestBody Map<String, Object> request) {
         Map<String, Object> job = dashboardService.createReport(request);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(job);
     }
 
-    @GetMapping("/reports/{jobId}")
+    @GetMapping({"/reports/{jobId}", "/dashboard/reports/{jobId}"})
     public Map<String, Object> getReport(@PathVariable String jobId) {
         return dashboardService.getReportJob(jobId);
     }
 
-    @GetMapping("/reports/{jobId}/download")
+    @GetMapping({"/reports/{jobId}/download", "/dashboard/reports/{jobId}/download"})
     public ResponseEntity<byte[]> downloadReport(@PathVariable String jobId) {
         byte[] content = dashboardService.downloadReport(jobId);
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
