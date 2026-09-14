@@ -1,13 +1,10 @@
 package com.ailab.chemistry.controller;
 
-import com.ailab.chemistry.domain.equipment.EquipmentReferenceProfile;
-import com.ailab.chemistry.domain.equipment.EquipmentReferenceRepository;
-import com.ailab.chemistry.infrastructure.persistence.laboratory.UnavailableEquipmentReferenceRepository;
-import com.ailab.workspace.service.EquipmentCatalogService;
+import com.ailab.admin.catalog.AdminCatalogDraftEntity;
+import com.ailab.admin.catalog.AdminCatalogDraftRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,16 +17,13 @@ import java.util.*;
 @SecurityRequirement(name = "bearerAuth")
 public class EquipmentCatalogController {
 
-    private final EquipmentReferenceRepository equipmentRepository;
-    private final EquipmentCatalogService equipmentCatalogService;
+    private static final String ENTITY_TYPE = "EQUIPMENT";
+    private static final String PUBLISHED = "PUBLISHED";
 
-    public EquipmentCatalogController(
-            ObjectProvider<EquipmentReferenceRepository> repositoryProvider,
-            EquipmentCatalogService equipmentCatalogService
-    ) {
-        EquipmentReferenceRepository repo = repositoryProvider.getIfAvailable();
-        this.equipmentRepository = repo != null ? repo : new UnavailableEquipmentReferenceRepository();
-        this.equipmentCatalogService = equipmentCatalogService;
+    private final AdminCatalogDraftRepository catalogRepository;
+
+    public EquipmentCatalogController(AdminCatalogDraftRepository catalogRepository) {
+        this.catalogRepository = catalogRepository;
     }
 
     @GetMapping({"", "/catalog"})
@@ -40,25 +34,10 @@ public class EquipmentCatalogController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
 
-        List<Map<String, Object>> all = new ArrayList<>();
+        List<Map<String, Object>> all = catalogRepository.findByEntityTypeAndStatus(ENTITY_TYPE, PUBLISHED).stream()
+                .map(this::toEquipmentMap)
+                .toList();
 
-        // 1. Load active repository profiles
-        List<EquipmentReferenceProfile> profiles = equipmentRepository.findActive();
-        if (profiles != null) {
-            for (EquipmentReferenceProfile p : profiles) {
-                all.add(toSummaryMap(p));
-            }
-        }
-
-        // 2. Load catalog service specs
-        List<EquipmentCatalogService.EquipmentSpecification> specs = equipmentCatalogService.getAll();
-        if (specs != null) {
-            for (EquipmentCatalogService.EquipmentSpecification s : specs) {
-                all.add(specToMap(s));
-            }
-        }
-
-        // Filter
         if (query != null && !query.isBlank()) {
             String q = query.toLowerCase();
             all = all.stream()
@@ -83,68 +62,50 @@ public class EquipmentCatalogController {
     @GetMapping("/{identifier}")
     @Operation(summary = "Get equipment details and ports", description = "Retrieve equipment specification, capabilities, and typed port configuration by profile identifier.")
     public Map<String, Object> getEquipmentDetails(@PathVariable String identifier) {
-        Optional<EquipmentReferenceProfile> profileOpt = equipmentRepository.findByProfileId(identifier);
-        if (profileOpt.isPresent()) {
-            return toDetailsMap(profileOpt.get());
-        }
-
-        Optional<EquipmentCatalogService.EquipmentSpecification> specOpt = equipmentCatalogService.findById(identifier);
-        if (specOpt.isPresent()) {
-            return specToMap(specOpt.get());
-        }
-
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Equipment profile not found: " + identifier);
+        AdminCatalogDraftEntity entity = catalogRepository.findByEntityTypeAndId(ENTITY_TYPE, identifier)
+                .or(() -> catalogRepository.findByEntityTypeAndCode(ENTITY_TYPE, identifier))
+                .filter(e -> PUBLISHED.equalsIgnoreCase(e.getStatus()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Equipment profile not found: " + identifier));
+        return toEquipmentMap(entity);
     }
 
-    private Map<String, Object> toSummaryMap(EquipmentReferenceProfile profile) {
-        return Map.of(
-                "profileId", profile.profileId(),
-                "id", profile.profileId(),
-                "displayName", profile.displayName(),
-                "name", profile.displayName(),
-                "type", profile.type().name(),
-                "category", profile.type().name(),
-                "condition", profile.condition().name(),
-                "provenance", profile.provenance()
-        );
-    }
+    private Map<String, Object> toEquipmentMap(AdminCatalogDraftEntity entity) {
+        Map<String, Object> data = entity.getData() != null ? entity.getData() : Map.of();
+        String code = stringValue(data.getOrDefault("code", entity.getCode()));
+        String name = firstString(data, "displayName", "name", "title", "label");
+        if (name == null || name.isBlank()) {
+            name = code;
+        }
+        String category = firstString(data, "category", "type");
 
-    private Map<String, Object> specToMap(EquipmentCatalogService.EquipmentSpecification spec) {
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("profileId", spec.id());
-        m.put("id", spec.id());
-        m.put("displayName", spec.name());
-        m.put("name", spec.name());
-        m.put("category", spec.category());
-        m.put("type", spec.category());
-        m.put("capacityMl", spec.capacityMl());
-        m.put("rendererKey", spec.rendererKey());
-        m.put("capabilities", spec.capabilities());
-        m.put("ports", spec.ports());
-        m.put("assets2d", spec.assets2d());
-        m.put("limits", spec.limits());
+        m.putAll(data);
+        m.put("profileId", code);
+        m.put("id", code);
+        m.put("code", code);
+        m.put("displayName", name);
+        m.put("name", name);
+        if (category != null) {
+            m.put("category", category);
+            m.put("type", category);
+        }
+        m.putIfAbsent("ports", List.of());
+        m.putIfAbsent("capabilities", List.of());
         return m;
     }
 
-    private Map<String, Object> toDetailsMap(EquipmentReferenceProfile profile) {
-        List<Map<String, Object>> ports = List.of(
-                Map.of("id", "INLET", "name", "Fluid Inlet", "type", "FLUID", "direction", "INPUT", "connector", "standard-open-mouth"),
-                Map.of("id", "OUTLET", "name", "Fluid Outlet", "type", "FLUID", "direction", "OUTPUT", "connector", "spout"),
-                Map.of("id", "THERMAL", "name", "Heat Junction", "type", "THERMAL", "direction", "BIDIRECTIONAL", "connector", "thermal-pad")
-        );
+    private String firstString(Map<String, Object> data, String... keys) {
+        for (String key : keys) {
+            String value = stringValue(data.get(key));
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
+    }
 
-        return Map.of(
-                "profileId", profile.profileId(),
-                "id", profile.profileId(),
-                "displayName", profile.displayName(),
-                "name", profile.displayName(),
-                "type", profile.type().name(),
-                "condition", profile.condition().name(),
-                "datasetId", profile.datasetId(),
-                "capabilities", profile.capabilities().stream().map(com.ailab.chemistry.domain.equipment.EquipmentCapability::capabilityType).toList(),
-                "ports", ports,
-                "provenance", profile.provenance()
-        );
+    private String stringValue(Object value) {
+        return value != null ? String.valueOf(value) : null;
     }
 
     private <T> List<T> page(List<T> items, int page, int size) {
