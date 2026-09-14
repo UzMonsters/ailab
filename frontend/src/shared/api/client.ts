@@ -165,31 +165,35 @@ async function requestBlob(endpoint: string): Promise<Blob> {
 }
 
 export const api = {
-  get: <T>(endpoint: string) => request<T>(endpoint),
+  get: <T>(endpoint: string, options?: RequestInit) => request<T>(endpoint, options),
   getBlob: (endpoint: string) => requestBlob(endpoint),
 
-  post: <T>(endpoint: string, body?: unknown) =>
+  post: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
     request<T>(endpoint, {
       method: 'POST',
       body: body !== undefined ? JSON.stringify(body) : undefined,
+      ...options,
     }),
 
-  put: <T>(endpoint: string, body?: unknown) =>
+  put: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
     request<T>(endpoint, {
       method: 'PUT',
       body: body !== undefined ? JSON.stringify(body) : undefined,
+      ...options,
     }),
 
-  patch: <T>(endpoint: string, body?: unknown) =>
+  patch: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
     request<T>(endpoint, {
       method: 'PATCH',
       body: body !== undefined ? JSON.stringify(body) : undefined,
+      ...options,
     }),
 
-  delete: <T>(endpoint: string, body?: unknown) =>
+  delete: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
     request<T>(endpoint, {
       method: 'DELETE',
       body: body !== undefined ? JSON.stringify(body) : undefined,
+      ...options,
     }),
 };
 

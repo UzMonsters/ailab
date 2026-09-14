@@ -35,8 +35,16 @@ const tabs = [
 type Tab = (typeof tabs)[number];
 
 async function all(resource: ApiResource) {
-  const first = await resource.list({ status: 'PUBLISHED', page: 0, size: 100, sort: 'code,asc' });
-  return first.items ?? first.content ?? [];
+  let page = 0;
+  const items: JsonObject[] = [];
+  while (true) {
+    const resp = await resource.list({ status: 'PUBLISHED', page, size: 100, sort: 'code,asc' });
+    const current = (resp.items ?? resp.content ?? []) as JsonObject[];
+    items.push(...current);
+    if (current.length < 100) break;
+    page++;
+  }
+  return items;
 }
 
 export default function ScenarioEditor({ id }: { id?: string }) {

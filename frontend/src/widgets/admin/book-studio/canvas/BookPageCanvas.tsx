@@ -63,7 +63,7 @@ export function BookPageCanvas() {
             <p className="mt-1 text-xs">or use the left panel to add content</p>
           </div>
         )}
-        <BookPageRenderer blocks={sortedBlocks} scenarioName={scenarioName} onInteract={handleInteract} />
+        <BookPageRenderer blocks={sortedBlocks} scenarioName={scenarioName} onInteract={handleInteract} onSelectBlock={setSelected} />
         {selectedBlockId && <BookAlignmentGuides />}
         {selectedBlockId && <BookSelectionOverlay />}
       </div>

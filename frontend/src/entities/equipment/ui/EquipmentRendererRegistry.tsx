@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { BeakerRenderer, type BeakerProps } from './renderers/BeakerRenderer';
 import { ErlenmeyerRenderer, type ErlenmeyerProps } from './renderers/ErlenmeyerRenderer';
 import { RoundFlaskRenderer, type RoundFlaskProps } from './renderers/RoundFlaskRenderer';
@@ -21,6 +21,7 @@ import { ClampStandRenderer, type ClampStandProps } from './renderers/ClampStand
 import { CrucibleRenderer, type CrucibleProps } from './renderers/CrucibleRenderer';
 import { FunnelRenderer, SeparatoryFunnelRenderer } from './renderers/FunnelRenderer';
 import { RingStandRenderer } from './renderers/RingStandRenderer';
+import { equipmentPreviewConfig } from './equipmentPreviewConfig';
 
 export type EquipmentIconProps = {
   type: string;
@@ -162,6 +163,28 @@ export function renderEquipmentCanvas(rendererId: string | undefined, props: Equ
   return (canonical ? rendererRegistry.get(canonical)?.component : undefined)?.(props) ?? defaultRenderer({ ...props, type: canonical ?? props.type });
 }
 
-export function EquipmentThumbnail(props: EquipmentIconProps) {
-  return <span className="equipment-art inline-flex h-full w-full items-center justify-center rounded-lg bg-white/[.03] p-1 leading-none">{renderEquipmentCanvas(props.type, props)}</span>;
+export type EquipmentThumbnailProps = EquipmentIconProps & {
+  asset?: ReactNode;
+  alt?: string;
+  frameWidth?: number | string;
+  frameHeight?: number | string;
+  scale?: number;
+  offsetX?: number;
+  offsetY?: number;
+  objectPosition?: string;
+  className?: string;
+};
+
+export function EquipmentThumbnail({ asset, alt, frameWidth, frameHeight, scale, offsetX, offsetY, objectPosition, className = '', ...rendererProps }: EquipmentThumbnailProps) {
+  const type = String(rendererProps.type ?? 'unsupported');
+  const normalization = equipmentPreviewConfig[canonicalRendererId(type)] ?? {};
+  const position = objectPosition ?? normalization.objectPosition ?? 'center bottom';
+  const artStyle: CSSProperties = {
+    alignItems: position.includes('bottom') ? 'flex-end' : 'center',
+    justifyContent: position.includes('left') ? 'flex-start' : position.includes('right') ? 'flex-end' : 'center',
+    transform: `translate(${offsetX ?? normalization.offsetX ?? 0}px, ${offsetY ?? normalization.offsetY ?? 0}px) scale(${scale ?? normalization.scale ?? 1})`,
+    transformOrigin: position,
+  };
+  const artSize = typeof rendererProps.size === 'number' ? rendererProps.size : 100;
+  return <span className={`equipment-art inline-flex shrink-0 items-end justify-center overflow-hidden rounded-lg bg-white/[.03] leading-none ${className}`} style={{width:frameWidth ?? rendererProps.size ?? 100,height:frameHeight ?? rendererProps.size ?? 100}} role={alt?'img':undefined} aria-label={alt}><span className="inline-flex h-full w-full p-1.5" style={artStyle} aria-hidden={alt?true:undefined}>{asset ?? renderEquipmentCanvas(type,{...rendererProps,type,size:artSize,width:artSize,height:artSize})}</span></span>;
 }

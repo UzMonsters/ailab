@@ -9,7 +9,7 @@ export type BookPageBlock = {
   id: string; kind: BookBlockKind; x: number; y: number; w: number; h: number; z: number;
   translations?: Record<string, unknown>; text?: string; src?: string; assetId?: string;
   svg?: string; formula?: string; scenarioId?: string;
-  equipmentId?: string; materialId?: string; reactionId?: string;
+  equipmentId?: string; rendererKey?: string; materialId?: string; reactionId?: string;
   shapeType?: string; fillColor?: string; strokeColor?: string; strokeWidth?: number;
   borderRadius?: number;
   widgetType?: string; widgetValue?: number; widgetLabel?: string;
@@ -40,8 +40,8 @@ export function hydrateBookPageBlocks(raw: unknown, locale = 'en'): BookPageBloc
       assetId: String(data.assetId ?? entry.assetId ?? ''),
       svg: sanitizeSvgMarkup(String(data.svg ?? entry.svg ?? '')),
       formula: String(data.latex ?? entry.formula ?? ''),
-      scenarioId: String(data.scenarioId ?? entry.scenarioId ?? ''),
       equipmentId: String(data.equipmentId ?? ''),
+      rendererKey: String(data.rendererKey ?? ''),
       materialId: String(data.materialId ?? ''),
       reactionId: String(data.reactionId ?? ''),
       shapeType: String(data.shapeType ?? ''),
@@ -72,7 +72,27 @@ export function hydrateBookPageBlocks(raw: unknown, locale = 'en'): BookPageBloc
   });
 }
 
+import { EquipmentThumbnail } from '@/entities/equipment/ui/EquipmentRendererRegistry';
+
 function EquipmentPlaceholder({ block }: { block: BookPageBlock }) {
+  if (block.rendererKey || block.equipmentId) {
+    return (
+      <div className="flex h-full w-full items-center justify-center p-2">
+        <EquipmentThumbnail
+          type={block.rendererKey || block.equipmentId!}
+          size={Math.min(block.w, block.h) - 20}
+          frameWidth="100%"
+          frameHeight="100%"
+          className="bg-transparent"
+        />
+        {block.showName !== false && (
+          <span className="absolute bottom-1 left-1/2 -translate-x-1/2 rounded bg-black/50 px-2 py-0.5 text-[10px] text-white">
+            {block.equipmentId}
+          </span>
+        )}
+      </div>
+    );
+  }
   return (
     <div className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-violet-300/30 bg-violet-100/50 p-3 text-center">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-10 w-10 text-violet-500">
@@ -145,6 +165,6 @@ export function BookBlockRenderer({ block, scenarioLabel, interactive = false, o
   return <RichTextPreview content={block.text || '<p>Text block</p>'} />;
 }
 
-export function BookPageRenderer({ blocks, scenarioName, onInteract, className = '' }: { blocks: BookPageBlock[]; scenarioName?: (id: string) => string; onInteract?: (id: string) => void; className?: string }) {
-  return <div className={`absolute inset-0 overflow-hidden bg-[#fff9e9] text-slate-950 ${className}`}>{[...blocks].sort((a, b) => a.z - b.z).filter(b => b.visible !== false).map((block) => <div key={block.id} className="absolute overflow-hidden rounded p-2" style={{ left: block.x, top: block.y, width: block.w, height: block.h, zIndex: block.z, opacity: block.opacity ?? 1, transform: block.rotation ? `rotate(${block.rotation}deg)` : undefined }}><BookBlockRenderer block={block} scenarioLabel={block.scenarioId ? scenarioName?.(block.scenarioId) : undefined} interactive={Boolean(onInteract)} onInteract={block.scenarioId ? () => onInteract?.(block.scenarioId!) : undefined} /></div>)}</div>;
+export function BookPageRenderer({ blocks, scenarioName, onInteract, onSelectBlock, className = '' }: { blocks: BookPageBlock[]; scenarioName?: (id: string) => string; onInteract?: (id: string) => void; onSelectBlock?: (id: string) => void; className?: string }) {
+  return <div className={`absolute inset-0 overflow-hidden bg-[#fff9e9] text-slate-950 ${className}`}>{[...blocks].sort((a, b) => a.z - b.z).filter(b => b.visible !== false).map((block) => <div key={block.id} onPointerDown={onSelectBlock ? (e) => { e.stopPropagation(); onSelectBlock(block.id); } : undefined} className="absolute overflow-hidden rounded p-2" style={{ left: block.x, top: block.y, width: block.w, height: block.h, zIndex: block.z, opacity: block.opacity ?? 1, transform: block.rotation ? `rotate(${block.rotation}deg)` : undefined }}><BookBlockRenderer block={block} scenarioLabel={block.scenarioId ? scenarioName?.(block.scenarioId) : undefined} interactive={Boolean(onInteract)} onInteract={block.scenarioId ? () => onInteract?.(block.scenarioId!) : undefined} /></div>)}</div>;
 }
