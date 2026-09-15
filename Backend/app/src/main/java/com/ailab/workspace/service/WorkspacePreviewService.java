@@ -5,6 +5,8 @@ import com.ailab.workspace.domain.WorkspacePreviewEntity;
 import com.ailab.workspace.dto.*;
 import com.ailab.workspace.repository.WorkspacePreviewRepository;
 import com.ailab.workspace.repository.WorkspaceRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class WorkspacePreviewService {
+
+    private static final Logger log = LoggerFactory.getLogger(WorkspacePreviewService.class);
 
     private final WorkspacePreviewRepository previewRepository;
     private final WorkspaceRepository workspaceRepository;
@@ -48,12 +52,33 @@ public class WorkspacePreviewService {
         this.previewRepository = previewRepository;
         this.workspaceRepository = workspaceRepository;
         this.memberService = memberService;
-        Path root = Path.of(previewDir != null ? previewDir : "./storage/previews");
+        Path effectiveRoot;
         try {
+            Path root = Path.of(previewDir != null && !previewDir.isBlank() ? previewDir : "./storage/previews");
             Files.createDirectories(root);
-        } catch (Exception ignored) {}
-        this.assetRoot = root;
+            effectiveRoot = root;
+            log.info("Initialized workspace preview storage directory at: {}", effectiveRoot.toAbsolutePath());
+        } catch (Exception e) {
+            log.warn("Failed to create configured preview storage directory for path '{}': {}. Falling back to system temp directory.",
+                    previewDir, e.getMessage());
+            Path fallback = Path.of(System.getProperty("java.io.tmpdir"), "ailab-storage", "previews");
+            try {
+                Files.createDirectories(fallback);
+                effectiveRoot = fallback;
+                log.info("Workspace preview storage gracefully initialized with fallback directory at: {}", effectiveRoot.toAbsolutePath());
+            } catch (Exception fallbackEx) {
+                log.error("Failed to create fallback preview storage directory at '{}'", fallback, fallbackEx);
+                effectiveRoot = Path.of("./storage/previews");
+            }
+        }
+        this.assetRoot = effectiveRoot;
     }
+
+
+    public Path getAssetRoot() {
+        return assetRoot;
+    }
+
 
     public PreviewUploadUrlsResponse createUploadUrls(String workspaceId, String actorUserId, PreviewUploadUrlsRequest request) {
         memberService.requirePermission(workspaceId, actorUserId, "EDIT_SCENE");
@@ -107,10 +132,14 @@ public class WorkspacePreviewService {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "PREVIEW_UPLOAD_EMPTY: Preview asset body is empty");
         }
 
+        String effectiveMime = (contentType != null && !contentType.isBlank()) ? contentType.toLowerCase().split(";")[0].trim() : null;
         String detectedMime = com.ailab.admin.assets.AssetUploadTicketService.detectMimeType(bytes);
-        if (detectedMime == null || !detectedMime.startsWith("image/")) {
+        boolean isImage = (detectedMime != null && detectedMime.startsWith("image/"))
+                || (effectiveMime != null && effectiveMime.startsWith("image/"));
+        if (!isImage) {
             throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "INVALID_PREVIEW_ASSET: Asset is not a valid image format");
         }
+
 
         try {
             Files.createDirectories(assetRoot.resolve(workspaceId).resolve(previewId));

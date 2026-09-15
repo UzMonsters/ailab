@@ -1,5 +1,7 @@
 package com.ailab.admin.assets;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -14,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class AssetStorageService {
+
+    private static final Logger log = LoggerFactory.getLogger(AssetStorageService.class);
 
     private final Path storageDir;
     private final Map<String, StoredAssetMeta> metaCache = new ConcurrentHashMap<>();
@@ -31,13 +35,33 @@ public class AssetStorageService {
 
     @org.springframework.beans.factory.annotation.Autowired
     public AssetStorageService(@org.springframework.beans.factory.annotation.Value("${app.storage.dir:./storage/assets}") String storagePath) {
-        this.storageDir = Paths.get(storagePath != null ? storagePath : "./storage/assets");
+        Path initializedPath;
         try {
-            Files.createDirectories(storageDir);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to initialize asset storage directory", e);
+            Path resolved = Paths.get(storagePath != null && !storagePath.isBlank() ? storagePath : "./storage/assets");
+            Files.createDirectories(resolved);
+            initializedPath = resolved;
+            log.info("Initialized asset storage directory at: {}", initializedPath.toAbsolutePath());
+        } catch (Exception e) {
+            log.warn("Failed to create configured asset storage directory for path '{}': {}. Attempting fallback to system temp directory.",
+                    storagePath, e.getMessage());
+            Path fallback = Paths.get(System.getProperty("java.io.tmpdir"), "ailab-storage", "assets");
+            try {
+                Files.createDirectories(fallback);
+                initializedPath = fallback;
+                log.info("Asset storage gracefully initialized with fallback directory at: {}", initializedPath.toAbsolutePath());
+            } catch (Exception fallbackEx) {
+                log.error("Failed to initialize both primary storage '{}' and fallback storage '{}'", storagePath, fallback, fallbackEx);
+                throw new RuntimeException("Failed to initialize asset storage directory at " + storagePath + " and fallback " + fallback, e);
+            }
         }
+        this.storageDir = initializedPath;
     }
+
+    public Path getStorageDir() {
+        return storageDir;
+    }
+
+
 
     public StoredAssetMeta store(String fileId, byte[] data, String contentType) throws IOException {
         String safeFileId = sanitize(fileId);
@@ -99,6 +123,11 @@ public class AssetStorageService {
     }
 
     private String sanitize(String fileId) {
-        return fileId.replaceAll("[^a-zA-Z0-9._-]", "_");
+        if (fileId == null) {
+            return "unnamed_asset";
+        }
+        String clean = fileId.replace("..", "_").replaceAll("[^a-zA-Z0-9._-]", "_");
+        return clean.isBlank() ? "unnamed_asset" : clean;
     }
 }
+
