@@ -18,6 +18,9 @@ public interface WorkspaceMemberRepository extends JpaRepository<WorkspaceMember
 
     Optional<WorkspaceMemberEntity> findByWorkspaceIdAndUserId(String workspaceId, String userId);
 
+    @Query("SELECT m.workspaceId, COUNT(m) FROM WorkspaceMemberEntity m WHERE m.workspaceId IN :workspaceIds GROUP BY m.workspaceId")
+    List<Object[]> countByWorkspaceIds(@org.springframework.data.repository.query.Param("workspaceIds") List<String> workspaceIds);
+
     @Query("SELECT COUNT(m) FROM WorkspaceMemberEntity m WHERE m.workspaceId = :workspaceId AND m.role = 'OWNER'")
     long countOwnersByWorkspaceId(String workspaceId);
 

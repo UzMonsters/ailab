@@ -199,6 +199,44 @@ class WorkspaceSharingCollaborationIntegrationTest {
     }
 
     @Test
+    void testAdminWorkspaceActiveLinkFilter() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/workspaces")
+                        .header("Authorization", adminToken)
+                        .param("ownerId", owner.getId())
+                        .param("hasActiveLinks", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value(wsId));
+
+        mockMvc.perform(get("/api/v1/admin/workspaces")
+                        .header("Authorization", adminToken)
+                        .param("ownerId", owner.getId())
+                        .param("hasActiveLinks", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items", hasSize(0)));
+
+        CreateShareLinkRequest linkReq = new CreateShareLinkRequest("VIEWER", Instant.now().plusSeconds(3600), null, 5, true, true);
+        mockMvc.perform(post("/api/v1/workspaces/" + wsId + "/share-links")
+                        .header("Authorization", ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(linkReq)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/admin/workspaces")
+                        .header("Authorization", adminToken)
+                        .param("ownerId", owner.getId())
+                        .param("hasActiveLinks", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value(wsId));
+
+        mockMvc.perform(get("/api/v1/admin/workspaces")
+                        .header("Authorization", adminToken)
+                        .param("ownerId", owner.getId())
+                        .param("hasActiveLinks", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items", hasSize(0)));
+    }
+
+    @Test
     void testPersistentTeamChat() throws Exception {
         // Send message with clientMessageId
         SendChatMessageRequest chatReq = new SendChatMessageRequest("client-msg-01", "Hello team! Starting titration.", null, Map.of("stateVersion", 1));

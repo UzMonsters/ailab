@@ -2,8 +2,11 @@ package com.ailab.workspace.repository;
 
 import com.ailab.workspace.domain.WorkspaceShareLinkEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,6 +14,12 @@ import java.util.Optional;
 public interface WorkspaceShareLinkRepository extends JpaRepository<WorkspaceShareLinkEntity, String> {
 
     List<WorkspaceShareLinkEntity> findByWorkspaceId(String workspaceId);
+
+    @Query("SELECT l.workspaceId, COUNT(l) FROM WorkspaceShareLinkEntity l WHERE l.workspaceId IN :workspaceIds AND l.revokedAt IS NULL AND (l.expiresAt IS NULL OR l.expiresAt > :now) AND (l.maxUses IS NULL OR l.useCount < l.maxUses) GROUP BY l.workspaceId")
+    List<Object[]> countActiveByWorkspaceIds(
+            @Param("workspaceIds") List<String> workspaceIds,
+            @Param("now") Instant now
+    );
 
     Optional<WorkspaceShareLinkEntity> findByTokenHash(String tokenHash);
 
