@@ -19,4 +19,8 @@ public interface WorkspaceInvitationRepository extends JpaRepository<WorkspaceIn
     Optional<WorkspaceInvitationEntity> findByIdAndWorkspaceId(String id, String workspaceId);
 
     void deleteByWorkspaceId(String workspaceId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT i.workspaceId, COUNT(i) FROM WorkspaceInvitationEntity i WHERE i.workspaceId IN :workspaceIds AND i.status = 'PENDING' GROUP BY i.workspaceId")
+    List<Object[]> countPendingInvitationsByWorkspaceIds(@org.springframework.data.repository.query.Param("workspaceIds") java.util.Collection<String> workspaceIds);
 }
+

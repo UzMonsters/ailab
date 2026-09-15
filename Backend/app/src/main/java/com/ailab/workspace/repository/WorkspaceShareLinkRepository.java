@@ -21,4 +21,8 @@ public interface WorkspaceShareLinkRepository extends JpaRepository<WorkspaceSha
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query("UPDATE WorkspaceShareLinkEntity l SET l.useCount = l.useCount + 1, l.lastUsedAt = :now WHERE l.id = :id AND (l.maxUses IS NULL OR l.useCount < l.maxUses)")
     int incrementUseCountAtomic(@org.springframework.data.repository.query.Param("id") String id, @org.springframework.data.repository.query.Param("now") java.time.Instant now);
+
+    @org.springframework.data.jpa.repository.Query("SELECT l.workspaceId, COUNT(l) FROM WorkspaceShareLinkEntity l WHERE l.workspaceId IN :workspaceIds AND l.revokedAt IS NULL AND (l.expiresAt IS NULL OR l.expiresAt > :now) AND (l.maxUses IS NULL OR l.useCount < l.maxUses) GROUP BY l.workspaceId")
+    List<Object[]> countActiveShareLinksByWorkspaceIds(@org.springframework.data.repository.query.Param("workspaceIds") java.util.Collection<String> workspaceIds, @org.springframework.data.repository.query.Param("now") java.time.Instant now);
 }
+

@@ -47,35 +47,39 @@ public interface WorkspaceRepository extends JpaRepository<WorkspaceEntity, Stri
             Pageable pageable
     );
 
-    @Query("""
-           SELECT new com.ailab.admin.workspace.AdminWorkspaceSummaryRow(
-               w.id,
-               w.name,
-               w.science,
-               CASE WHEN w.isDeleted = true THEN 'DELETED' ELSE 'ACTIVE' END,
-               w.ownerId,
-               w.stateVersion,
-               w.updatedAt,
-               (SELECT COUNT(m) FROM WorkspaceMemberEntity m WHERE m.workspaceId = w.id),
-               (SELECT COUNT(l) FROM WorkspaceShareLinkEntity l WHERE l.workspaceId = w.id AND l.revokedAt IS NULL AND (l.expiresAt IS NULL OR l.expiresAt > :now) AND (l.maxUses IS NULL OR l.useCount < l.maxUses)),
-               (SELECT COUNT(i) FROM WorkspaceInvitationEntity i WHERE i.workspaceId = w.id AND i.status = 'PENDING')
-           )
-           FROM WorkspaceEntity w
+    @Query(value = """
+           SELECT w FROM WorkspaceEntity w
            WHERE (:hasScience = false OR LOWER(w.science) = :science)
              AND (:hasSearch = false OR LOWER(w.name) LIKE CONCAT('%', :search, '%'))
              AND (:status = '' OR (:status = 'ACTIVE' AND w.isDeleted = false) OR (:status = 'DELETED' AND w.isDeleted = true))
              AND (:hasOwner = false OR w.ownerId = :ownerId)
              AND (:hasActiveLinksFilter = false
-                  OR (:hasActiveLinks = true AND EXISTS (
-                      SELECT 1 FROM WorkspaceShareLinkEntity l
-                      WHERE l.workspaceId = w.id AND l.revokedAt IS NULL AND (l.expiresAt IS NULL OR l.expiresAt > :now) AND (l.maxUses IS NULL OR l.useCount < l.maxUses)
+                  OR (:hasActiveLinks = true AND w.id IN (
+                      SELECT l.workspaceId FROM WorkspaceShareLinkEntity l
+                      WHERE l.revokedAt IS NULL AND (l.expiresAt IS NULL OR l.expiresAt > :now) AND (l.maxUses IS NULL OR l.useCount < l.maxUses)
                   ))
-                  OR (:hasActiveLinks = false AND NOT EXISTS (
-                      SELECT 1 FROM WorkspaceShareLinkEntity l
-                      WHERE l.workspaceId = w.id AND l.revokedAt IS NULL AND (l.expiresAt IS NULL OR l.expiresAt > :now) AND (l.maxUses IS NULL OR l.useCount < l.maxUses)
+                  OR (:hasActiveLinks = false AND w.id NOT IN (
+                      SELECT l.workspaceId FROM WorkspaceShareLinkEntity l
+                      WHERE l.revokedAt IS NULL AND (l.expiresAt IS NULL OR l.expiresAt > :now) AND (l.maxUses IS NULL OR l.useCount < l.maxUses)
+                  )))
+           """,
+           countQuery = """
+           SELECT COUNT(w) FROM WorkspaceEntity w
+           WHERE (:hasScience = false OR LOWER(w.science) = :science)
+             AND (:hasSearch = false OR LOWER(w.name) LIKE CONCAT('%', :search, '%'))
+             AND (:status = '' OR (:status = 'ACTIVE' AND w.isDeleted = false) OR (:status = 'DELETED' AND w.isDeleted = true))
+             AND (:hasOwner = false OR w.ownerId = :ownerId)
+             AND (:hasActiveLinksFilter = false
+                  OR (:hasActiveLinks = true AND w.id IN (
+                      SELECT l.workspaceId FROM WorkspaceShareLinkEntity l
+                      WHERE l.revokedAt IS NULL AND (l.expiresAt IS NULL OR l.expiresAt > :now) AND (l.maxUses IS NULL OR l.useCount < l.maxUses)
+                  ))
+                  OR (:hasActiveLinks = false AND w.id NOT IN (
+                      SELECT l.workspaceId FROM WorkspaceShareLinkEntity l
+                      WHERE l.revokedAt IS NULL AND (l.expiresAt IS NULL OR l.expiresAt > :now) AND (l.maxUses IS NULL OR l.useCount < l.maxUses)
                   )))
            """)
-    Page<AdminWorkspaceSummaryRow> findAdminWorkspaceSummaries(
+    Page<WorkspaceEntity> findAdminWorkspaces(
             @Param("search") String search,
             @Param("hasSearch") boolean hasSearch,
             @Param("science") String science,
@@ -88,6 +92,7 @@ public interface WorkspaceRepository extends JpaRepository<WorkspaceEntity, Stri
             @Param("now") Instant now,
             Pageable pageable
     );
+
 
     long countByIsDeletedFalse();
 

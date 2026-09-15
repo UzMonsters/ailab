@@ -25,5 +25,6 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
 COPY --from=build --chown=appuser:appgroup /build/app/target/app-*.jar app.jar
 USER appuser
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "exec java -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0 -XX:+ExitOnOutOfMemoryError ${JAVA_OPTS} -jar app.jar"]
+
 

@@ -69,7 +69,7 @@ public class AdminWorkspaceService {
     public AdminWorkspaceDtos.PageDto list(String q, String science, String status, String ownerId,
                                            Boolean hasActiveLinks, int page, int size, String sort) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, Math.min(size, 100)), sort(sort));
-        Page<AdminWorkspaceSummaryRow> rows = workspaceRepository.findAdminWorkspaceSummaries(
+        Page<WorkspaceEntity> pageResult = workspaceRepository.findAdminWorkspaces(
                 normalized(q),
                 hasText(q),
                 normalized(science),
@@ -83,29 +83,44 @@ public class AdminWorkspaceService {
                 pageable
         );
 
-        Map<String, User> owners = userRepository.findAllById(rows.getContent().stream()
-                        .map(AdminWorkspaceSummaryRow::ownerId)
+        List<WorkspaceEntity> workspaces = pageResult.getContent();
+        Set<String> wsIds = workspaces.stream().map(WorkspaceEntity::getId).collect(Collectors.toSet());
+
+        Map<String, Long> memberCounts = wsIds.isEmpty() ? Collections.emptyMap() :
+                memberRepository.countMembersByWorkspaceIds(wsIds).stream()
+                        .collect(Collectors.toMap(r -> (String) r[0], r -> ((Number) r[1]).longValue()));
+
+        Map<String, Long> linkCounts = wsIds.isEmpty() ? Collections.emptyMap() :
+                shareLinkRepository.countActiveShareLinksByWorkspaceIds(wsIds, Instant.now()).stream()
+                        .collect(Collectors.toMap(r -> (String) r[0], r -> ((Number) r[1]).longValue()));
+
+        Map<String, Long> invitationCounts = wsIds.isEmpty() ? Collections.emptyMap() :
+                invitationRepository.countPendingInvitationsByWorkspaceIds(wsIds).stream()
+                        .collect(Collectors.toMap(r -> (String) r[0], r -> ((Number) r[1]).longValue()));
+
+        Map<String, User> owners = userRepository.findAllById(workspaces.stream()
+                        .map(WorkspaceEntity::getOwnerId)
                         .collect(Collectors.toSet()))
                 .stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
 
-        List<AdminWorkspaceDtos.SummaryDto> items = rows.getContent().stream()
-                .map(row -> new AdminWorkspaceDtos.SummaryDto(
-                        row.id(),
-                        row.name(),
-                        row.science(),
-                        row.status(),
-                        owner(row.ownerId(), owners.get(row.ownerId())),
-                        row.memberCount(),
-                        row.activeShareLinkCount(),
-                        row.pendingInvitationCount(),
-                        row.stateVersion(),
-                        row.updatedAt()
+        List<AdminWorkspaceDtos.SummaryDto> items = workspaces.stream()
+                .map(ws -> new AdminWorkspaceDtos.SummaryDto(
+                        ws.getId(),
+                        ws.getName(),
+                        ws.getScience(),
+                        ws.isDeleted() ? "DELETED" : "ACTIVE",
+                        owner(ws.getOwnerId(), owners.get(ws.getOwnerId())),
+                        memberCounts.getOrDefault(ws.getId(), 0L),
+                        linkCounts.getOrDefault(ws.getId(), 0L),
+                        invitationCounts.getOrDefault(ws.getId(), 0L),
+                        ws.getStateVersion(),
+                        ws.getUpdatedAt()
                 ))
                 .toList();
 
         return new AdminWorkspaceDtos.PageDto(items,
-                new AdminWorkspaceDtos.PageMeta(rows.getNumber(), rows.getSize(), rows.getTotalElements(), rows.getTotalPages()));
+                new AdminWorkspaceDtos.PageMeta(pageResult.getNumber(), pageResult.getSize(), pageResult.getTotalElements(), pageResult.getTotalPages()));
     }
 
     @Transactional(readOnly = true)
