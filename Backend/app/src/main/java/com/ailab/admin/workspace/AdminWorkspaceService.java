@@ -3,13 +3,17 @@ package com.ailab.admin.workspace;
 import com.ailab.user.domain.User;
 import com.ailab.user.repository.UserRepository;
 import com.ailab.workspace.domain.WorkspaceEntity;
+import com.ailab.workspace.domain.WorkspaceShareLinkEntity;
 import com.ailab.workspace.dto.WorkspaceInvitationDto;
 import com.ailab.workspace.dto.WorkspaceMemberDto;
 import com.ailab.workspace.dto.WorkspaceShareLinkDto;
 import com.ailab.workspace.exception.WorkspaceNotFoundException;
 import com.ailab.workspace.repository.*;
 import com.ailab.workspace.security.WorkspaceShareSessionService;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,43 +73,104 @@ public class AdminWorkspaceService {
     public AdminWorkspaceDtos.PageDto list(String q, String science, String status, String ownerId,
                                            Boolean hasActiveLinks, int page, int size, String sort) {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, Math.min(size, 100)), sort(sort));
-        Page<AdminWorkspaceSummaryRow> rows = workspaceRepository.findAdminWorkspaceSummaries(
-                normalized(q),
-                hasText(q),
-                normalized(science),
-                hasText(science),
-                normalizedStatus(status),
-                ownerId != null && !ownerId.isBlank() ? ownerId : "",
-                ownerId != null && !ownerId.isBlank(),
-                hasActiveLinks,
-                hasActiveLinks != null,
-                Instant.now(),
+        Instant now = Instant.now();
+        Page<WorkspaceEntity> workspaces = workspaceRepository.findAll(
+                adminWorkspaceSpecification(q, science, normalizedStatus(status), ownerId, hasActiveLinks, now),
                 pageable
         );
 
-        Map<String, User> owners = userRepository.findAllById(rows.getContent().stream()
-                        .map(AdminWorkspaceSummaryRow::ownerId)
+        List<String> workspaceIds = workspaces.getContent().stream()
+                .map(WorkspaceEntity::getId)
+                .toList();
+        Map<String, Long> memberCounts = workspaceIds.isEmpty()
+                ? Map.of()
+                : countMap(memberRepository.countByWorkspaceIds(workspaceIds));
+        Map<String, Long> activeShareLinkCounts = workspaceIds.isEmpty()
+                ? Map.of()
+                : countMap(shareLinkRepository.countActiveByWorkspaceIds(workspaceIds, now));
+        Map<String, Long> pendingInvitationCounts = workspaceIds.isEmpty()
+                ? Map.of()
+                : countMap(invitationRepository.countPendingByWorkspaceIds(workspaceIds));
+
+        Map<String, User> owners = userRepository.findAllById(workspaces.getContent().stream()
+                        .map(WorkspaceEntity::getOwnerId)
                         .collect(Collectors.toSet()))
                 .stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
 
-        List<AdminWorkspaceDtos.SummaryDto> items = rows.getContent().stream()
-                .map(row -> new AdminWorkspaceDtos.SummaryDto(
-                        row.id(),
-                        row.name(),
-                        row.science(),
-                        row.status(),
-                        owner(row.ownerId(), owners.get(row.ownerId())),
-                        row.memberCount(),
-                        row.activeShareLinkCount(),
-                        row.pendingInvitationCount(),
-                        row.stateVersion(),
-                        row.updatedAt()
+        List<AdminWorkspaceDtos.SummaryDto> items = workspaces.getContent().stream()
+                .map(workspace -> new AdminWorkspaceDtos.SummaryDto(
+                        workspace.getId(),
+                        workspace.getName(),
+                        workspace.getScience(),
+                        workspace.isDeleted() ? "DELETED" : "ACTIVE",
+                        owner(workspace.getOwnerId(), owners.get(workspace.getOwnerId())),
+                        memberCounts.getOrDefault(workspace.getId(), 0L),
+                        activeShareLinkCounts.getOrDefault(workspace.getId(), 0L),
+                        pendingInvitationCounts.getOrDefault(workspace.getId(), 0L),
+                        workspace.getStateVersion(),
+                        workspace.getUpdatedAt()
                 ))
                 .toList();
 
         return new AdminWorkspaceDtos.PageDto(items,
-                new AdminWorkspaceDtos.PageMeta(rows.getNumber(), rows.getSize(), rows.getTotalElements(), rows.getTotalPages()));
+                new AdminWorkspaceDtos.PageMeta(workspaces.getNumber(), workspaces.getSize(), workspaces.getTotalElements(), workspaces.getTotalPages()));
+    }
+
+    private Specification<WorkspaceEntity> adminWorkspaceSpecification(
+            String q,
+            String science,
+            String status,
+            String ownerId,
+            Boolean hasActiveLinks,
+            Instant now
+    ) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (hasText(science)) {
+                predicates.add(criteriaBuilder.equal(
+                        criteriaBuilder.lower(root.get("science")), normalized(science)));
+            }
+            if (hasText(q)) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("name")), "%" + normalized(q) + "%"));
+            }
+            if ("ACTIVE".equals(status)) {
+                predicates.add(criteriaBuilder.isFalse(root.get("isDeleted")));
+            } else if ("DELETED".equals(status)) {
+                predicates.add(criteriaBuilder.isTrue(root.get("isDeleted")));
+            }
+            if (ownerId != null && !ownerId.isBlank()) {
+                predicates.add(criteriaBuilder.equal(root.get("ownerId"), ownerId));
+            }
+            if (hasActiveLinks != null) {
+                jakarta.persistence.criteria.Subquery<Integer> subquery = query.subquery(Integer.class);
+                Root<WorkspaceShareLinkEntity> link = subquery.from(WorkspaceShareLinkEntity.class);
+                List<Predicate> linkPredicates = new ArrayList<>();
+                linkPredicates.add(criteriaBuilder.equal(link.get("workspaceId"), root.get("id")));
+                linkPredicates.add(criteriaBuilder.isNull(link.get("revokedAt")));
+                linkPredicates.add(criteriaBuilder.or(
+                        criteriaBuilder.isNull(link.get("expiresAt")),
+                        criteriaBuilder.greaterThan(link.get("expiresAt"), now)));
+                linkPredicates.add(criteriaBuilder.or(
+                        criteriaBuilder.isNull(link.get("maxUses")),
+                        criteriaBuilder.lessThan(link.get("useCount"), link.get("maxUses"))));
+                subquery.select(criteriaBuilder.literal(1));
+                subquery.where(criteriaBuilder.and(linkPredicates.toArray(Predicate[]::new)));
+                Predicate exists = criteriaBuilder.exists(subquery);
+                predicates.add(Boolean.TRUE.equals(hasActiveLinks) ? exists : criteriaBuilder.not(exists));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
+    }
+
+    private Map<String, Long> countMap(List<Object[]> rows) {
+        return rows.stream().collect(Collectors.toMap(
+                row -> String.valueOf(row[0]),
+                row -> ((Number) row[1]).longValue()
+        ));
     }
 
     @Transactional(readOnly = true)
