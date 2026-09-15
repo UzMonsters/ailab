@@ -417,6 +417,7 @@ export const useBookStudioStore = create<BookStudioState>((set, get) => ({
               latex: b.formula,
               scenarioId: b.scenarioId,
               equipmentId: b.equipmentId,
+              rendererKey: b.rendererKey,
               materialId: b.materialId,
               reactionId: b.reactionId,
               shapeType: b.shapeType,

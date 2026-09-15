@@ -675,17 +675,25 @@ export function SandboxCanvas({
                   <span className="font-mono text-xs font-bold text-cyan-300">
                     {(item.operation === 'active' || item.operation === 'measuring') && item.measurementStatus === 'valid' && typeof item.measuredValue === 'number' ? `pH ${item.measuredValue.toFixed(2)}` : 'pH — подключите зонд к раствору'}
                   </span>
+                  </span>
                 </div>
               )}
             </div>
           )}
 
           {pourAnimation?.targetId === item.id && pourAnimation.sourceId !== item.id && (
-            <svg className="pointer-events-none absolute left-1/2 top-0 z-30 h-20 w-12 -translate-x-1/2 -translate-y-[4.5rem] overflow-visible" viewBox="0 0 48 80" aria-label="Pouring liquid">
-              <path d="M24 0 C22 18 28 30 24 48 C22 58 24 68 24 80" fill="none" stroke={item.material?.color ?? '#22D3EE'} strokeWidth="5" strokeLinecap="round" className="sandbox-pour-stream" />
-              <circle cx="17" cy="16" r="2.5" fill={item.material?.color ?? '#22D3EE'} className="animate-rise" />
-              <circle cx="31" cy="32" r="2" fill={item.material?.color ?? '#22D3EE'} className="animate-rise animation-delay-300" />
-              <circle cx="24" cy="48" r="1.5" fill={item.material?.color ?? '#22D3EE'} className="animate-rise animation-delay-600" />
+            <svg className="pointer-events-none absolute left-1/2 top-0 z-30 h-[120px] w-[160px] -translate-x-1/2 -translate-y-[6rem] overflow-visible" viewBox="0 0 160 120" aria-label="Pouring liquid">
+              {pourAnimation.sourceId === 'library' && (
+                <g transform="translate(80, 20) rotate(-110) scale(0.65)" className="sandbox-pour-library-flask animate-pulse" style={{ animationDuration: '0.8s' }}>
+                  <path d="M-12,0 L12,0 L12,18 L24,40 L24,75 A8,8 0 0,1 -24,75 L-24,40 L-12,18 Z" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.7)" strokeWidth="3" />
+                  <path d="M-22,46 L22,46 L22,70 A4,4 0 0,1 -22,70 Z" fill={item.material?.color ?? '#22D3EE'} opacity="0.9" />
+                  <path d="M-12,2 L12,2" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" />
+                </g>
+              )}
+              <path d="M80 30 C76 50 86 65 80 85 C76 100 82 110 80 120" fill="none" stroke={item.material?.color ?? '#22D3EE'} strokeWidth="5" strokeLinecap="round" className="sandbox-pour-stream" />
+              <circle cx="73" cy="50" r="2.5" fill={item.material?.color ?? '#22D3EE'} className="animate-rise" />
+              <circle cx="89" cy="70" r="2" fill={item.material?.color ?? '#22D3EE'} className="animate-rise animation-delay-300" />
+              <circle cx="80" cy="90" r="1.5" fill={item.material?.color ?? '#22D3EE'} className="animate-rise animation-delay-600" />
             </svg>
           )}
           {spillAnimation === item.id && (

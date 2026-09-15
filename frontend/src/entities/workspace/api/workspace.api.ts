@@ -56,50 +56,46 @@ export const workspacesApi = {
   saveThumbnail: (id: string, data: { svg?: string; width?: number; height?: number; imageData?: string }) =>
     api.post<{ thumbnailUrl: string; updatedAt: string }>(`/api/v1/workspaces/${id}/thumbnail`, data),
 
-  getState: (id: string, sessionToken?: string) => api.get<WorkspaceState>(`/api/v1/workspaces/${id}/state${sessionToken ? `?sessionToken=${encodeURIComponent(sessionToken)}` : ''}`),
+  getState: (id: string, sessionToken?: string) => api.get<WorkspaceState>(`/api/v1/workspaces/${id}/state`, sessionToken ? { headers: { 'X-Share-Session': sessionToken } } : undefined),
 
   saveState: (id: string, state: WorkspaceState, expectedVersion?: number, sessionToken?: string) => {
     const params = new URLSearchParams();
     if (expectedVersion !== undefined) params.set('expectedVersion', String(expectedVersion));
-    if (sessionToken) params.set('sessionToken', sessionToken);
     const query = params.toString() ? `?${params.toString()}` : '';
-    return api.put<WorkspaceState>(`/api/v1/workspaces/${id}/state${query}`, state);
+    return api.put<WorkspaceState>(`/api/v1/workspaces/${id}/state${query}`, state, sessionToken ? { headers: { 'X-Share-Session': sessionToken } } : undefined);
   },
 
   appendEvent: (id: string, event: SandboxEventCommand, sessionToken?: string) =>
-    api.post<WorkspaceEventAck>(`/api/v1/workspaces/${id}/events${sessionToken ? `?sessionToken=${encodeURIComponent(sessionToken)}` : ''}`, event),
+    api.post<WorkspaceEventAck>(`/api/v1/workspaces/${id}/events`, event, sessionToken ? { headers: { 'X-Share-Session': sessionToken } } : undefined),
 
   getEvents: (id: string, afterVersion?: number, limit?: number, sessionToken?: string) => {
     const params = new URLSearchParams();
     if (afterVersion !== undefined) params.set('afterVersion', String(afterVersion));
     if (limit !== undefined) params.set('limit', String(limit));
-    if (sessionToken) params.set('sessionToken', sessionToken);
     const encoded = params.toString();
     const query = encoded ? `?${encoded}` : '';
-    return api.get<Array<Record<string, unknown>>>(`/api/v1/workspaces/${id}/events${query}`);
+    return api.get<Array<Record<string, unknown>>>(`/api/v1/workspaces/${id}/events${query}`, sessionToken ? { headers: { 'X-Share-Session': sessionToken } } : undefined);
   },
 
   undo: (id: string, expectedVersion?: number, sessionToken?: string) => {
     const params = new URLSearchParams();
     if (expectedVersion !== undefined) params.set('expectedVersion', String(expectedVersion));
-    if (sessionToken) params.set('sessionToken', sessionToken);
     const encoded = params.toString();
     const query = encoded ? `?${encoded}` : '';
-    return api.post<WorkspaceState>(`/api/v1/workspaces/${id}/undo${query}`);
+    return api.post<WorkspaceState>(`/api/v1/workspaces/${id}/undo${query}`, undefined, sessionToken ? { headers: { 'X-Share-Session': sessionToken } } : undefined);
   },
 
   redo: (id: string, expectedVersion?: number, sessionToken?: string) => {
     const params = new URLSearchParams();
     if (expectedVersion !== undefined) params.set('expectedVersion', String(expectedVersion));
-    if (sessionToken) params.set('sessionToken', sessionToken);
     const encoded = params.toString();
     const query = encoded ? `?${encoded}` : '';
-    return api.post<WorkspaceState>(`/api/v1/workspaces/${id}/redo${query}`);
+    return api.post<WorkspaceState>(`/api/v1/workspaces/${id}/redo${query}`, undefined, sessionToken ? { headers: { 'X-Share-Session': sessionToken } } : undefined);
   },
 
   publish: (id: string, data?: { title?: string; description?: string }) =>
     api.post<{ workspaceId: string; shareUrl?: string; publishedAt?: string }>(`/api/v1/workspaces/${id}/publish`, data),
 
   autosave: (id: string, data: AutosaveRequest, sessionToken?: string) =>
-    api.post<{ stateVersion: number; savedAt: string }>(`/api/v1/workspaces/${id}/autosave${sessionToken ? `?sessionToken=${encodeURIComponent(sessionToken)}` : ''}`, data),
+    api.post<{ stateVersion: number; savedAt: string }>(`/api/v1/workspaces/${id}/autosave`, data, sessionToken ? { headers: { 'X-Share-Session': sessionToken } } : undefined),
 };

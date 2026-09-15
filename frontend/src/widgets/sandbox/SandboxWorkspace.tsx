@@ -70,6 +70,7 @@ import { MobileSheet as SandboxMobileSheet } from "@/widgets/sandbox/SandboxPane
 import { SandboxToolbar } from "./SandboxToolbar";
 import { SandboxDock } from "./SandboxDock";
 import { EquipmentThumbnail } from "@/entities/equipment/ui/EquipmentRendererRegistry";
+
 import { capacityFor, projectSandboxConnections, projectSandboxItems } from "./sandboxProjection";
 import { canPlace } from "./collision";
 import { applyAcidBaseTemplate, applyItemPatch, applyOperationToScene } from "./sandboxActions";
@@ -1000,14 +1001,14 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
         engine.workspace.scene.environment.spills.push({
           id: crypto.randomUUID(), materialId: material.id, amount: overflowAmount, time: Date.now(),
           x: object.position.x + object.boundingBox.width / 2, y: object.position.y + object.boundingBox.height,
-          color: material.color, sourceId: object.id,
+          color: material.color, sourceId: 'library',
         });
       }
       engine.notifyUpdate();
       queueWorkspaceEvent("OVERFLOW", { itemId: selected.id, materialId: canonicalizeLegacyMaterialId(material.id), amountMl: overflowAmount });
       if (acceptedLiquidAmount <= 0) {
-        addToast(`Сосуд заполнен: ${overflowAmount.toFixed(1)} мл разлито.`, "info");
-        triggerPourAnimation(selected.id, selected.id, 0, overflowAmount);
+        addToast(`Разлито мимо: ${overflowAmount.toFixed(1)} мл воды.`, "info");
+        triggerPourAnimation("library", selected.id, 0, overflowAmount);
         return;
       }
     }
@@ -1040,7 +1041,7 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
       amountMl: acceptedLiquidAmount || 1,
       phase: material.state,
     });
-    triggerPourAnimation(selected.id, selected.id, acceptedLiquidAmount || 25, overflowAmount);
+    triggerPourAnimation("library", selected.id, acceptedLiquidAmount || 25, overflowAmount);
     addToast(overflowAmount > 0 ? `${material.name}: ${acceptedLiquidAmount.toFixed(1)} мл принято, ${overflowAmount.toFixed(1)} мл разлито.` : `${material.name} added · ${material.state === "liquid" ? "25 mL" : "solid sample"}`, overflowAmount > 0 ? "info" : "success");
   };
 
@@ -1535,6 +1536,7 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
 
   return (
     <ScenarioRuntimeProvider scenario={scenarioRuntime.scenario}>
+
     <div data-sandbox-mode={sandboxMode} aria-busy={scenarioRuntime.loading} className={`sandbox-ui relative flex ${embedded ? 'h-full min-h-[680px]' : 'h-[100dvh]'} w-full min-h-0 overflow-hidden bg-background text-foreground ${shareMode === "viewer" ? "sandbox-viewer-mode" : ""}`}>
     {scenarioRuntime.loading && <div role="status" className="absolute left-1/2 top-16 z-[95] -translate-x-1/2 rounded-lg border border-border bg-card/95 px-4 py-2 text-xs shadow-xl">Loading Scenario…</div>}
     {scenarioRuntime.error && <div role="alert" className="absolute left-1/2 top-16 z-[95] max-w-md -translate-x-1/2 rounded-lg border border-amber-400/30 bg-amber-950/95 px-4 py-2 text-xs text-amber-100 shadow-xl"><strong>Could not load the current Scenario.</strong><details className="mt-1"><summary>Show details</summary>{scenarioRuntime.error}</details></div>}

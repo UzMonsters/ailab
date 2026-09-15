@@ -61,7 +61,7 @@ export function LevelScenarioSection({ draft, onChange }: { draft: LevelDraft; o
     try {
       const response = await adminPlatformApi.scenarios.list({
         status: 'PUBLISHED',
-        search: query.trim() || undefined,
+        q: query.trim() || undefined,
         size: 20,
         sort: 'updatedAt,desc',
       });
@@ -82,13 +82,24 @@ export function LevelScenarioSection({ draft, onChange }: { draft: LevelDraft; o
   useEffect(() => {
     if (!showPreview) return;
     let active = true;
+    const fetchAll = async (resource: any) => {
+      let page = 0; const items: JsonObject[] = [];
+      while (true) {
+        const resp = await resource.list({ status: 'PUBLISHED', page, size: 100, sort: 'code,asc' });
+        const current = (resp.items ?? resp.content ?? []) as JsonObject[];
+        items.push(...current);
+        if (current.length < 100) break;
+        page++;
+      }
+      return items;
+    };
     void Promise.all([
-      adminPlatformApi.equipment.list({ status: 'PUBLISHED', page: 0, size: 100, sort: 'code,asc' }),
-      adminPlatformApi.materials.list({ status: 'PUBLISHED', page: 0, size: 100, sort: 'code,asc' }),
+      fetchAll(adminPlatformApi.equipment),
+      fetchAll(adminPlatformApi.materials),
     ]).then(([eq, mat]) => {
       if (!active) return;
-      setCatalogEquipment(eq.items ?? eq.content ?? []);
-      setCatalogMaterials(mat.items ?? mat.content ?? []);
+      setCatalogEquipment(eq);
+      setCatalogMaterials(mat);
     }).catch((error) => {
       console.error('Failed to load preview catalogs:', error);
     });

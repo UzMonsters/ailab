@@ -1,6 +1,58 @@
 'use client';
+
 import { useState } from 'react';
-import { listEquipmentRenderers, renderEquipmentCanvas } from '@/entities/equipment/ui/EquipmentRendererRegistry';
+import { EquipmentThumbnail, listEquipmentRenderers, renderEquipmentCanvas } from '@/entities/equipment/ui/EquipmentRendererRegistry';
 import { FormSection } from '@/widgets/admin/editor';
+import styles from './EquipmentComparison.module.css';
+import { EquipmentThumbnailDevGrid } from './EquipmentThumbnailDevGrid';
 import type { MaterialDraft } from './materialEditor.types';
-export function MaterialSandboxPreview({ draft }: { draft: MaterialDraft }) { const [fill, setFill] = useState(65); const [renderer, setRenderer] = useState('beaker'); const [theme, setTheme] = useState<'dark'|'light'>('dark'); const liquid = draft.phase === 'LIQUID' || draft.phase === 'AQUEOUS'; const allowed = draft.phase === 'SOLID' ? ['beaker','testtube','petridish','watchglass','crucible'] : draft.phase === 'GAS' ? ['beaker','testtube','roundflask','erlenmeyer'] : ['beaker','testtube','erlenmeyer','graduated_cylinder','volumetric_flask','roundflask']; const options = listEquipmentRenderers().filter(item => allowed.includes(item.key)); const activeRenderer = options.some(item => item.key === renderer) ? renderer : options[0]?.key ?? 'beaker'; const props = { type: activeRenderer, width: 300, height: 300, size: 300, liquidLevel: liquid ? fill / 100 : 0, liquidColor: draft.appearance.color, liquidOpacity: draft.appearance.opacity, hasSolid: draft.phase === 'SOLID', solidColor: draft.appearance.particleColor, hasGas: draft.phase === 'GAS', gasColor: draft.appearance.color, volumeMl: fill * 2.5, capacityMl: 250, temperature: 24.5 }; return <FormSection title="Sandbox preview" description="Preview the material in compatible production equipment. Preview controls are temporary and are never saved."><div className="grid gap-5 xl:grid-cols-[220px_1fr]"><aside className="rounded-xl border border-white/[.07] bg-black/15 p-4"><label className="block text-sm text-slate-300">Container<select className="mt-2 w-full rounded-lg border border-white/10 bg-[#141b2a] px-3 py-2 text-sm" value={activeRenderer} onChange={e => setRenderer(e.target.value)}>{options.map(item => <option key={item.key} value={item.key}>{item.label}</option>)}</select></label><label className="mt-5 block text-sm text-slate-300">Amount · {fill}%<input className="mt-3 w-full accent-violet-500" type="range" min="0" max="100" value={fill} onChange={e => setFill(Number(e.target.value))}/></label><div className="mt-5 grid grid-cols-2 gap-2"><button type="button" onClick={()=>setTheme('dark')} className={`rounded-lg border px-2 py-2 text-xs ${theme==='dark'?'border-violet-400 bg-violet-500/10':'border-white/10'}`}>Dark</button><button type="button" onClick={()=>setTheme('light')} className={`rounded-lg border px-2 py-2 text-xs ${theme==='light'?'border-violet-400 bg-violet-500/10':'border-white/10'}`}>Light</button></div><p className="mt-5 text-xs leading-5 text-slate-500">{draft.phase === 'SOLID' ? 'Solid contents use particle color.' : draft.phase === 'GAS' ? 'Gas appears as a colored headspace.' : 'Liquid contents use color and opacity.'}</p></aside><div className={`grid min-h-[440px] place-items-center overflow-hidden rounded-xl border bg-[linear-gradient(rgba(148,163,184,.12)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,.12)_1px,transparent_1px)] bg-[size:24px_24px] ${theme==='dark'?'border-white/10 bg-[#080d16]':'border-slate-300 bg-slate-100'}`}>{renderEquipmentCanvas(activeRenderer, props)}</div></div><div className="mt-5 grid gap-3 sm:grid-cols-3"><p className="text-xs uppercase tracking-wide text-slate-500">Compare containers</p>{options.slice(0,3).map(item => <div key={item.key} className="rounded-xl border border-white/[.07] bg-black/15 p-3"><p className="mb-2 text-xs text-slate-400">{item.label}</p>{renderEquipmentCanvas(item.key, { ...props, type: item.key, size: 100, width: 100, height: 100 })}</div>)}</div></FormSection>; }
+
+const comparisonContainers = [
+  { type: 'beaker', label: 'Beaker' },
+  { type: 'erlenmeyer', label: 'Erlenmeyer' },
+  { type: 'roundflask', label: 'Round Flask' },
+] as const;
+
+export function MaterialSandboxPreview({ draft }: { draft: MaterialDraft }) {
+  const [fill, setFill] = useState(65);
+  const [renderer, setRenderer] = useState('beaker');
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const liquid = draft.phase === 'LIQUID' || draft.phase === 'AQUEOUS';
+  const allowed = draft.phase === 'SOLID'
+    ? ['beaker', 'testtube', 'petridish', 'watchglass', 'crucible']
+    : draft.phase === 'GAS'
+      ? ['beaker', 'testtube', 'roundflask', 'erlenmeyer']
+      : ['beaker', 'testtube', 'erlenmeyer', 'graduated_cylinder', 'volumetric_flask', 'roundflask'];
+  const options = listEquipmentRenderers().filter(item => allowed.includes(item.key));
+  const activeRenderer = options.some(item => item.key === renderer) ? renderer : options[0]?.key ?? 'beaker';
+  const props = {
+    type: activeRenderer, width: 300, height: 300, size: 300,
+    liquidLevel: liquid ? fill / 100 : 0,
+    liquidColor: draft.appearance.color,
+    liquidOpacity: draft.appearance.opacity,
+    hasSolid: draft.phase === 'SOLID',
+    solidColor: draft.appearance.particleColor,
+    hasGas: draft.phase === 'GAS',
+    gasColor: draft.appearance.color,
+    volumeMl: fill * 2.5, capacityMl: 250, temperature: 24.5,
+  };
+
+  return <FormSection title="Sandbox preview" description="Preview the material in compatible production equipment. Preview controls are temporary and are never saved.">
+    <div className="grid gap-5 xl:grid-cols-[220px_1fr]">
+      <aside className="rounded-xl border border-white/[.07] bg-black/15 p-4">
+        <label className="block text-sm text-slate-300">Container<select className="mt-2 w-full rounded-lg border border-white/10 bg-[#141b2a] px-3 py-2 text-sm" value={activeRenderer} onChange={event=>setRenderer(event.target.value)}>{options.map(item=><option key={item.key} value={item.key}>{item.label}</option>)}</select></label>
+        <label className="mt-5 block text-sm text-slate-300">Amount · {fill}%<input className="mt-3 w-full accent-violet-500" type="range" min="0" max="100" value={fill} onChange={event=>setFill(Number(event.target.value))}/></label>
+        <div className="mt-5 grid grid-cols-2 gap-2"><button type="button" onClick={()=>setTheme('dark')} className={`rounded-lg border px-2 py-2 text-xs ${theme==='dark'?'border-violet-400 bg-violet-500/10':'border-white/10'}`}>Dark</button><button type="button" onClick={()=>setTheme('light')} className={`rounded-lg border px-2 py-2 text-xs ${theme==='light'?'border-violet-400 bg-violet-500/10':'border-white/10'}`}>Light</button></div>
+        <p className="mt-5 text-xs leading-5 text-slate-500">{draft.phase==='SOLID'?'Solid contents use particle color.':draft.phase==='GAS'?'Gas appears as a colored headspace.':'Liquid contents use color and opacity.'}</p>
+      </aside>
+      <div className={`grid min-h-[440px] place-items-center overflow-hidden rounded-xl border bg-[linear-gradient(rgba(148,163,184,.12)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,.12)_1px,transparent_1px)] bg-[size:24px_24px] ${theme==='dark'?'border-white/10 bg-[#080d16]':'border-slate-300 bg-slate-100'}`}>{renderEquipmentCanvas(activeRenderer,props)}</div>
+    </div>
+
+    <section className={styles.section} aria-labelledby="compare-containers-heading">
+      <h3 id="compare-containers-heading" className={styles.heading}>Compare containers</h3>
+      <div className={styles.grid}>{comparisonContainers.map(item=>{const selected=activeRenderer===item.type;return <button key={item.type} type="button" aria-pressed={selected} onClick={()=>setRenderer(item.type)} className={`${styles.card} ${selected?styles.selected:''}`}><span className={styles.label}>{item.label}</span><EquipmentThumbnail type={item.type} alt={item.label} frameWidth={88} frameHeight={100} size={88} liquidLevel={props.liquidLevel} liquidColor={props.liquidColor} liquidOpacity={props.liquidOpacity} hasSolid={props.hasSolid} solidColor={props.solidColor} hasGas={props.hasGas} gasColor={props.gasColor} volumeMl={props.volumeMl} capacityMl={props.capacityMl} temperature={props.temperature}/></button>})}</div>
+    </section>
+
+    <EquipmentThumbnailDevGrid/>
+  </FormSection>;
+}
