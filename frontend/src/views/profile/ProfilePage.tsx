@@ -8,7 +8,7 @@ import {
   Beaker, Cpu, BarChart3, Activity, Grid3X3, Clock,
   Mail, Edit3, CheckCircle, AlertTriangle, Shield, User,
   Settings, MapPin, Loader2, X, Save, Lock,
-  FlaskConical,
+  FlaskConical, Camera,
 } from 'lucide-react';
 import { userApi } from '@/entities/user/api/user.api';
 import { useAuthStore } from '@/stores/auth.store';
@@ -186,12 +186,16 @@ export default function ProfilePage() {
         </div>
         <div className="px-4 sm:px-8 pb-6 sm:pb-8 -mt-[60px] relative flex flex-col md:flex-row items-start md:items-end gap-5 sm:gap-6 flex-wrap">
           <div className="flex min-w-0 items-end gap-4 sm:gap-6">
-            <div className="relative">
-              <div className="relative w-[120px] h-[120px] rounded-[24px] border-4 border-[var(--card)] bg-[var(--background)] flex items-center justify-center text-[48px] text-[var(--primary)] shadow-lg overflow-hidden">
-                {user.avatarUrl ? <Image src={user.avatarUrl} alt={`${user.username} avatar`} width={120} height={120} unoptimized className="h-full w-full object-cover" /> : user.username[0].toUpperCase()}
-                <button type="button" aria-label="Upload avatar" onClick={() => avatarInput.current?.click()} className="absolute inset-x-2 bottom-2 min-h-9 rounded-lg bg-black/60 text-xs text-white">{avatarBusy ? 'Uploading…' : 'Change'}</button><input ref={avatarInput} type="file" accept="image/*" className="hidden" onChange={(event) => handleAvatar(event.target.files?.[0])} />
+            <div className="relative group">
+              <div className="relative w-[120px] h-[120px] rounded-[24px] border-4 border-[var(--card)] bg-[var(--accent)] flex items-center justify-center text-[48px] text-[var(--primary)] font-bold shadow-lg overflow-hidden">
+                {user.avatarUrl ? <Image src={user.avatarUrl} alt={`${user.username} avatar`} width={120} height={120} unoptimized className="h-full w-full object-cover" /> : user.username.substring(0, 2).toUpperCase()}
+                <input ref={avatarInput} type="file" accept="image/*" className="hidden" onChange={(event) => handleAvatar(event.target.files?.[0])} />
+                {avatarBusy && <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><Loader2 className="animate-spin text-white" size={28} /></div>}
               </div>
-              <div className="absolute bottom-1 right-1 w-[20px] h-[20px] bg-[#34D399] border-[4px] border-[var(--card)] rounded-full" />
+              <div className="absolute top-1 right-1 w-[20px] h-[20px] bg-[#34D399] border-[4px] border-[var(--card)] rounded-full z-10" />
+              <button type="button" aria-label="Upload avatar" onClick={() => avatarInput.current?.click()} className="absolute -bottom-1 -right-1 w-[38px] h-[38px] bg-[var(--primary)] text-white rounded-full flex items-center justify-center shadow-md border-[3px] border-[var(--card)] hover:bg-[var(--primary-bright)] transition-transform hover:scale-105 z-20" title="Change photo">
+                <Camera size={16} />
+              </button>
             </div>
             <div className="mb-2">
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--foreground)] flex items-center gap-2 sm:gap-3 truncate">
