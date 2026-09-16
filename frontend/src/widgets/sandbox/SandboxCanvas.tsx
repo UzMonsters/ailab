@@ -675,7 +675,6 @@ export function SandboxCanvas({
                   <span className="font-mono text-xs font-bold text-cyan-300">
                     {(item.operation === 'active' || item.operation === 'measuring') && item.measurementStatus === 'valid' && typeof item.measuredValue === 'number' ? `pH ${item.measuredValue.toFixed(2)}` : 'pH — подключите зонд к раствору'}
                   </span>
-                  </span>
                 </div>
               )}
             </div>
