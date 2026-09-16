@@ -18,7 +18,21 @@ export class EquipmentRegistry {
     graduated: 'graduated_cylinder',
   };
   register(definition: EquipmentDefinition) { this.definitions.set(definition.type, definition); return this; }
-  private canonical(type: string) { return this.aliases[type] ?? type; }
+  private canonical(type: string) {
+    let normalized = type;
+    if (normalized.endsWith('Renderer')) {
+      normalized = normalized.slice(0, -8);
+    }
+    normalized = normalized.toLowerCase();
+    
+    if (this.aliases[normalized]) {
+      return this.aliases[normalized];
+    }
+    if (this.definitions.has(normalized)) {
+      return normalized;
+    }
+    return this.aliases[type] ?? type;
+  }
   get(type: string) { return this.definitions.get(this.canonical(type)); }
   list() { return [...this.definitions.values()]; }
   getScaleBounds(type: string) {

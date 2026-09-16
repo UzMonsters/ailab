@@ -30,13 +30,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       const currentUser = useAuthStore.getState().user;
       if (!currentUser) {
         router.replace(`/${locale}/auth`);
-      } else if (currentUser.role !== 'ROLE_ADMIN') {
-        router.replace(`/${locale}/dashboard`);
       }
     });
   }, [fetchUser, router, locale]);
 
-  if (!user || user.role !== 'ROLE_ADMIN') {
+  if (!user) {
     return null;
   }
 
