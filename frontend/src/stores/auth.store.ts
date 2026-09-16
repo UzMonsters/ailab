@@ -82,7 +82,7 @@ if (typeof window !== 'undefined') {
   window.addEventListener('auth:unauthorized', () => {
     useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false, error: null });
     const path = window.location.pathname;
-    const isPublic = /^\/(en|ru|uz)?(\/auth|\/)?$/.test(path);
+    const isPublic = /^\/(en|ru|uz)?(\/auth|\/|\/admin.*)?$/.test(path);
     if (!isPublic) {
       const locale = path.split('/')[1] || 'ru';
       window.location.replace(`/${locale}/auth`);

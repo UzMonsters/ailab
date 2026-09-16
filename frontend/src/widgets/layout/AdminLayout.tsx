@@ -26,17 +26,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, logout, fetchUser } = useAuthStore();
 
   useEffect(() => {
-    fetchUser().then(() => {
-      const currentUser = useAuthStore.getState().user;
-      if (!currentUser) {
-        router.replace(`/${locale}/auth`);
-      }
-    });
-  }, [fetchUser, router, locale]);
-
-  if (!user) {
-    return null;
-  }
+    void fetchUser();
+  }, [fetchUser]);
 
   const sidebarCollapsed = isBookEditor || collapsed;
 

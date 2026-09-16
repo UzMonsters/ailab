@@ -78,7 +78,13 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...(options.headers as Record<string, string>),
   };
 
-  if (accessToken) {
+  if (!accessToken && !endpoint.startsWith('/api/v1/auth/')) {
+    if (!refreshPromise) refreshPromise = tryRefresh();
+    const refreshed = await refreshPromise;
+    if (refreshed && accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+  } else if (accessToken) {
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
@@ -139,7 +145,12 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 async function requestBlob(endpoint: string): Promise<Blob> {
   const headers: Record<string, string> = {};
-  if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+  if (!accessToken && !endpoint.startsWith('/api/v1/auth/')) {
+    const refreshed = await refreshAccessToken();
+    if (refreshed && accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+  } else if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
 
   let res = await fetch(`${API_BASE}${endpoint}`, { headers, credentials: 'include' });
   if (res.status === 401) {
