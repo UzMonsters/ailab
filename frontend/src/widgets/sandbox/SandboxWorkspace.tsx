@@ -972,7 +972,7 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
   
   const addMaterial = (material: Material) => {
     if (!selected || !isVessel(selected)) {
-      addToast("Select a vessel first", "error");
+      addToast(ts("selectVessel"), "error");
       return;
     }
     if (!engine) return;

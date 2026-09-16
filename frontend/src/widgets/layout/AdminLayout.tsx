@@ -19,15 +19,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname() || '';
   const router = useRouter();
   
-  const locale = 'en';
+  const locale = pathname.split('/')[1] || 'en';
 
   const isBookEditor = pathname.includes('/admin/book');
   const [collapsed, setCollapsed] = useState(false);
   const { user, logout, fetchUser } = useAuthStore();
 
   useEffect(() => {
-    void fetchUser();
-  }, [fetchUser]);
+    fetchUser().then(() => {
+      const currentUser = useAuthStore.getState().user;
+      if (!currentUser) {
+        router.replace(`/${locale}/auth`);
+      } else if (currentUser.role !== 'ROLE_ADMIN') {
+        router.replace(`/${locale}/dashboard`);
+      }
+    });
+  }, [fetchUser, router, locale]);
+
+  if (!user || user.role !== 'ROLE_ADMIN') {
+    return null;
+  }
 
   const sidebarCollapsed = isBookEditor || collapsed;
 
