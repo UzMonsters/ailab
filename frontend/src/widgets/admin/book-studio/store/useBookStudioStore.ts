@@ -119,7 +119,9 @@ interface BookStudioState {
   discardDraft: () => void;
   createBook: (title: string, slug: string) => Promise<void>;
   createChapter: (bookId: string, title: string) => Promise<void>;
+  renameChapter: (chapterId: string, title: string) => Promise<void>;
   createPage: (chapterId: string) => Promise<void>;
+  renamePage: (pageId: string, title: string) => Promise<void>;
 }
 
 export const useBookStudioStore = create<BookStudioState>((set, get) => ({
@@ -455,7 +457,6 @@ export const useBookStudioStore = create<BookStudioState>((set, get) => ({
       delete newDrafts[draftKey];
 
       set({ notice: 'Page saved', dirty: false, pageDrafts: newDrafts });
-      await get().loadBook(String(book.id), pageId);
     } catch (e) {
       set({ error: e instanceof Error ? e.message : 'Save failed' });
     } finally {
@@ -487,7 +488,7 @@ export const useBookStudioStore = create<BookStudioState>((set, get) => ({
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Book publish failed';
       set({ error: msg });
-      useToastStore.getState().addToast('Publish Failed: ' + msg, 'error');
+      useToastStore.getState().addToast({ message: 'Publish Failed: ' + msg, type: 'error' } as any);
     } finally {
       set({ busy: false });
     }
@@ -652,15 +653,32 @@ export const useBookStudioStore = create<BookStudioState>((set, get) => ({
     }
   },
 
+  renameChapter: async (chapterId: string, title: string) => {
+    const book = get().book;
+    if (!book) return;
+    set({ busy: true, error: '' });
+    try {
+      const locale = get().contentLocale;
+      await adminBookApi.patchChapter(String(book.id), chapterId, {
+        translations: { [locale]: { title: title.trim() } },
+      });
+      await get().loadBook(String(book.id));
+    } catch (e) {
+      set({ error: e instanceof Error ? e.message : 'Failed to rename chapter' });
+      throw e;
+    } finally {
+      set({ busy: false });
+    }
+  },
+
   createPage: async (chapterId: string) => {
-    const { book } = get();
+    const book = get().book;
     if (!book) return;
     set({ busy: true, error: '' });
     try {
       const locale = get().contentLocale;
       const result = await adminBookApi.createPage(String(book.id), {
         chapterId,
-        position: get().pages.filter(item => String(item.chapterId) === chapterId).length + 1,
         layout: 'single-page',
         translations: { [locale]: { title: 'Untitled page' } },
       });
@@ -671,6 +689,24 @@ export const useBookStudioStore = create<BookStudioState>((set, get) => ({
       set({ busy: false });
     }
   },
+
+  renamePage: async (pageId: string, title: string) => {
+    const book = get().book;
+    if (!book) return;
+    set({ busy: true, error: '' });
+    try {
+      const locale = get().contentLocale;
+      await adminBookApi.patchPage(String(book.id), pageId, {
+        translations: { [locale]: { title: title.trim() } },
+      });
+      await get().loadBook(String(book.id), get().page ? String(get().page!.id) : undefined);
+    } catch (e) {
+      set({ error: e instanceof Error ? e.message : 'Failed to rename page' });
+      throw e;
+    } finally {
+      set({ busy: false });
+    }
+  }
 }));
 
 export const labelEntity = label;
