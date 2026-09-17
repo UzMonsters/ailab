@@ -13,11 +13,19 @@ const comparisonContainers = [
   { type: 'roundflask', label: 'Round Flask' },
 ] as const;
 
+function hexToRgba(hex: string, opacity: number): string {
+  if (!hex) return 'rgba(2,132,199,0.8)';
+  const h = hex.replace('#', '');
+  if (h.length === 3) return `rgba(${parseInt(h[0]+h[0],16)}, ${parseInt(h[1]+h[1],16)}, ${parseInt(h[2]+h[2],16)}, ${opacity})`;
+  if (h.length === 6) return `rgba(${parseInt(h.substring(0,2),16)}, ${parseInt(h.substring(2,4),16)}, ${parseInt(h.substring(4,6),16)}, ${opacity})`;
+  return hex;
+}
+
 export function MaterialSandboxPreview({ draft }: { draft: MaterialDraft }) {
   const [fill, setFill] = useState(65);
   const [renderer, setRenderer] = useState('beaker');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const liquid = draft.phase === 'LIQUID' || draft.phase === 'AQUEOUS';
+  const liquid = draft.phase === 'LIQUID' || draft.phase === 'AQUEOUS' || draft.phase === 'UNKNOWN';
   const allowed = draft.phase === 'SOLID'
     ? ['beaker', 'testtube', 'petridish', 'watchglass', 'crucible']
     : draft.phase === 'GAS'
@@ -25,15 +33,16 @@ export function MaterialSandboxPreview({ draft }: { draft: MaterialDraft }) {
       : ['beaker', 'testtube', 'erlenmeyer', 'graduated_cylinder', 'volumetric_flask', 'roundflask'];
   const options = listEquipmentRenderers().filter(item => allowed.includes(item.key));
   const activeRenderer = options.some(item => item.key === renderer) ? renderer : options[0]?.key ?? 'beaker';
+  
   const props = {
     type: activeRenderer, width: 300, height: 300, size: 300,
     liquidLevel: liquid ? fill / 100 : 0,
-    liquidColor: draft.appearance.color,
+    liquidColor: hexToRgba(draft.appearance.color, draft.appearance.opacity),
     liquidOpacity: draft.appearance.opacity,
     hasSolid: draft.phase === 'SOLID',
     solidColor: draft.appearance.particleColor,
     hasGas: draft.phase === 'GAS',
-    gasColor: draft.appearance.color,
+    gasColor: hexToRgba(draft.appearance.color, draft.appearance.opacity),
     volumeMl: fill * 2.5, capacityMl: 250, temperature: 24.5,
   };
 
@@ -45,7 +54,7 @@ export function MaterialSandboxPreview({ draft }: { draft: MaterialDraft }) {
         <div className="mt-5 grid grid-cols-2 gap-2"><button type="button" onClick={()=>setTheme('dark')} className={`rounded-lg border px-2 py-2 text-xs ${theme==='dark'?'border-violet-400 bg-violet-500/10':'border-white/10'}`}>Dark</button><button type="button" onClick={()=>setTheme('light')} className={`rounded-lg border px-2 py-2 text-xs ${theme==='light'?'border-violet-400 bg-violet-500/10':'border-white/10'}`}>Light</button></div>
         <p className="mt-5 text-xs leading-5 text-slate-500">{draft.phase==='SOLID'?'Solid contents use particle color.':draft.phase==='GAS'?'Gas appears as a colored headspace.':'Liquid contents use color and opacity.'}</p>
       </aside>
-      <div className={`grid min-h-[440px] place-items-center overflow-hidden rounded-xl border bg-[linear-gradient(rgba(148,163,184,.12)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,.12)_1px,transparent_1px)] bg-[size:24px_24px] ${theme==='dark'?'border-white/10 bg-[#080d16]':'border-slate-300 bg-slate-100'}`}>{renderEquipmentCanvas(activeRenderer,props)}</div>
+      <div className={`grid min-h-[440px] place-items-center overflow-hidden rounded-xl border bg-[linear-gradient(rgba(148,163,184,.12)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,.12)_1px,transparent_1px)] bg-[size:24px_24px] ${theme==='dark'?'border-white/10 bg-[#080d16]':'sandbox-preview-light border-slate-300 bg-slate-100'}`}>{renderEquipmentCanvas(activeRenderer,props)}</div>
     </div>
 
     <section className={styles.section} aria-labelledby="compare-containers-heading">

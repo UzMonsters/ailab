@@ -1876,7 +1876,12 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
           items={items}
           connections={connections}
           selectedId={selectedId}
-          onPourExecute={pour}
+          onPourExecute={(source, target, amount) => {
+            pour(source, target, amount);
+            if (engine && !engine.workspace.simulation.running) {
+              runExperiment();
+            }
+          }}
           setPourSource={setPourSource}
           pourSource={pourSource}
           pourAnimation={pourAnimation}
@@ -2034,7 +2039,17 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
         setBottomDockTab={setBottomDockTab}
         syncStatus={syncStatus}
         itemsLength={items.length}
-        eventLog={eventLog}
+        eventLog={eventLog.map(entry => {
+          let detail = entry.detail;
+          if (detail) {
+            for (const item of items) {
+              if (detail.includes(item.id)) {
+                detail = detail.replaceAll(item.id, (item.metadata?.displayName as string | undefined) || item.name || item.type);
+              }
+            }
+          }
+          return { ...entry, detail };
+        })}
         selected={selected}
         measurementSamples={measurementSamples}
         mobilePanel={mobilePanel}

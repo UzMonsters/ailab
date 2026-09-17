@@ -484,7 +484,9 @@ export const useBookStudioStore = create<BookStudioState>((set, get) => ({
       await get().loadBook(bookId);
       set({ notice: 'Book published' });
     } catch (e) {
-      set({ error: e instanceof Error ? e.message : 'Book publish failed' });
+      const msg = e instanceof Error ? e.message : 'Book publish failed';
+      set({ error: msg });
+      if (typeof window !== 'undefined') window.alert('Publish Failed:\n\n' + msg);
     } finally {
       set({ busy: false });
     }

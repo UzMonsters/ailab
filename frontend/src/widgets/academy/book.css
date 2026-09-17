@@ -72,8 +72,8 @@
 .academy-background {
   position: absolute;
   inset: 0;
-  background: rgba(3, 6, 14, 0.86);
-  backdrop-filter: blur(8px) saturate(0.7);
+  background: rgba(3, 6, 14, 0.4);
+  backdrop-filter: blur(3px) saturate(0.7);
   z-index: -1;
 }
 

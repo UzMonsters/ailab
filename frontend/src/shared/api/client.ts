@@ -81,6 +81,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   if (!accessToken && !endpoint.startsWith('/api/v1/auth/')) {
     if (!refreshPromise) refreshPromise = tryRefresh();
     const refreshed = await refreshPromise;
+    refreshPromise = null;
     if (refreshed && accessToken) {
       headers['Authorization'] = `Bearer ${accessToken}`;
     }

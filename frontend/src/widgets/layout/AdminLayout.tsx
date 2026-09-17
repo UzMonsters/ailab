@@ -66,12 +66,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
-      title: 'Collaboration',
-      links: [
-        { href: `/${locale}/admin/sharing`, label: 'Collaboration', icon: Users },
-      ]
-    },
-    {
       title: t('systemGroup'),
       links: [
         { href: `/${locale}/admin/audit`, label: t('auditLog'), icon: List },

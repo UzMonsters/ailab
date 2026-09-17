@@ -1332,3 +1332,18 @@ html.light .share-dialog input { background:var(--input) !important; color:var(-
 .sandbox-viewer-mode::after{content:"Режим просмотра · изменения отключены";position:absolute;left:50%;bottom:14px;z-index:75;transform:translateX(-50%);padding:.5rem .8rem;border:1px solid color-mix(in srgb,var(--primary) 30%,var(--border));border-radius:999px;background:color-mix(in srgb,var(--card) 92%,transparent);color:var(--muted-foreground);font-size:10px;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.16);backdrop-filter:blur(12px)}
 .sandbox-minimap{right:5.25rem !important}
 @media (max-width:767px){.sandbox-assistant-trigger{bottom:5rem !important;right:.75rem !important}.sandbox-assistant-panel{bottom:9rem !important;right:.75rem !important}}
+
+.sandbox-preview-light svg path[stroke="white"],
+.sandbox-preview-light svg path[stroke^="rgba(255,255,255"],
+.sandbox-preview-light svg ellipse[stroke^="rgba(255,255,255"],
+.sandbox-preview-light svg line[stroke^="rgba(255,255,255"],
+.sandbox-preview-light svg circle[stroke^="rgba(255,255,255"],
+.sandbox-preview-light svg rect[stroke^="rgba(255,255,255"] {
+  stroke: rgba(15, 23, 42, 0.4) !important;
+}
+.sandbox-preview-light svg ellipse[fill="url(#glassReflection)"] {
+  fill: rgba(0, 0, 0, 0.05) !important;
+}
+.sandbox-preview-light svg path[stroke="#f8fafc"] { stroke: #334155 !important; }
+.sandbox-preview-light svg path[stroke="#e2e8f0"] { stroke: #475569 !important; }
+

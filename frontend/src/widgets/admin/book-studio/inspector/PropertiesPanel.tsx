@@ -13,6 +13,8 @@ import { ExperimentProperties } from '../properties/ExperimentProperties';
 
 const propertiesByKind: Record<string, React.FC<{ block: any }>> = {
   RICH_TEXT: TextProperties,
+  PARAGRAPH: TextProperties,
+  HEADING: TextProperties,
   IMAGE: ImageProperties,
   SVG: ShapeProperties,
   SHAPE: ShapeProperties,
