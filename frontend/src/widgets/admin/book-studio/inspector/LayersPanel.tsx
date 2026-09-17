@@ -24,8 +24,40 @@ function blockLabel(block: ReturnType<typeof useBookStudioStore.getState>['block
 }
 
 export function LayersPanel() {
-  const { blocks, selectedBlockId, setSelected, patchBlock } = useBookStudioStore();
+  const { blocks, selectedBlockId, setSelected, patchBlock, commit } = useBookStudioStore();
   const sorted = [...blocks].sort((a, b) => b.z - a.z);
+
+  const onDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData('text/plain', id);
+  };
+  
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+  
+  const onDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData('text/plain');
+    if (sourceId === targetId) return;
+    
+    const sourceIndex = sorted.findIndex(b => b.id === sourceId);
+    const targetIndex = sorted.findIndex(b => b.id === targetId);
+    if (sourceIndex === -1 || targetIndex === -1) return;
+    
+    const sourceBlock = sorted[sourceIndex];
+    const newSorted = [...sorted];
+    newSorted.splice(sourceIndex, 1);
+    newSorted.splice(targetIndex, 0, sourceBlock);
+    
+    // Reassign Z index from top (highest) to bottom (lowest)
+    let z = newSorted.length * 10;
+    const nextBlocks = blocks.map(b => {
+      const idx = newSorted.findIndex(sb => sb.id === b.id);
+      return { ...b, z: z - idx * 10 };
+    });
+    
+    commit(nextBlocks);
+  };
 
   return (
     <div className="space-y-1">
@@ -39,6 +71,10 @@ export function LayersPanel() {
         return (
           <div
             key={block.id}
+            draggable
+            onDragStart={e => onDragStart(e, block.id)}
+            onDragOver={onDragOver}
+            onDrop={e => onDrop(e, block.id)}
             onClick={() => setSelected(block.id)}
             className={`flex items-center gap-1.5 rounded px-2 py-1.5 cursor-pointer transition-colors ${
               selectedBlockId === block.id
@@ -46,7 +82,7 @@ export function LayersPanel() {
                 : 'text-slate-400 hover:bg-white/5'
             }`}
           >
-            <GripVertical size={12} className="shrink-0 text-slate-600" />
+            <GripVertical size={12} className="shrink-0 text-slate-600 cursor-grab" />
             {Icon && <Icon size={12} className="shrink-0" />}
             <span className="flex-1 truncate text-[11px]">{blockLabel(block)}</span>
             <button

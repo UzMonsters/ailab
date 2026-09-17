@@ -25,8 +25,9 @@ export function BookResizeHandles({ block }: { block: Block }) {
     const moveHandler = (ev: PointerEvent) => {
       const d = dragRef.current;
       if (!d) return;
-      const dx = ev.clientX - d.startX;
-      const dy = ev.clientY - d.startY;
+      const zoom = useBookStudioStore.getState().zoom;
+      const dx = (ev.clientX - d.startX) / zoom;
+      const dy = (ev.clientY - d.startY) / zoom;
       const o = d.original;
       let patch: Partial<Block> = {};
 
@@ -44,6 +45,15 @@ export function BookResizeHandles({ block }: { block: Block }) {
     };
 
     const upHandler = () => {
+      if (dragRef.current) {
+        const currentBlock = useBookStudioStore.getState().blocks.find(b => b.id === dragRef.current!.original.id);
+        if (currentBlock) {
+          // Push to history
+          const { blocks, commit } = useBookStudioStore.getState();
+          const prevBlocks = blocks.map(b => b.id === dragRef.current!.original.id ? dragRef.current!.original : b);
+          useBookStudioStore.setState({ history: [...useBookStudioStore.getState().history, prevBlocks], future: [] });
+        }
+      }
       dragRef.current = null;
       window.removeEventListener('pointermove', moveHandler);
       window.removeEventListener('pointerup', upHandler);

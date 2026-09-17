@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useBookStudioStore, labelEntity } from '../store/useBookStudioStore';
 import type { JsonObject } from '@/shared/api/contracts/platform';
@@ -131,7 +131,7 @@ export function PagesPanel() {
 
             {isExpanded && (
               <div className="ml-3 space-y-0.5">
-                {pageList.map((p) => {
+                {pageList.map((p, pIndex) => {
                   const pageId = String(p.id);
                   if (renamingId === pageId) {
                     return (
@@ -145,12 +145,13 @@ export function PagesPanel() {
                       key={pageId}
                       onClick={() => handlePageSelect(p)}
                       onDoubleClick={() => { setRenameValue(labelEntity(p)); setRenamingId(pageId); }}
-                      className={`w-full rounded px-2 py-1 text-left text-[11px] transition-colors ${
+                      className={`w-full rounded px-2 py-1 text-left text-[11px] truncate transition-colors ${
                         page?.id === pageId
                           ? 'bg-violet-600/20 text-violet-300'
                           : 'text-slate-400 hover:bg-white/5'
                       }`}
                     >
+                      <span className="opacity-50 mr-1">{pIndex + 1}.</span>
                       {labelEntity(p)}
                     </button>
                   );

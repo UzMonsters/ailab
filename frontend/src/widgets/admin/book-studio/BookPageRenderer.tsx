@@ -152,7 +152,9 @@ function DataWidgetPlaceholder({ block }: { block: BookPageBlock }) {
   );
 }
 
-export function BookBlockRenderer({ block, scenarioLabel, interactive = false, onInteract }: { block: BookPageBlock; scenarioLabel?: string; interactive?: boolean; onInteract?: () => void }) {
+import { RichTextEditor } from './RichTextEditor';
+
+export function BookBlockRenderer({ block, scenarioLabel, interactive = false, isEditingText = false, onInteract, onTextChange }: { block: BookPageBlock; scenarioLabel?: string; interactive?: boolean; isEditingText?: boolean; onInteract?: () => void; onTextChange?: (html: string) => void }) {
   if (block.kind === 'IMAGE') return block.src ? <img src={block.src} alt={block.alt || 'Book page asset'} className="h-full w-full object-contain" /> : <span className="text-xs text-slate-400">Choose image</span>;
   if (block.kind === 'SVG') return block.svg ? <div className="h-full w-full [&>svg]:h-full [&>svg]:w-full [&_path]:!fill-current [&_rect]:!fill-current [&_circle]:!fill-current [&_path]:!stroke-[inherit] [&_rect]:!stroke-[inherit] [&_circle]:!stroke-[inherit]" style={{ fill: block.fillColor, stroke: block.strokeColor, color: block.fillColor }} dangerouslySetInnerHTML={{ __html: block.svg }} /> : <span className="text-xs text-slate-400">Choose SVG</span>;
   if (block.kind === 'FORMULA') { const formula = block.formula || String.raw`H_2O`; const markup = katex.renderToString(formula, { throwOnError: false, displayMode: true, strict: false }); return <div className="grid h-full w-full place-items-center overflow-auto" role="img" aria-label={`Formula ${formula}`} dangerouslySetInnerHTML={{ __html: markup }} />; }
@@ -168,6 +170,18 @@ export function BookBlockRenderer({ block, scenarioLabel, interactive = false, o
   if (block.backgroundColor) textStyle.backgroundColor = block.backgroundColor;
   if (block.fontSize) textStyle.fontSize = `${block.fontSize}px`;
   if (block.fontFamily) textStyle.fontFamily = block.fontFamily;
+  
+  if (isEditingText && onTextChange) {
+    return (
+      <div style={textStyle} className="h-full w-full">
+        <RichTextEditor 
+          content={block.text || ''} 
+          onChange={onTextChange} 
+          hideToolbar 
+        />
+      </div>
+    );
+  }
   
   return <RichTextPreview content={block.text || '<p>Text block</p>'} style={textStyle} />;
 }

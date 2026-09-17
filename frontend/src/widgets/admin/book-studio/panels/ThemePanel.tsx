@@ -1,26 +1,61 @@
 'use client';
 
-import { Palette } from 'lucide-react';
+import { useBookStudioStore } from '../store/useBookStudioStore';
 
-const presets = [
+const paperStyles = [
   { name: 'Cream', bg: '#fff9e9' },
   { name: 'White', bg: '#ffffff' },
-  { name: 'Graph paper', bg: '#f0f4f8' },
-  { name: 'Dark', bg: '#1a1a2e' },
+  { name: 'Graph', bg: '#f0f4f8' },
+];
+
+const themes = [
+  { name: 'Light', mode: 'light' },
+  { name: 'Dark', mode: 'dark' },
 ];
 
 export function ThemePanel() {
+  const { book } = useBookStudioStore();
+  const settings = (book?.settings as any) || {};
+
+  const updateSettings = (updates: any) => {
+    useBookStudioStore.setState(s => {
+      if (!s.book) return s;
+      return {
+        book: {
+          ...s.book,
+          settings: { ...((s.book.settings as any) || {}), ...updates }
+        },
+        dirty: true,
+      };
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">Paper</p>
+        <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">Book Theme</p>
         <div className="grid grid-cols-2 gap-1.5">
-          {presets.map((p, i) => (
+          {themes.map((t, i) => (
             <button
               key={i}
-              className="flex flex-col items-center gap-1 rounded-lg border border-white/5 bg-white/[.03] p-2 hover:border-violet-500/40 transition-colors"
+              onClick={() => updateSettings({ theme: t.mode })}
+              className={`flex flex-col items-center gap-1 rounded-lg border p-2 transition-colors ${settings.theme === t.mode ? 'border-violet-500 bg-violet-500/10' : 'border-white/5 bg-white/[.03] hover:border-violet-500/40'}`}
             >
-              <div className="h-10 w-full rounded border border-white/10" style={{ background: p.bg }} />
+              <span className="text-xs text-slate-300">{t.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">Paper Style</p>
+        <div className="grid grid-cols-3 gap-1.5">
+          {paperStyles.map((p, i) => (
+            <button
+              key={i}
+              onClick={() => updateSettings({ backgroundColor: p.bg })}
+              className={`flex flex-col items-center gap-1 rounded-lg border p-2 transition-colors ${settings.backgroundColor === p.bg ? 'border-violet-500 bg-violet-500/10' : 'border-white/5 bg-white/[.03] hover:border-violet-500/40'}`}
+            >
+              <div className="h-8 w-full rounded border border-white/10" style={{ background: p.bg }} />
               <span className="text-[10px] text-slate-400">{p.name}</span>
             </button>
           ))}

@@ -48,8 +48,9 @@ export function EquipmentPanel() {
           <div
             key={String(item.id)}
             draggable
-            onDragStart={e => handleDragStart(e, 'EQUIPMENT_REFERENCE', { equipmentId: item.id, rendererKey: item.rendererKey || item.code || 'beaker' })}
-            className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[.03] p-2 cursor-grab hover:border-violet-500/40 transition-colors"
+            onClick={() => useBookStudioStore.getState().addBlock('EQUIPMENT_REFERENCE', { equipmentId: String(item.id), rendererKey: String(item.rendererKey || item.code || 'beaker') })}
+            onDragStart={e => handleDragStart(e, 'EQUIPMENT_REFERENCE', { equipmentId: String(item.id), rendererKey: String(item.rendererKey || item.code || 'beaker') })}
+            className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[.03] p-2 cursor-pointer hover:border-violet-500/40 transition-colors"
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-violet-600/10">
               <FlaskConical size={14} className="text-violet-400" />
