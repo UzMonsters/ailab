@@ -1,0 +1,16 @@
+name: Keep Alive Ping
+
+on:
+  schedule:
+    # Запускать каждые 5 минут
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Frontend
+        run: curl -s https://ailab-frontend.onrender.com > /dev/null
+      - name: Ping Backend
+        run: curl -s https://ailab-api-1h23.onrender.com/actuator/health > /dev/null || true
