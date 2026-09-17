@@ -23,10 +23,17 @@ export function BookFlip({ pages, currentPage, totalPages, onNavigate, initialBo
   const bookRef = useRef<{ pageFlip: () => { getCurrentPageIndex: () => number; turnToPage: (page: number) => void; flipNext: (corner: "top" | "bottom") => void; flipPrev: (corner: "top" | "bottom") => void; flip: (page: number, corner: "top" | "bottom") => void } } | null>(null);
   const [savedPage, setSavedPage] = useState<number | null>(() => {
     if (initialBookmark && initialBookmark > 0) return initialBookmark;
-    if (typeof window === 'undefined') return null;
-    const fallback = Number(window.localStorage.getItem("jasscience-book-bookmark"));
-    return Number.isInteger(fallback) && fallback > 0 ? fallback : null;
+    return null;
   });
+
+  useEffect(() => {
+    if (initialBookmark && initialBookmark > 0) return;
+    const fallback = Number(window.localStorage.getItem("jasscience-book-bookmark"));
+    if (Number.isInteger(fallback) && fallback > 0) {
+      setSavedPage(fallback);
+    }
+  }, [initialBookmark]);
+
   useEffect(() => {
     if (initialBookmark == null) return;
     const timer = window.setTimeout(() => setSavedPage(current => current === initialBookmark ? current : initialBookmark > 0 ? initialBookmark : null), 0);

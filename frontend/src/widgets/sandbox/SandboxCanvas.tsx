@@ -488,17 +488,6 @@ export function SandboxCanvas({
           );
         })()}
       </svg>
-      {/* Persistent liquid left after overflow or a shattered vessel. */}
-      {spills.map((spill, index) => {
-        const age = Math.max(0, spillNow - spill.time);
-        if (age >= 3000) return null;
-        const size = Math.min(104, Math.max(38, 26 + Math.sqrt(Math.max(0, spill.amount)) * 8));
-        const left = ((spill.x ?? 0) + pan.x) * zoom - size / 2;
-        const top = ((spill.y ?? 0) + pan.y) * zoom - size / 3;
-        const color = spill.color || '#22D3EE';
-        const progress = age / 3000;
-        return <div key={spill.id} className="pointer-events-none absolute z-[5] rounded-full border border-white/20 shadow-[0_5px_16px_rgba(8,47,73,.28)]" title={`Разлито: ${spill.amount.toFixed(1)} мл`} style={{ left, top, width: size, height: Math.max(14, size * .34), background: `radial-gradient(ellipse at 48% 42%, ${color}cc 0%, ${color}66 52%, transparent 74%)`, transform: `rotate(${(index * 23) % 35 - 17}deg) scale(${1 + progress * .18})`, opacity: .9 * (1 - progress) }} />;
-      })}
       {/* Layer 2: Equipment items */}
           {/* Group Outline (Bounding Box) */}
           {selectedIds.size > 1 && (() => {
@@ -647,9 +636,6 @@ export function SandboxCanvas({
               ⚠️ {item.integrity === 'shattered' ? 'РАЗБИТ (SHATTERED)' : 'ПОВРЕЖДЁН'}
             </span>
           )}
-          {(item.overflowing || (item.lastOverflowAt && spillNow - item.lastOverflowAt < 3500)) && (
-            <span className="pointer-events-none absolute -top-14 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-cyan-300/50 bg-cyan-950/90 px-2.5 py-0.5 text-[10px] font-extrabold text-cyan-100 shadow-xl">РАЗЛИВ · ПЕРЕПОЛНЕНИЕ</span>
-          )}
           {item.attachedTo && (
             <span className="pointer-events-none absolute -top-7 right-0 whitespace-nowrap rounded-lg border border-orange-500/30 bg-orange-500/15 px-2 py-0.5 text-[9px] font-bold text-orange-400 shadow-md backdrop-blur-sm">
               Attached &middot; Heat link
@@ -717,10 +703,19 @@ export function SandboxCanvas({
           {pourAnimation?.targetId === item.id && pourAnimation.sourceId !== item.id && (
             <svg className="pointer-events-none absolute left-1/2 top-0 z-30 h-[120px] w-[160px] -translate-x-1/2 -translate-y-[6rem] overflow-visible" viewBox="0 0 160 120" aria-label="Pouring liquid">
               {pourAnimation.sourceId === 'library' && (
-                <g transform="translate(80, 20) rotate(-110) scale(0.65)" className="sandbox-pour-library-flask animate-pulse" style={{ animationDuration: '0.8s' }}>
-                  <path d="M-12,0 L12,0 L12,18 L24,40 L24,75 A8,8 0 0,1 -24,75 L-24,40 L-12,18 Z" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.7)" strokeWidth="3" />
-                  <path d="M-22,46 L22,46 L22,70 A4,4 0 0,1 -22,70 Z" fill={item.material?.color ?? '#22D3EE'} opacity="0.9" />
-                  <path d="M-12,2 L12,2" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" />
+                <g transform="translate(70, -10) rotate(-100) scale(1.1)" className="sandbox-pour-library-flask animate-pulse" style={{ animationDuration: '0.8s' }}>
+                  {/* Bottle body */}
+                  <path d="M-20,0 L20,0 L20,30 L40,60 L40,120 A10,10 0 0,1 -40,120 L-40,60 L-20,30 Z" fill="rgba(255,255,255,0.1)" stroke="url(#glass-shine)" strokeWidth="2" />
+                  <path d="M-20,0 L20,0 L20,30 L40,60 L40,120 A10,10 0 0,1 -40,120 L-40,60 L-20,30 Z" fill="url(#glass-shine)" opacity="0.3" />
+                  {/* Liquid inside */}
+                  <path d="M-38,75 L38,75 L38,115 A8,8 0 0,1 -38,115 Z" fill={item.material?.color ?? '#22D3EE'} opacity="0.95" />
+                  {/* Reagent Label */}
+                  <rect x="-25" y="80" width="50" height="30" rx="3" fill="#ffffff" opacity="0.9" stroke="rgba(0,0,0,0.1)" strokeWidth="1" />
+                  <line x1="-15" y1="90" x2="15" y2="90" stroke="#333333" strokeWidth="2" strokeLinecap="round" />
+                  <line x1="-15" y1="98" x2="5" y2="98" stroke="#333333" strokeWidth="2" strokeLinecap="round" />
+                  {/* Bottle neck/cap area details */}
+                  <path d="M-20,5 L20,5" stroke="rgba(255,255,255,0.6)" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M-18,15 L18,15" stroke="rgba(255,255,255,0.4)" strokeWidth="1" strokeLinecap="round" />
                 </g>
               )}
               <path d="M80 30 C76 50 86 65 80 85 C76 100 82 110 80 120" fill="none" stroke={item.material?.color ?? '#22D3EE'} strokeWidth="5" strokeLinecap="round" className="sandbox-pour-stream" />
@@ -729,12 +724,7 @@ export function SandboxCanvas({
               <circle cx="80" cy="90" r="1.5" fill={item.material?.color ?? '#22D3EE'} className="animate-rise animation-delay-600" />
             </svg>
           )}
-          {spillAnimation === item.id && (
-            <svg className="pointer-events-none absolute left-1/2 bottom-0 z-10 h-16 w-48 -translate-x-1/2 translate-y-12 overflow-visible opacity-80" viewBox="0 0 128 64" aria-label="Spilling liquid">
-              <ellipse cx="64" cy="32" rx="40" ry="12" fill={item.material?.color ?? '#22D3EE'} className="animate-ping opacity-40" />
-              <ellipse cx="64" cy="32" rx="30" ry="8" fill={item.material?.color ?? '#22D3EE'} className="opacity-90" />
-            </svg>
-          )}
+
           {item.ports.map((port) => {
             const anchor = itemPortLayout(item, port);
             const status = portCompatibility[`${item.id}:${port.id}`];

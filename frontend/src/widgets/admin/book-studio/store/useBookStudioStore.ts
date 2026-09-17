@@ -5,6 +5,7 @@ import { adminBookApi } from '@/entities/book/api/book.api';
 import { adminPlatformApi } from '@/entities/admin/api/platform-admin.api';
 import { sanitizeSvgMarkup } from '@/shared/lib/sanitizeSvg';
 import { getApiBaseUrl } from '@/shared/api/client';
+import { useToastStore } from '@/stores/toast.store';
 import type { JsonObject } from '@/shared/api/contracts/platform';
 import type { Locale } from '@/shared/types/catalog';
 import { hydrateBookPageBlocks, type BookBlockKind, type BookPageBlock } from '../BookPageRenderer';
@@ -486,7 +487,7 @@ export const useBookStudioStore = create<BookStudioState>((set, get) => ({
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Book publish failed';
       set({ error: msg });
-      if (typeof window !== 'undefined') window.alert('Publish Failed:\n\n' + msg);
+      useToastStore.getState().addToast('Publish Failed: ' + msg, 'error');
     } finally {
       set({ busy: false });
     }
