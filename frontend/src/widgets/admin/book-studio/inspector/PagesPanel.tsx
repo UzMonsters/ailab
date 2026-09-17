@@ -1,18 +1,23 @@
 'use client';
 
+'use client';
+
 import { useBookStudioStore, labelEntity } from '../store/useBookStudioStore';
 import type { JsonObject } from '@/shared/api/contracts/platform';
 import { Plus, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
 export function PagesPanel() {
-  const { book, page, pages, selectPage, chapters, dirty, createChapter, createPage } = useBookStudioStore();
+  const { book, page, pages, selectPage, chapters, dirty, createChapter, createPage, renameChapter, renamePage } = useBookStudioStore();
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
   const [showChapterModal, setShowChapterModal] = useState(false);
   const [chapterTitle, setChapterTitle] = useState('');
   const [createError, setCreateError] = useState('');
   const [creating, setCreating] = useState(false);
   const [pendingPageSwitch, setPendingPageSwitch] = useState<{ page: JsonObject } | null>(null);
+  
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   const toggleChapter = (id: string) => {
     setExpandedChapters(prev => {
@@ -21,6 +26,20 @@ export function PagesPanel() {
       else next.add(id);
       return next;
     });
+  };
+
+  const handleRenameSubmit = async (type: 'chapter' | 'page') => {
+    if (!renamingId || !renameValue.trim()) {
+      setRenamingId(null);
+      return;
+    }
+    try {
+      if (type === 'chapter') await renameChapter(renamingId, renameValue);
+      else await renamePage(renamingId, renameValue);
+    } catch (e) {
+      console.error(e);
+    }
+    setRenamingId(null);
   };
 
   const addPage = async (chapterId: string) => {
@@ -45,100 +64,6 @@ export function PagesPanel() {
     setCreateError('');
     try {
       await createChapter(String(book.id), chapterTitle.trim());
-      setShowChapterModal(false);
-      setChapterTitle('');
-    } catch (e) {
-      setCreateError(e instanceof Error ? e.message : 'Failed to create chapter');
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const handlePageSelect = (p: JsonObject) => {
-    if (dirty && page && String(p.id) !== String(page.id)) {
-      setPendingPageSwitch({ page: p });
-      return;
-    }
-    selectPage(p);
-  };
-
-  const confirmPageSwitch = (saveFirst: boolean) => {
-    if (!pendingPageSwitch) return;
-    if (saveFirst) {
-      void useBookStudioStore.getState().save().then(() => {
-        selectPage(pendingPageSwitch.page);
-        setPendingPageSwitch(null);
-      });
-    } else {
-      useBookStudioStore.getState().discardDraft();
-      selectPage(pendingPageSwitch.page);
-      setPendingPageSwitch(null);
-    }
-  };
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] text-slate-500 uppercase tracking-wider">Pages</p>
-        <button
-          onClick={addChapter}
-          className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-violet-400 hover:bg-violet-600/10 transition-colors"
-        >
-          <Plus size={10} /> Chapter
-        </button>
-      </div>
-
-      {chapters.map((chapter) => {
-        const chapterId = String(chapter.id);
-        const isExpanded = expandedChapters.has(chapterId) || chapters.length <= 3;
-        const chapterPages = (chapter as JsonObject).pages as JsonObject[] | undefined;
-        const pageList = Array.isArray(chapterPages) ? chapterPages : [];
-
-        return (
-          <div key={chapterId}>
-            <button
-              onClick={() => toggleChapter(chapterId)}
-              className="flex w-full items-center gap-1 rounded px-1 py-1 text-left text-[11px] font-medium text-slate-300 hover:bg-white/5"
-            >
-              {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-              <span className="truncate">{labelEntity(chapter)}</span>
-              <span className="ml-auto text-[10px] text-slate-600">{pageList.length}</span>
-            </button>
-
-            {isExpanded && (
-              <div className="ml-3 space-y-0.5">
-                {pageList.map((p) => {
-                  const pageId = String(p.id);
-                  return (
-                    <button
-                      key={pageId}
-                      onClick={() => handlePageSelect(p)}
-                      className={`w-full rounded px-2 py-1 text-left text-[11px] transition-colors ${
-                        page?.id === pageId
-                          ? 'bg-violet-600/20 text-violet-300'
-                          : 'text-slate-400 hover:bg-white/5'
-                      }`}
-                    >
-                      {labelEntity(p)}
-                    </button>
-                  );
-                })}
-                <button
-                  onClick={() => void addPage(chapterId)}
-                  className="flex w-full items-center gap-1 rounded px-2 py-1 text-[10px] text-slate-500 hover:text-violet-400 hover:bg-white/5"
-                >
-                  <Plus size={10} /> Add page
-                </button>
-              </div>
-            )}
-          </div>
-        );
-      })}
-
-      {chapters.length === 0 && (
-        <div className="py-6 text-center">
-          <p className="text-xs text-slate-500">No chapters yet</p>
-          <button onClick={addChapter} className="mt-2 text-xs text-violet-400 hover:underline">Add first chapter</button>
         </div>
       )}
 
