@@ -381,7 +381,7 @@ export function JasScienceModal({
 
         <div className="flex justify-center border-t border-white/10 p-5 sm:p-6">
           <a
-            href="http://localhost:3000/ru#platform"
+            href="/#platform"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 rounded-xl border border-violet-300/25 bg-violet-400/10 px-5 py-2.5 text-xs font-bold text-violet-200 transition-colors hover:bg-violet-400/20 hover:text-white"

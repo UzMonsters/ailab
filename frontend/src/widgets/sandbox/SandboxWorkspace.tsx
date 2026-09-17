@@ -262,28 +262,7 @@ export function SandboxWorkspace({ previewDraft, previewCatalog, embedded = fals
     mixTimersRef.current.clear();
   }, []);
 
-  // Older snapshots could contain solid samples inside a pipette. Clean that
-  // invalid state once when loading the scene so the UI and transfer logic
-  // agree on the same physical model.
-  useEffect(() => {
-    if (!engine) return;
-    let changed = false;
-    for (const object of engine.workspace.scene.objects.values()) {
-      if (object.type !== "pipette" && object.type !== "burette") continue;
-      const liquidContents = object.contents.filter((content) => content.phase === "liquid" || content.phase === "aqueous");
-      if (liquidContents.length === object.contents.length) continue;
-      object.contents = liquidContents;
-      object.properties.massG = 0;
-      object.properties.moles = liquidContents.reduce((sum, content) => sum + Number(content.molarAmount ?? 0), 0);
-      object.properties.volumeMl = liquidContents.reduce((sum, content) => sum + Number(content.amount ?? 0), 0);
-      object.properties.liquidLevel = Math.min(1, Number(object.properties.volumeMl) / Number(object.properties.capacityMl ?? object.metadata.capacity ?? 10));
-      object.material = liquidContents[0]
-        ? { id: liquidContents[0].materialId, name: liquidContents[0].name, formula: liquidContents[0].formula, state: liquidContents[0].phase, color: liquidContents[0].color }
-        : undefined;
-      changed = true;
-    }
-    if (changed) engine.notifyUpdate();
-  }, [engine]);
+
 
   const resolveGuideTargets = (scenarioId?: string, step?: number) => {
     if (!scenarioId || step === undefined) return undefined;

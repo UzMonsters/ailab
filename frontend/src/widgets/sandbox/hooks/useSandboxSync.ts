@@ -148,6 +148,19 @@ export function useSandboxSync({
         engine.workspace.scene.add(object);
       } catch (error) { console.error('Failed to restore workspace item', error); }
     }
+    for (const object of engine.workspace.scene.objects.values()) {
+      if (object.type !== "pipette" && object.type !== "burette") continue;
+      const liquidContents = object.contents.filter((content) => content.phase === "liquid" || content.phase === "aqueous");
+      if (liquidContents.length === object.contents.length) continue;
+      object.contents = liquidContents;
+      object.properties.massG = 0;
+      object.properties.moles = liquidContents.reduce((sum, content) => sum + Number(content.molarAmount ?? 0), 0);
+      object.properties.volumeMl = liquidContents.reduce((sum, content) => sum + Number(content.amount ?? 0), 0);
+      object.properties.liquidLevel = Math.min(1, Number(object.properties.volumeMl) / Number(object.properties.capacityMl ?? object.metadata.capacity ?? 10));
+      object.material = liquidContents[0]
+        ? { id: String(liquidContents[0].materialId), name: String(liquidContents[0].name), formula: String(liquidContents[0].formula), state: String(liquidContents[0].phase), color: String(liquidContents[0].color) } as any
+        : undefined;
+    }
     for (const connection of state.connections ?? []) {
       if (!isConnectionSnapshot(connection)) continue;
       try { engine.workspace.scene.connect(connection); } catch (error) { console.error('Failed to restore workspace connection', error); }
