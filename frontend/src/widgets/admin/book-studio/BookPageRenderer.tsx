@@ -154,7 +154,7 @@ function DataWidgetPlaceholder({ block }: { block: BookPageBlock }) {
 
 export function BookBlockRenderer({ block, scenarioLabel, interactive = false, onInteract }: { block: BookPageBlock; scenarioLabel?: string; interactive?: boolean; onInteract?: () => void }) {
   if (block.kind === 'IMAGE') return block.src ? <img src={block.src} alt={block.alt || 'Book page asset'} className="h-full w-full object-contain" /> : <span className="text-xs text-slate-400">Choose image</span>;
-  if (block.kind === 'SVG') return block.svg ? <div className="h-full w-full [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: block.svg }} /> : <span className="text-xs text-slate-400">Choose SVG</span>;
+  if (block.kind === 'SVG') return block.svg ? <div className="h-full w-full [&>svg]:h-full [&>svg]:w-full" style={{ fill: block.fillColor, stroke: block.strokeColor, color: block.fillColor }} dangerouslySetInnerHTML={{ __html: block.svg }} /> : <span className="text-xs text-slate-400">Choose SVG</span>;
   if (block.kind === 'FORMULA') { const formula = block.formula || String.raw`H_2O`; const markup = katex.renderToString(formula, { throwOnError: false, displayMode: true, strict: false }); return <div className="grid h-full w-full place-items-center overflow-auto" role="img" aria-label={`Formula ${formula}`} dangerouslySetInnerHTML={{ __html: markup }} />; }
   if (block.kind === 'INTERACTIVE_EXPERIMENT_LINK') return <button type="button" onDoubleClick={onInteract} onClick={interactive ? onInteract : undefined} className="h-full w-full rounded-xl border border-violet-300 bg-violet-100 p-4 text-left text-violet-950"><b>Interactive Scenario</b><span className="mt-2 block text-sm">{scenarioLabel || block.scenarioId || 'Select a Scenario'}</span><span className="mt-3 block text-xs text-violet-700">{interactive ? 'Open interactive runtime' : 'Double-click to interact'}</span></button>;
   if (block.kind === 'EQUIPMENT_REFERENCE') return <EquipmentPlaceholder block={block} />;
@@ -162,7 +162,14 @@ export function BookBlockRenderer({ block, scenarioLabel, interactive = false, o
   if (block.kind === 'REACTION_REFERENCE') return <ReactionPlaceholder block={block} />;
   if (block.kind === 'DATA_WIDGET') return <DataWidgetPlaceholder block={block} />;
   if (block.kind === 'SHAPE') return <div className="h-full w-full rounded" style={{ background: block.fillColor || '#e2e8f0', border: `${block.strokeWidth || 1}px solid ${block.strokeColor || '#94a3b8'}`, borderRadius: block.borderRadius || 0 }} />;
-  return <RichTextPreview content={block.text || '<p>Text block</p>'} />;
+  
+  const textStyle: React.CSSProperties = {};
+  if (block.color) textStyle.color = block.color;
+  if (block.backgroundColor) textStyle.backgroundColor = block.backgroundColor;
+  if (block.fontSize) textStyle.fontSize = `${block.fontSize}px`;
+  if (block.fontFamily) textStyle.fontFamily = block.fontFamily;
+  
+  return <RichTextPreview content={block.text || '<p>Text block</p>'} style={textStyle} />;
 }
 
 export function BookPageRenderer({ blocks, scenarioName, onInteract, onSelectBlock, className = '' }: { blocks: BookPageBlock[]; scenarioName?: (id: string) => string; onInteract?: (id: string) => void; onSelectBlock?: (id: string) => void; className?: string }) {

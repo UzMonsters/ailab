@@ -64,11 +64,14 @@ export function BookCanvasViewport() {
         style={{
           transform: `translate(${panX}px, ${panY}px) scale(${zoom})`,
           transition: isPanning ? 'none' : 'transform 0.1s ease-out',
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        <div className="flex items-center justify-center" style={{ minHeight: '100vh', minWidth: '100vw' }}>
-          <BookPageCanvas />
-        </div>
+        <BookPageCanvas />
       </div>
     </div>
   );

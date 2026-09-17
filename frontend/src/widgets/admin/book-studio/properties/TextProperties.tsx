@@ -23,6 +23,15 @@ export function TextProperties({ block }: { block: Block }) {
         </div>
       </div>
       <div>
+        <label className="text-[10px] text-slate-500">Content (HTML)</label>
+        <textarea 
+          value={block.text || ''} 
+          onChange={e => patchBlock(block.id, { text: e.target.value })}
+          rows={4}
+          className="w-full rounded border border-white/10 bg-[#080c14] px-2 py-1 text-xs text-white outline-none focus:border-violet-500" 
+        />
+      </div>
+      <div>
         <label className="text-[10px] text-slate-500">Color</label>
         <input type="color" value={block.color || '#1e293b'} onChange={e => patchBlock(block.id, { color: e.target.value })}
           className="h-6 w-full rounded border border-white/10" />

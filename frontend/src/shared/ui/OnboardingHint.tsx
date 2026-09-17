@@ -31,9 +31,8 @@ export default function OnboardingHint({ storageKey }: OnboardingHintProps) {
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,.3)] flex items-center gap-3 text-sm text-[var(--foreground)]">
-      <span>👋</span>
       <span>Welcome! Create your first workspace to get started.</span>
-      <button onClick={dismiss} aria-label="Dismiss welcome hint" className="touch-target ml-2 rounded hover:bg-[var(--accent)] text-[var(--muted-foreground)]">
+      <button onClick={dismiss} aria-label="Dismiss welcome hint" className="ml-2 grid h-6 w-6 place-items-center rounded hover:bg-[var(--accent)] text-[var(--muted-foreground)]">
         <X size={14} />
       </button>
     </div>

@@ -109,7 +109,10 @@ export function BookStudioTopBar({ onCreateBook }: { onCreateBook?: () => void }
         ) : notice ? (
           <span className="flex items-center gap-1 text-emerald-400"><CheckCircle size={12} />{t('saved')}</span>
         ) : error ? (
-          <span className="flex items-center gap-1 text-rose-400"><AlertCircle size={12} />{t('saveFailed')}</span>
+          <span className="flex items-center gap-1 text-rose-400" title={error}>
+            <AlertCircle size={12} />
+            <span className="max-w-[300px] truncate">{error}</span>
+          </span>
         ) : null}
       </div>
 

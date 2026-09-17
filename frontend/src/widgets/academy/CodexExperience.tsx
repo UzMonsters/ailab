@@ -392,45 +392,6 @@ export default function CodexExperience({
             pages[0].render()
           ) : (
             <div className="academy-book is-open">
-              {/* Bookmarks */}
-              <div 
-                className="academy-bookmarks"
-                style={{
-                  position: 'absolute',
-                  right: '-4.25rem',
-                  top: '4rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.5rem',
-                  zIndex: 35
-                }}
-              >
-                {bookmarks.map((bm, i) => (
-                  <button
-                    key={bm.label}
-                    onClick={() => navigate(bm.page)}
-                    aria-label={bm.label}
-                    title={bm.label}
-                    className={`academy-bookmark ${currentPage === bm.page ? 'academy-bookmark-active' : ''} ${i % 3 === 1 ? 'academy-bookmark-overlap' : ''}`}
-                    style={{
-                      backgroundColor: bm.color,
-                      color: '#fff',
-                      padding: '0.65rem 0.7rem',
-                      borderRadius: '0 0.5rem 0.5rem 0',
-                      border: '1px solid rgba(255,255,255,0.2)',
-                      borderLeft: 'none',
-                      fontFamily: 'var(--font-cinzel)',
-                      cursor: 'pointer',
-                      boxShadow: '2px 2px 5px rgba(0,0,0,0.3)',
-                      width: '3.1rem',
-                      height: '3.1rem',
-                    }}
-                  >
-                    <bm.icon size={18} strokeWidth={1.8} aria-hidden="true" />
-                  </button>
-                ))}
-              </div>
-
               {readerPages.length > 0 ? <BookFlip
                 currentPage={currentPage}
                 pages={readerPages}

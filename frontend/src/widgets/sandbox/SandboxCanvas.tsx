@@ -355,14 +355,32 @@ export function SandboxCanvas({
       <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
         <SvgDefs />
       </svg>
-      {activePourSource && (
-        <div className="sandbox-pour-guidance pointer-events-auto absolute left-1/2 top-5 z-[110] flex min-w-[330px] -translate-x-1/2 items-center gap-3 rounded-2xl border border-cyan-300/40 bg-card/95 px-4 py-2 text-xs font-semibold text-foreground shadow-[0_12px_32px_rgba(6,182,212,.2)] backdrop-blur-xl">
-          <Droplets size={16} className="text-cyan-400" />
-          <label className="min-w-0 flex-1"><span className="flex justify-between gap-3"><span>Объём переливания</span><b className="font-mono text-cyan-300">{Math.min(pourAmount,activePourSource.volumeMl).toFixed(0)} мл</b></span><input aria-label="Объём переливания в миллилитрах" type="range" min="1" max={Math.max(1,Math.floor(activePourSource.volumeMl))} value={Math.min(pourAmount,Math.max(1,activePourSource.volumeMl))} onChange={event=>setPourAmount?.(Number(event.target.value))} className="mt-1 w-full accent-cyan-400"/></label>
-          <button type="button" className="ml-1 grid h-6 w-6 place-items-center rounded-full bg-muted text-muted-foreground hover:text-foreground" onClick={(event) => { event.stopPropagation(); setPourSource?.(null); }} aria-label="Отменить переливание">×</button>
-        </div>
-      )}
-      {pourAnimation && (()=>{const source=items.find(item=>item.id===pourAnimation.sourceId);const target=items.find(item=>item.id===pourAnimation.targetId);if(!source||!target||source.id===target.id)return null;const x1=(source.x+source.w/2+pan.x)*zoom;const y1=(source.y+source.h*.45+pan.y)*zoom;const x2=(target.x+target.w/2+pan.x)*zoom;const y2=(target.y+target.h*.18+pan.y)*zoom;const color=source.material?.color??'#22d3ee';const path=`M ${x1} ${y1} Q ${(x1+x2)/2} ${Math.min(y1,y2)-pourAnimation.arcLift} ${x2} ${y2}`;return <svg className="pointer-events-none absolute inset-0 z-40 h-full w-full overflow-visible" aria-label={`${pourAnimation.kind} liquid transfer`}><path d={path} fill="none" stroke={color} strokeWidth={Math.max(2,pourAnimation.streamWidth*zoom)} strokeLinecap="round" className={`sandbox-transfer-stream sandbox-transfer-${pourAnimation.kind}`} style={{animationDuration:`${Math.max(280,pourAnimation.durationMs/3)}ms, ${pourAnimation.durationMs}ms`}}/>{pourAnimation.kind==='pipette'&&<><circle cx={x2} cy={y2-24} r="4" fill={color} className="sandbox-transfer-drop"/><circle cx={x2} cy={y2-42} r="2.5" fill={color} className="sandbox-transfer-drop animation-delay-300"/></>}<circle cx={x2} cy={y2} r="10" fill="none" stroke={color} strokeWidth="3" className="sandbox-transfer-ripple"/></svg>})()}
+      {activePourSource && (() => {
+        const sourceRenderScaleX = activePourSource.scaleX ?? activePourSource.scale;
+        const screenX = (activePourSource.x + (activePourSource.w * sourceRenderScaleX) / 2 + pan.x) * zoom;
+        const screenY = (activePourSource.y - 20 + pan.y) * zoom;
+        return (
+          <div style={{ left: screenX, top: screenY }} className="sandbox-pour-guidance pointer-events-auto absolute z-[110] flex min-w-[330px] -translate-x-1/2 -translate-y-full items-center gap-3 rounded-2xl border border-cyan-300/40 bg-card/95 px-4 py-2 text-xs font-semibold text-foreground shadow-[0_12px_32px_rgba(6,182,212,.2)] backdrop-blur-xl transition-all">
+            <Droplets size={16} className="text-cyan-400" />
+            <label className="min-w-0 flex-1"><span className="flex justify-between gap-3"><span>Объём переливания</span><b className="font-mono text-cyan-300">{Math.min(pourAmount,activePourSource.volumeMl).toFixed(0)} мл</b></span><input aria-label="Объём переливания в миллилитрах" type="range" min="1" max={Math.max(1,Math.floor(activePourSource.volumeMl))} value={Math.min(pourAmount,Math.max(1,activePourSource.volumeMl))} onChange={event=>setPourAmount?.(Number(event.target.value))} className="mt-1 w-full accent-cyan-400"/></label>
+            <button type="button" className="ml-1 grid h-6 w-6 place-items-center rounded-full bg-muted text-muted-foreground hover:text-foreground" onClick={(event) => { event.stopPropagation(); setPourSource?.(null); }} aria-label="Отменить переливание">×</button>
+          </div>
+        );
+      })()}
+      {pourAnimation && (()=>{const source=items.find(item=>item.id===pourAnimation.sourceId);const target=items.find(item=>item.id===pourAnimation.targetId);if(!source||!target||source.id===target.id)return null;
+        const targetRenderScaleX = target.scaleX ?? target.scale;
+        const targetRenderScaleY = target.scaleY ?? target.scale;
+        const sourceRenderScaleX = source.scaleX ?? source.scale;
+        const sourceRenderScaleY = source.scaleY ?? source.scale;
+        const targetX = target.x - source.w * sourceRenderScaleX * 0.1;
+        const targetY = target.y - source.h * sourceRenderScaleY * 0.5;
+        const x1=(targetX+source.w*sourceRenderScaleX*0.8+pan.x)*zoom;
+        const y1=(targetY+source.h*sourceRenderScaleY*0.2+pan.y)*zoom;
+        const x2=(target.x+target.w/2+pan.x)*zoom;
+        const y2=(target.y+target.h*.18+pan.y)*zoom;
+        const color=source.material?.color??'#22d3ee';
+        const path=`M ${x1} ${y1} Q ${(x1+x2)/2} ${Math.min(y1,y2)-pourAnimation.arcLift} ${x2} ${y2}`;
+        return <svg className="pointer-events-none absolute inset-0 z-40 h-full w-full overflow-visible" aria-label={`${pourAnimation.kind} liquid transfer`}><path d={path} fill="none" stroke={color} strokeWidth={Math.max(2,pourAnimation.streamWidth*zoom)} strokeLinecap="round" className={`sandbox-transfer-stream sandbox-transfer-${pourAnimation.kind}`} style={{animationDuration:`${Math.max(280,pourAnimation.durationMs/3)}ms, ${pourAnimation.durationMs}ms`, animationDelay: '0.4s'}}/>{pourAnimation.kind==='pipette'&&<><circle cx={x2} cy={y2-24} r="4" fill={color} className="sandbox-transfer-drop"/><circle cx={x2} cy={y2-42} r="2.5" fill={color} className="sandbox-transfer-drop animation-delay-300"/></>}<circle cx={x2} cy={y2} r="10" fill="none" stroke={color} strokeWidth="3" className="sandbox-transfer-ripple" style={{animationDelay: '0.4s'}}/></svg>})()}
       {/* Layer 1: Connection lines (SVG, behind everything) */}
       <svg className="pointer-events-none absolute inset-0 h-full w-full z-0" style={{ overflow: 'visible' }}>
         <defs><marker id="arrow-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#22D3EE" /></marker><marker id="arrow-violet" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#A78BFA" /></marker><marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#FB923C" /></marker><marker id="arrow-emerald" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#34D399" /></marker><marker id="arrow-glass" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(255,255,255,0.7)" /></marker></defs>{connections.map((link) => { const fromItem = items.find((item) => item.id === link.from); const toItem = items.find((item) => item.id === link.to); const fromPort = fromItem?.ports.find((port) => port.id === link.fromPort);
@@ -513,15 +531,31 @@ export function SandboxCanvas({
           {items.filter(item => !item.hidden).map((item) => {
 
         // Items themselves apply pan/zoom to coordinate rendering
-        const screenX = (item.x + pan.x) * zoom;
-        const screenY = (item.y + pan.y) * zoom;
+        let screenX = (item.x + pan.x) * zoom;
+        let screenY = (item.y + pan.y) * zoom;
         const renderScaleX = resizeDraft?.id === item.id ? resizeDraft.scaleX : (item.scaleX ?? item.scale);
         const renderScaleY = resizeDraft?.id === item.id ? resizeDraft.scaleY : (item.scaleY ?? item.scale);
         const screenW = item.w * renderScaleX * zoom;
         const screenH = item.h * renderScaleY * zoom;
         const measuredTemperature = item.type === 'thermometer' ? temperatureReading?.(item.id) : null;
         const displayedTemperature = measuredTemperature ?? item.measuredTemperatureC;
-        const displayRotation = rotationDraft?.id === item.id ? rotationDraft.rotation : item.rotation;
+        let displayRotation = rotationDraft?.id === item.id ? rotationDraft.rotation : item.rotation;
+        
+        let zIndexClass = selectedId === item.id ? 'z-20 ring-2 ring-[var(--primary)]' : 'z-10 hover:ring-1 hover:ring-[var(--primary)]/60';
+        const isPouringNow = pourAnimation?.sourceId === item.id;
+        if (isPouringNow) {
+          const target = items.find(i => i.id === pourAnimation!.targetId);
+          if (target) {
+            const targetRenderScaleX = target.scaleX ?? target.scale;
+            const targetRenderScaleY = target.scaleY ?? target.scale;
+            const targetX = target.x - item.w * renderScaleX * 0.1;
+            const targetY = target.y - item.h * renderScaleY * 0.5;
+            screenX = (targetX + pan.x) * zoom;
+            screenY = (targetY + pan.y) * zoom;
+            displayRotation = 45;
+            zIndexClass = 'z-[60] ring-0';
+          }
+        }
         const visibleLiquid = item.contents.find((content) => content.phase === 'liquid' || content.phase === 'aqueous');
           const visibleSolid = item.contents.find((content) => content.phase === 'solid');
           const isVaporizing = item.contents.some((content) => content.phase === 'gas') || Boolean(visibleLiquid && item.temperature >= Number(item.material?.boilingPointC ?? 100));
@@ -568,9 +602,9 @@ export function SandboxCanvas({
             event.stopPropagation();
             setContextMenu({ x: event.clientX, y: event.clientY, itemId: item.id });
           }}
-          style={{ left: screenX, top: screenY, width: screenW, height: screenH, transform: `rotate(${displayRotation}deg)`, touchAction: 'none' }}
+          style={{ left: screenX, top: screenY, width: screenW, height: screenH, transform: `rotate(${displayRotation}deg)`, touchAction: 'none', transition: isPouringNow ? 'left 0.4s ease-in-out, top 0.4s ease-in-out, transform 0.4s ease-in-out' : 'none' }}
           data-help-target={item.type}
-          className={`group absolute rounded-xl p-1 select-none outline-none focus:ring-2 focus:ring-[var(--primary)] ${activePourSource ? (isPourTarget ? 'sandbox-pour-target z-30 cursor-pointer ring-4 ring-cyan-300 bg-cyan-300/10 shadow-[0_0_34px_rgba(34,211,238,.72)]' : isPourDimmed ? 'opacity-30 saturate-50' : 'z-20 ring-2 ring-cyan-400/50') : tool === 'pan' ? 'cursor-move' : tool === 'connect' ? 'cursor-crosshair' : 'cursor-default'} ${selectedId === item.id ? 'z-20 ring-2 ring-[var(--primary)]' : 'z-10 hover:ring-1 hover:ring-[var(--primary)]/60'} ${collisionItemId === item.id ? 'ring-2 ring-red-400 bg-red-500/10' : ''} ${isHelpTarget ? 'help-arrow-target ring-2 ring-violet-300 shadow-[0_0_20px_rgba(156,107,255,.55)] animate-pulse' : ''}`}
+          className={`group absolute rounded-xl p-1 select-none outline-none focus:ring-2 focus:ring-[var(--primary)] ${activePourSource ? (isPourTarget ? 'sandbox-pour-target z-30 cursor-pointer ring-4 ring-cyan-300 bg-cyan-300/10 shadow-[0_0_34px_rgba(34,211,238,.72)]' : isPourDimmed ? 'opacity-30 saturate-50' : 'z-20 ring-2 ring-cyan-400/50') : tool === 'pan' ? 'cursor-move' : tool === 'connect' ? 'cursor-crosshair' : 'cursor-default'} ${zIndexClass} ${collisionItemId === item.id ? 'ring-2 ring-red-400 bg-red-500/10' : ''} ${isHelpTarget ? 'help-arrow-target ring-2 ring-violet-300 shadow-[0_0_20px_rgba(156,107,255,.55)] animate-pulse' : ''}`}
         >
           <span className={`equipment-art pointer-events-none absolute inset-0 grid place-items-center rounded-xl ${item.operation === 'mixing' ? 'sandbox-vessel-mixing' : ''} ${pourAnimation?.sourceId===item.id?`sandbox-pour-source sandbox-pour-${pourAnimation.kind}`:''} ${pourAnimation?.targetId===item.id?'sandbox-pour-receiver':''}`}>
             {renderEquipmentCanvas(item.type, { type: item.type, width: screenW, height: screenH, size: Math.min(screenW, screenH), liquidLevel: visibleLiquid ? item.liquidLevel : 0, volumeMl: item.volumeMl, capacityMl: item.capacityMl, liquidColor: item.material?.color ?? visibleLiquid?.color, hasGas: isVaporizing, hasSolid: !!visibleSolid, solidColor: visibleSolid?.color, massG: item.massG, operation: item.operation, temperature: item.temperature, connected: temperatureConnected(item.id), sealed: item.sealed, broken: item.broken })}

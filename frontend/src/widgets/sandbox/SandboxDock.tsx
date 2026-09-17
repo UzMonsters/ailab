@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 import { useTranslations } from "next-intl";
 import { useState, useEffect } from 'react';
 import { MobileSheet, MeasurementCard, MiniChart } from "@/widgets/sandbox/SandboxPanels";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import type { Item } from "./types";
 import type { SandboxSyncStatus } from "./hooks/useSandboxSync";
 import type { RuntimeScenario } from './runtime/runtime.types';
@@ -218,7 +219,7 @@ export function SandboxDock({
            );
          })()}
         <div className="flex h-11 items-center gap-1 border-b border-border px-2">
-          <button aria-label={ts("dock.events")} className="mr-1 grid h-8 w-8 place-items-center rounded-lg text-xs font-bold text-foreground hover:bg-foreground/10" onClick={() => setBottomDockOpen((open: boolean) => !open)}>{bottomDockOpen ? '⌄' : '⌃'}</button>
+          <button aria-label={ts("dock.events")} className="mr-1 grid h-8 w-8 place-items-center rounded-lg text-foreground hover:bg-foreground/10" onClick={() => setBottomDockOpen((open: boolean) => !open)}>{bottomDockOpen ? <ChevronDown size={16} /> : <ChevronUp size={16} />}</button>
           {([
             { id: 'Events', label: ts("dock.events") },
             { id: 'Measurements', label: ts("dock.measurements") },
@@ -230,7 +231,7 @@ export function SandboxDock({
           <span data-testid="sandbox-sync-status" className={`ml-auto text-[10px] ${syncStatus === 'error' || syncStatus === 'offline' || syncStatus === 'conflict' ? 'text-red-300' : syncStatus === 'saving' || syncStatus === 'reconciling' ? 'text-amber-300' : 'text-emerald-300'}`}>{syncLabel(syncStatus)} <span className="text-foreground/35">·</span> {itemsLength} {ts("dock.objects")}</span>
         </div>
           {bottomDockOpen && <div className="flex-1 overflow-y-auto p-3 text-xs text-[var(--muted-foreground)]">
-          {bottomDockTab === 'Events' && <div className={`sandbox-event-log space-y-1 ${eventLog.length === 0 ? 'sandbox-event-log-empty' : ''}`}>{eventLog.length === 0 ? <p>{ts("dock.emptyLog")}</p> : eventLog.slice().reverse().map((entry, idx) => <p key={`${entry.time}-${entry.event}-${idx}`}><span className="mr-2 font-mono text-[10px] text-cyan-200/50">{entry.time}</span><strong className="mr-2 text-foreground/90">{eventLabel(entry.event)}</strong>{entry.detail}</p>)}</div>}
+          {bottomDockTab === 'Events' && <div className={`sandbox-event-log space-y-1 ${eventLog.length === 0 ? 'sandbox-event-log-empty' : ''}`}>{eventLog.length === 0 ? <p>{ts("dock.emptyLog")}</p> : eventLog.slice().reverse().map((entry, idx) => <p key={`${entry.time}-${entry.event}-${idx}`}><span className="mr-2 font-mono text-[10px] text-blue-700 dark:text-cyan-200/50">{entry.time}</span><strong className="mr-2 text-foreground/90">{eventLabel(entry.event)}</strong><span className="text-slate-800 dark:text-slate-300">{entry.detail}</span></p>)}</div>}
            {bottomDockTab === 'Measurements' && (temperatureConnected && selected && measuredTemperature !== null ? <div className="grid grid-cols-1 gap-3 md:grid-cols-3"><MeasurementCard label="Температура · LIVE" value={`${measuredTemperature.toFixed(1)} °C`} /></div> : <div className="sandbox-empty-state rounded-xl border border-cyan-400/20 bg-cyan-400/[.05] p-4 text-center text-xs">Нет измерений. Подключите измерительный прибор.</div>)}
           {bottomDockTab === 'Charts' && <div className="grid gap-4 md:grid-cols-2"><MiniChart title={ts("dock.temperature")} samples={measurementSamples} field="temperature" color="#F97316" /></div>}
           {bottomDockTab === 'Simulation' && (
