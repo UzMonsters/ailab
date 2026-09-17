@@ -48,6 +48,9 @@ export function BookPageCanvas() {
         }}
         aria-label="Book page canvas"
       >
+        <div className="pointer-events-none absolute bottom-4 left-0 right-0 text-center text-xs text-slate-400 font-serif">
+          {pages.findIndex(p => p.id === page?.id) + 1}
+        </div>
         {showGrid && (
           <div
             className="pointer-events-none absolute inset-0 opacity-10"

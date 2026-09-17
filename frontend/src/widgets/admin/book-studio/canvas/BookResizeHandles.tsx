@@ -40,8 +40,7 @@ export function BookResizeHandles({ block }: { block: Block }) {
         case 'sw': patch = { x: o.x + dx, w: Math.max(100, o.w - dx), h: Math.max(70, o.h + dy) }; break;
         case 'w': patch = { x: o.x + dx, w: Math.max(100, o.w - dx) }; break;
       }
-      patchBlock(d.dir.includes('x') || d.dir === 'nw' || d.dir === 'sw' || d.dir === 'ne' || d.dir === 'e' || d.dir === 'w'
-        ? d.dir : d.dir, patch, false);
+      patchBlock(o.id, patch, false);
     };
 
     const upHandler = () => {

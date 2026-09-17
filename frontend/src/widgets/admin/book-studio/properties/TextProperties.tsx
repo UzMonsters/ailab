@@ -1,6 +1,7 @@
 'use client';
 
 import { useBookStudioStore, type Block } from '../store/useBookStudioStore';
+import { RichTextEditor } from '../RichTextEditor';
 
 export function TextProperties({ block }: { block: Block }) {
   const { patchBlock } = useBookStudioStore();
@@ -23,12 +24,10 @@ export function TextProperties({ block }: { block: Block }) {
         </div>
       </div>
       <div>
-        <label className="text-[10px] text-slate-500">Content (HTML)</label>
-        <textarea 
-          value={block.text || ''} 
-          onChange={e => patchBlock(block.id, { text: e.target.value })}
-          rows={4}
-          className="w-full rounded border border-white/10 bg-[#080c14] px-2 py-1 text-xs text-white outline-none focus:border-violet-500" 
+        <label className="text-[10px] text-slate-500">Content (Rich Text)</label>
+        <RichTextEditor 
+          content={block.text || ''} 
+          onChange={html => patchBlock(block.id, { text: html })}
         />
       </div>
       <div>

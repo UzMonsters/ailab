@@ -24,7 +24,7 @@ const groupFor=(item:LibraryItem)=>{const capabilities=new Set((item.capabilitie
 
 export interface LibraryProps { tab: LibraryTab; setTab: (tab: LibraryTab) => void; addItem: (item: LibraryItem) => void; addMaterial: (material: Material) => void; selected?: unknown; helpActive?: boolean; helpTab?: LibraryTab; helpTargets?: string[]; levelLabel?: string; mode?: RuntimeMode | 'NORMAL'; runtimeCatalog?: RuntimeCatalog | null; allowedEquipmentIds?: string[]; allowedMaterialIds?: string[]; onStartScenario?: (id: string) => void; catalogPolicy?: 'OPEN' | 'RESTRICTED'; }
 
-export function Library({tab,setTab,addItem,addMaterial,selected,helpActive=false,helpTab,helpTargets=[],levelLabel,mode='NORMAL',runtimeCatalog,allowedEquipmentIds=[],allowedMaterialIds=[],catalogPolicy='OPEN'}:LibraryProps){
+export function Library({tab,setTab,addItem,addMaterial,selected,helpActive=false,helpTab,helpTargets=[],levelLabel,mode='NORMAL',runtimeCatalog,allowedEquipmentIds=[],allowedMaterialIds=[],onStartScenario,catalogPolicy='OPEN'}:LibraryProps){
   const ts=useTranslations('sandbox'),locale=useLocale();
   const groupLabel=(key:string)=>({containers:ts('groupContainers'),measurement:ts('groupMeasurement'),heating:ts('groupHeating'),cooling:ts('groupCooling'),transfer:ts('groupTransfer'),connection:ts('groupConnection'),other:ts('groupOther')}[key]??key.replaceAll('_',' '));
   const [query,setQuery]=useState(''),[remoteEquipment,setRemoteEquipment]=useState<EquipmentSummary[]>([]),[remoteMaterials,setRemoteMaterials]=useState<MaterialSummary[]>([]),[remoteScenarios,setRemoteScenarios]=useState<LearningLevelSummary[]>([]),[status,setStatus]=useState<'loading'|'ready'|'error'>(runtimeCatalog?.equipment.length||runtimeCatalog?.materials.length?'ready':'loading'),[attempt,setAttempt]=useState(0);
@@ -36,7 +36,7 @@ export function Library({tab,setTab,addItem,addMaterial,selected,helpActive=fals
     void Promise.all([
       catalogCache.getEquipment(),
       catalogCache.getMaterials(),
-      learningApi.track('chemistry', locale).then(res => res.data?.levels ?? []).catch(() => [])
+      learningApi.track('chemistry', locale).then(res => res.levels ?? []).catch(() => [])
     ]).then(([equipment,materials,levels])=>{
       if(!active)return;
       setRemoteEquipment(equipment);
