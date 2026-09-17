@@ -14,7 +14,6 @@ const railItems: RailItem[] = [
   { id: 'layouts', label: 'Layouts', icon: LayoutGrid },
   { id: 'text', label: 'Text', icon: Type },
   { id: 'graphics', label: 'Graphics', icon: Shapes },
-  { id: 'scientists', label: 'Scientists', icon: UserRound },
   { id: 'equipment', label: 'Equipment', icon: FlaskConical },
   { id: 'materials', label: 'Materials', icon: Atom },
   { id: 'reactions', label: 'Reactions', icon: Sparkles },
