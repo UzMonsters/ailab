@@ -43,7 +43,7 @@ export function BookPageCanvas() {
   const bgColor = (book?.settings as any)?.backgroundColor || defaultBg;
 
   return (
-    <div className={`flex gap-2 ${previewMode === 'two-page' ? '' : ''}`} style={{ transform: `scale(${zoom})`, transformOrigin: 'center top' }}>
+    <div className={`flex gap-2 ${previewMode === 'two-page' ? '' : ''}`}>
       <div
         className={`relative mx-auto overflow-hidden text-slate-950 shadow-2xl ${previewMode === 'two-page' ? 'ring-4 ring-violet-500 ring-offset-4 ring-offset-[#090d16]' : ''}`}
         style={{ width: 590, height: 760, backgroundColor: bgColor }}
@@ -59,9 +59,9 @@ export function BookPageCanvas() {
         </div>
         {showGrid && (
           <div
-            className="pointer-events-none absolute inset-0 z-0 opacity-10"
+            className="pointer-events-none absolute inset-0 z-0 opacity-30"
             style={{
-              backgroundImage: 'linear-gradient(rgba(0,0,0,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.1) 1px, transparent 1px)',
+              backgroundImage: 'linear-gradient(rgba(128,128,128,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(128,128,128,.5) 1px, transparent 1px)',
               backgroundSize: '20px 20px',
             }}
           />

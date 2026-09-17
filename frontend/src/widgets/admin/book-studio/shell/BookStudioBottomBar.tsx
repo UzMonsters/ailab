@@ -79,7 +79,7 @@ export function BookStudioBottomBar() {
         </button>
         <div className="mx-1 h-3 w-px bg-white/10" />
         <button
-          onClick={() => { setZoom(0.75); setPan(0, 0); }}
+          onClick={() => window.dispatchEvent(new Event('fit-book-page'))}
           className="flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-white/5 transition-colors"
           title={t('fitPage')}
           aria-label={t('fitPage')}

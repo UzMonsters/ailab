@@ -118,7 +118,6 @@ export const railSections: RailSection[] = [
   { id: 'layouts', label: 'Layouts', icon: LayoutGrid, tabId: 'layouts' },
   { id: 'text', label: 'Text', icon: Type, tabId: 'text' },
   { id: 'graphics', label: 'Graphics', icon: Shapes, tabId: 'graphics' },
-  { id: 'scientists', label: 'Scientists', icon: UserRound, tabId: 'scientists' },
   { id: 'equipment', label: 'Equipment', icon: FlaskConical, tabId: 'equipment' },
   { id: 'materials', label: 'Materials', icon: Atom, tabId: 'materials' },
   { id: 'reactions', label: 'Reactions', icon: FlaskConical, tabId: 'reactions' },

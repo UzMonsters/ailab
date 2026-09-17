@@ -122,6 +122,8 @@ interface BookStudioState {
   renameChapter: (chapterId: string, title: string) => Promise<void>;
   createPage: (chapterId: string) => Promise<void>;
   renamePage: (pageId: string, title: string) => Promise<void>;
+  deleteChapter: (chapterId: string) => Promise<void>;
+  deletePage: (pageId: string) => Promise<void>;
 }
 
 export const useBookStudioStore = create<BookStudioState>((set, get) => ({
@@ -456,6 +458,8 @@ export const useBookStudioStore = create<BookStudioState>((set, get) => ({
       const draftKey = `${String(book.id)}:${pageId}`;
       delete newDrafts[draftKey];
 
+      await get().loadBook(String(book.id), pageId);
+
       set({ notice: 'Page saved', dirty: false, pageDrafts: newDrafts });
     } catch (e) {
       set({ error: e instanceof Error ? e.message : 'Save failed' });
@@ -689,6 +693,201 @@ export const useBookStudioStore = create<BookStudioState>((set, get) => ({
       set({ busy: false });
     }
   },
+  setSelected: (id) => set({ selectedBlockId: id }),
+
+  setContentLocale: (locale) => {
+    const { page, book, pageDrafts, contentLocale: prevLocale } = get();
+    if (!page || !book) {
+      set({ contentLocale: locale });
+      return;
+    }
+
+    const pageId = String(page.id);
+    const draftKey = `${String(book.id)}:${pageId}`;
+
+    const currentDrafts = { ...pageDrafts };
+    if (!currentDrafts[draftKey]) currentDrafts[draftKey] = {} as Record<Locale, Block[]>;
+    currentDrafts[draftKey][prevLocale] = get().blocks;
+
+    const savedBlocks = currentDrafts[draftKey][locale];
+
+    set({
+      contentLocale: locale,
+      blocks: savedBlocks || hydrateBookPageBlocks(page.blocks, locale),
+      selectedBlockId: '',
+      history: [],
+      future: [],
+      dirty: Boolean(savedBlocks),
+      pageDrafts: currentDrafts,
+    });
+  },
+
+  setActiveLeftTab: (tab) => set(state => ({ activeLeftTab: state.activeLeftTab === tab ? null : tab })),
+  setInspectorTab: (tab) => set({ inspectorTab: tab }),
+  setZoom: (z) => set({ zoom: Math.min(2, Math.max(0.1, z)) }),
+  setPan: (x, y) => set({ panX: x, panY: y }),
+  setShowGrid: (v) => set({ showGrid: v }),
+  setShowGuides: (v) => set({ showGuides: v }),
+  setPreviewMode: (m) => set({ previewMode: m }),
+  setInteractionMode: (m) => set({ interactionMode: m }),
+  setInteractiveDraft: (d) => set({ interactiveDraft: d }),
+  setIsPanning: (v) => set({ isPanning: v }),
+  setRightPanelOpen: (v) => set({ rightPanelOpen: v }),
+  setNotice: (msg) => set({ notice: msg }),
+  setError: (msg) => set({ error: msg }),
+
+  uploadImage: async (file) => {
+    set({ busy: true, error: '' });
+    try {
+      const response = await adminPlatformApi.assets.uploadUrls({
+        files: [{ filename: file.name, contentType: file.type, sizeBytes: file.size, kind: 'IMAGE' }],
+      });
+      const target = obj(Array.isArray(response.uploads) ? response.uploads[0] : {});
+      if (!target.uploadUrl || !target.assetId) throw new Error('Upload target was not created.');
+      const uploadUrl = String(target.uploadUrl).startsWith('/')
+        ? `${getApiBaseUrl()}${target.uploadUrl}`
+        : String(target.uploadUrl);
+      const uploaded = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
+      if (!uploaded.ok) throw new Error(`Image upload failed (${uploaded.status}).`);
+      let completedAsset: JsonObject = {};
+      try {
+        completedAsset = obj(await adminPlatformApi.assets.complete(String(target.assetId), {}));
+      } catch {
+        void 0;
+      }
+      const src = String(completedAsset.downloadUrl ?? target.downloadUrl ?? '');
+      const assetId = String(target.assetId);
+      get().addBlock('IMAGE', { src, assetId });
+    } catch (e) {
+      set({ error: e instanceof Error ? e.message : 'Image upload failed.' });
+    } finally {
+      set({ busy: false });
+    }
+  },
+
+  uploadSvg: async (file) => {
+    try {
+      const safe = sanitizeSvgMarkup(await file.text());
+      if (!safe) {
+        set({ error: 'Unsafe or invalid SVG' });
+        return;
+      }
+      get().addBlock('SVG', { svg: safe });
+    } catch (e) {
+      set({ error: e instanceof Error ? e.message : 'SVG upload failed.' });
+    }
+  },
+
+  copyBlock: (id) => {
+    const { blocks } = get();
+    const block = blocks.find(b => b.id === id);
+    if (block) set({ clipboard: [{ ...block }] });
+  },
+
+  pasteBlock: () => {
+    const { clipboard, blocks } = get();
+    if (!clipboard.length) return;
+    const top = Math.max(0, ...blocks.map(b => b.z)) + 1;
+    const pasted = clipboard.map((b, i) => ({
+      ...b,
+      id: crypto.randomUUID(),
+      x: b.x + 16,
+      y: b.y + 16,
+      z: top + i,
+    }));
+    get().commit([...blocks, ...pasted]);
+    set({ selectedBlockId: pasted[0]?.id || '' });
+  },
+
+  discardDraft: () => {
+    const { page, contentLocale, book } = get();
+    if (!page || !book) return;
+    const pageId = String(page.id);
+    const draftKey = `${String(book.id)}:${pageId}`;
+    const newDrafts = { ...get().pageDrafts };
+    delete newDrafts[draftKey];
+    set({
+      blocks: hydrateBookPageBlocks(page.blocks, contentLocale),
+      dirty: false,
+      selectedBlockId: '',
+      history: [],
+      future: [],
+      pageDrafts: newDrafts,
+    });
+  },
+
+  createBook: async (title: string, slug: string) => {
+    set({ busy: true, error: '' });
+    try {
+      const defaultLocale = get().contentLocale;
+      const book = await adminBookApi.create({
+        slug,
+        defaultLocale,
+        translations: { [defaultLocale]: { title, description: '' } },
+      });
+      await get().loadBooks();
+      await get().loadBook(String(book.id));
+    } catch (e) {
+      set({ error: e instanceof Error ? e.message : 'Failed to create book' });
+      throw e;
+    } finally {
+      set({ busy: false });
+    }
+  },
+
+  createChapter: async (bookId: string, title: string) => {
+    set({ busy: true, error: '' });
+    try {
+      const locale = get().contentLocale;
+      await adminBookApi.createChapter(bookId, {
+        position: get().chapters.length + 1,
+        translations: { [locale]: { title: title.trim(), description: '' } },
+      });
+      await get().loadBook(bookId);
+    } catch (e) {
+      set({ error: e instanceof Error ? e.message : 'Failed to create chapter' });
+      throw e;
+    } finally {
+      set({ busy: false });
+    }
+  },
+
+  renameChapter: async (chapterId: string, title: string) => {
+    const book = get().book;
+    if (!book) return;
+    set({ busy: true, error: '' });
+    try {
+      const locale = get().contentLocale;
+      await adminBookApi.patchChapter(String(book.id), chapterId, {
+        translations: { [locale]: { title: title.trim() } },
+      });
+      await get().loadBook(String(book.id));
+    } catch (e) {
+      set({ error: e instanceof Error ? e.message : 'Failed to rename chapter' });
+      throw e;
+    } finally {
+      set({ busy: false });
+    }
+  },
+
+  createPage: async (chapterId: string) => {
+    const book = get().book;
+    if (!book) return;
+    set({ busy: true, error: '' });
+    try {
+      const locale = get().contentLocale;
+      const result = await adminBookApi.createPage(String(book.id), {
+        chapterId,
+        layout: 'single-page',
+        translations: { [locale]: { title: 'Untitled page' } },
+      });
+      await get().loadBook(String(book.id), String(result.id));
+    } catch (e) {
+      set({ error: e instanceof Error ? e.message : 'Failed to create page' });
+    } finally {
+      set({ busy: false });
+    }
+  },
 
   renamePage: async (pageId: string, title: string) => {
     const book = get().book;
@@ -703,6 +902,36 @@ export const useBookStudioStore = create<BookStudioState>((set, get) => ({
     } catch (e) {
       set({ error: e instanceof Error ? e.message : 'Failed to rename page' });
       throw e;
+    } finally {
+      set({ busy: false });
+    }
+  },
+
+  deleteChapter: async (chapterId: string) => {
+    const book = get().book;
+    if (!book) return;
+    if (!confirm('Are you sure you want to delete this chapter and all its pages?')) return;
+    set({ busy: true, error: '' });
+    try {
+      await adminBookApi.deleteChapter(String(book.id), chapterId);
+      await get().loadBook(String(book.id));
+    } catch (e) {
+      set({ error: e instanceof Error ? e.message : 'Failed to delete chapter' });
+    } finally {
+      set({ busy: false });
+    }
+  },
+
+  deletePage: async (pageId: string) => {
+    const book = get().book;
+    if (!book) return;
+    if (!confirm('Are you sure you want to delete this page?')) return;
+    set({ busy: true, error: '' });
+    try {
+      await adminBookApi.deletePage(String(book.id), pageId);
+      await get().loadBook(String(book.id));
+    } catch (e) {
+      set({ error: e instanceof Error ? e.message : 'Failed to delete page' });
     } finally {
       set({ busy: false });
     }

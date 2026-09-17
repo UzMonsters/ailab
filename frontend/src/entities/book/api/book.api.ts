@@ -19,6 +19,7 @@ export const adminBookApi = {
   deleteChapter: (bookId: string, chapterId: string) => api.delete<JsonObject>(`/api/v1/admin/books/${bookId}/chapters/${chapterId}`),
   createPage: (bookId: string, request: JsonObject) => api.post<JsonObject>(`/api/v1/admin/books/${bookId}/pages`, request),
   patchPage: (bookId: string, pageId: string, request: JsonObject) => api.patch<JsonObject>(`/api/v1/admin/books/${bookId}/pages/${pageId}`, request),
+  deletePage: (bookId: string, pageId: string) => api.delete<JsonObject>(`/api/v1/admin/books/${bookId}/pages/${pageId}`),
   saveBlocks: (bookId: string, pageId: string, request: JsonObject) => api.put<JsonObject>(`/api/v1/admin/books/${bookId}/pages/${pageId}/blocks`, request),
   validate: (bookId: string, request?: JsonObject) => api.post<JsonObject>(`/api/v1/admin/books/${bookId}/validate`, request),
   publish: (bookId: string, request?: JsonObject) => api.post<JsonObject>(`/api/v1/admin/books/${bookId}/publish`, request),

@@ -112,21 +112,24 @@ export function PagesPanel() {
         const pageList = Array.isArray(chapterPages) ? chapterPages : [];
 
         return (
-          <div key={chapterId}>
+          <div key={chapterId} className="group/chapter">
             {renamingId === chapterId ? (
               <div className="flex w-full items-center gap-1 rounded px-1 py-1">
                 <input autoFocus value={renameValue} onChange={e => setRenameValue(e.target.value)} onKeyDown={e => { if(e.key==='Enter') void handleRenameSubmit('chapter'); if(e.key==='Escape') setRenamingId(null); }} onBlur={() => void handleRenameSubmit('chapter')} className="flex-1 bg-[#111827] text-[11px] text-white px-1 outline-none border border-violet-500 rounded" />
               </div>
             ) : (
-              <button
-                onClick={() => toggleChapter(chapterId)}
-                onDoubleClick={() => { setRenameValue(labelEntity(chapter)); setRenamingId(chapterId); }}
-                className="flex w-full items-center gap-1 rounded px-1 py-1 text-left text-[11px] font-medium text-slate-300 hover:bg-white/5"
-              >
-                {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-                <span className="truncate">{labelEntity(chapter)}</span>
-                <span className="ml-auto text-[10px] text-slate-600">{pageList.length}</span>
-              </button>
+              <div className="flex w-full items-center gap-1 rounded px-1 py-1 text-[11px] font-medium text-slate-300 hover:bg-white/5">
+                <button onClick={() => toggleChapter(chapterId)} className="flex items-center gap-1 flex-1 text-left" onDoubleClick={() => { setRenameValue(labelEntity(chapter)); setRenamingId(chapterId); }}>
+                  {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                  <span className="truncate">{labelEntity(chapter)}</span>
+                </button>
+                <div className="flex items-center gap-1 opacity-0 group-hover/chapter:opacity-100 transition-opacity">
+                  <span className="text-[10px] text-slate-600 px-1">{pageList.length}</span>
+                  <button onClick={() => void useBookStudioStore.getState().deleteChapter(chapterId)} className="text-slate-500 hover:text-rose-400" title="Delete Chapter">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  </button>
+                </div>
+              </div>
             )}
 
             {isExpanded && (
@@ -141,19 +144,22 @@ export function PagesPanel() {
                     );
                   }
                   return (
-                    <button
+                    <div
                       key={pageId}
-                      onClick={() => handlePageSelect(p)}
-                      onDoubleClick={() => { setRenameValue(labelEntity(p)); setRenamingId(pageId); }}
-                      className={`w-full rounded px-2 py-1 text-left text-[11px] truncate transition-colors ${
+                      className={`group/page flex w-full items-center justify-between rounded px-2 py-1 text-left text-[11px] transition-colors ${
                         page?.id === pageId
                           ? 'bg-violet-600/20 text-violet-300'
                           : 'text-slate-400 hover:bg-white/5'
                       }`}
                     >
-                      <span className="opacity-50 mr-1">{pIndex + 1}.</span>
-                      {labelEntity(p)}
-                    </button>
+                      <button className="flex-1 truncate text-left" onClick={() => handlePageSelect(p)} onDoubleClick={() => { setRenameValue(labelEntity(p)); setRenamingId(pageId); }}>
+                        <span className="opacity-50 mr-1">{pIndex + 1}.</span>
+                        {labelEntity(p)}
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); void useBookStudioStore.getState().deletePage(pageId); }} className="opacity-0 group-hover/page:opacity-100 text-slate-500 hover:text-rose-400 transition-opacity" title="Delete Page">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    </div>
                   );
                 })}
                 <button

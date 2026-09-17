@@ -33,8 +33,8 @@ export function EquipmentSandboxPreview({draft}:{draft:EquipmentDraft}){
   const connectionLine=(()=>{if(!source||!target)return null;const a=point(source),b=point({position:{x:Number(object(target.position).x??.5),y:Number(object(target.position).y??.5)}});return{x1:40+a.x*220,y1:32+a.y*220,x2:360+b.x*220,y2:32+b.y*220};})();
   const supported=hasEquipmentRenderer(draft.rendererKey);
 
-  const currentSvg = theme === 'dark' ? draft.media?.svgDark : draft.media?.svgLight;
-  const currentImage = theme === 'dark' ? draft.media?.imageDark : draft.media?.imageLight;
+  const currentSvg = theme === 'dark' ? (draft.media?.svgDark || draft.media?.svgLight) : (draft.media?.svgLight || draft.media?.svgDark);
+  const currentImage = theme === 'dark' ? (draft.media?.imageDark || draft.media?.imageLight) : (draft.media?.imageLight || draft.media?.imageDark);
   const mediaUrl = currentSvg?.url || currentImage?.url;
 
   return <FormSection title={t('sandboxPreview')} description={t('sandboxPreviewHelp')}>

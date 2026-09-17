@@ -18,7 +18,25 @@ export function BookCanvasViewport() {
     const up = (e: KeyboardEvent) => { if (e.code === 'Space') setSpaceHeld(false); };
     window.addEventListener('keydown', down);
     window.addEventListener('keyup', up);
-    return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); };
+
+    const handleFit = () => {
+      if (!viewportRef.current) return;
+      const { clientWidth, clientHeight } = viewportRef.current;
+      const { previewMode } = useBookStudioStore.getState();
+      const targetW = previewMode === 'two-page' ? PAGE_W * 2 + 16 : PAGE_W;
+      const targetH = PAGE_H;
+      const padding = 80;
+      const scale = Math.min((clientWidth - padding) / targetW, (clientHeight - padding) / targetH, 2);
+      useBookStudioStore.getState().setZoom(Number(scale.toFixed(2)));
+      useBookStudioStore.getState().setPan(0, 0);
+    };
+    window.addEventListener('fit-book-page', handleFit);
+
+    return () => { 
+      window.removeEventListener('keydown', down); 
+      window.removeEventListener('keyup', up); 
+      window.removeEventListener('fit-book-page', handleFit);
+    };
   }, []);
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
