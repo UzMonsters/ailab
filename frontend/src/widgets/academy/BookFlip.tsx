@@ -23,6 +23,10 @@ export function BookFlip({ pages, currentPage, totalPages, onNavigate, initialBo
   const bookRef = useRef<{ pageFlip: () => { getCurrentPageIndex: () => number; turnToPage: (page: number) => void; flipNext: (corner: "top" | "bottom") => void; flipPrev: (corner: "top" | "bottom") => void; flip: (page: number, corner: "top" | "bottom") => void } } | null>(null);
   const [savedPage, setSavedPage] = useState<number | null>(() => {
     if (initialBookmark && initialBookmark > 0) return initialBookmark;
+    if (typeof window !== "undefined") {
+      const fallback = Number(window.localStorage.getItem("jasscience-book-bookmark"));
+      if (Number.isInteger(fallback) && fallback > 0) return fallback;
+    }
     return null;
   });
 
@@ -30,7 +34,8 @@ export function BookFlip({ pages, currentPage, totalPages, onNavigate, initialBo
     if (initialBookmark && initialBookmark > 0) return;
     const fallback = Number(window.localStorage.getItem("jasscience-book-bookmark"));
     if (Number.isInteger(fallback) && fallback > 0) {
-      setSavedPage(fallback);
+      const timer = window.setTimeout(() => setSavedPage(fallback), 0);
+      return () => window.clearTimeout(timer);
     }
   }, [initialBookmark]);
 
