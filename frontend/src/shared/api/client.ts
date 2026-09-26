@@ -176,9 +176,98 @@ async function requestBlob(endpoint: string): Promise<Blob> {
   return res.blob();
 }
 
+async function requestBinary<T = void>(
+  endpoint: string,
+  data: Blob | ArrayBuffer | Uint8Array,
+  contentType: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const headers: Record<string, string> = {
+    'Content-Type': contentType,
+    ...(options.headers as Record<string, string>),
+  };
+
+  if (!headers['Authorization']) {
+    if (!accessToken && !endpoint.startsWith('/api/v1/auth/')) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed && accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+    } else if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+  }
+
+  const url = endpoint.startsWith('http://') || endpoint.startsWith('https://')
+    ? endpoint
+    : `${API_BASE}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+
+  let res = await fetch(url, {
+    ...options,
+    method: options.method || 'PUT',
+    headers,
+    body: data as BodyInit,
+    credentials: 'include',
+  });
+
+  if (res.status === 401 && !endpoint.startsWith('/api/v1/auth/')) {
+    const refreshed = await refreshAccessToken();
+    if (refreshed && accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+      res = await fetch(url, {
+        ...options,
+        method: options.method || 'PUT',
+        headers,
+        body: data as BodyInit,
+        credentials: 'include',
+      });
+    }
+
+    if (res.status === 401 && typeof window !== 'undefined' && !endpoint.startsWith('/api/v1/auth/')) {
+      accessToken = null;
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+    }
+  }
+
+  if (!res.ok) {
+    let errorData: Partial<ApiError>;
+    try {
+      errorData = await res.json();
+    } catch {
+      errorData = { message: res.statusText };
+    }
+    const message = errorData.message || errorData.detail || errorData.error || errorData.title || res.statusText || 'Binary upload failed';
+    throw new ApiErrorImpl({
+      status: res.status,
+      message,
+      code: errorData.code,
+      correlationId: errorData.correlationId,
+      traceId: errorData.traceId,
+      errors: errorData.errors,
+      fieldViolations: errorData.fieldViolations,
+    });
+  }
+
+  if (res.status === 204 || res.headers.get('content-length') === '0') {
+    return undefined as T;
+  }
+
+  const ct = res.headers.get('content-type');
+  if (ct && ct.includes('application/json')) {
+    return res.json();
+  }
+  return undefined as T;
+}
+
 export const api = {
   get: <T>(endpoint: string, options?: RequestInit) => request<T>(endpoint, options),
   getBlob: (endpoint: string) => requestBlob(endpoint),
+  putBinary: <T = void>(
+    endpoint: string,
+    data: Blob | ArrayBuffer | Uint8Array,
+    contentType: string,
+    options?: RequestInit
+  ) => requestBinary<T>(endpoint, data, contentType, options),
 
   post: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
     request<T>(endpoint, {
