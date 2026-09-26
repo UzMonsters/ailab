@@ -3,6 +3,7 @@ package com.ailab.admin.assets;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,7 +21,6 @@ public class AdminAssetController {
         this.assetService = assetService;
     }
 
-    @PostMapping("/upload-urls")
     public Map<String, Object> generateUploadUrls(@RequestBody Map<String, Object> request) {
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> files = request != null && request.get("files") instanceof List
@@ -29,13 +29,24 @@ public class AdminAssetController {
         return assetService.generateUploadUrls(files);
     }
 
+    @PostMapping("/upload-urls")
+    public Map<String, Object> generateUploadUrls(@RequestBody Map<String, Object> request,
+                                                  @AuthenticationPrincipal String actorId) {
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> files = request != null && request.get("files") instanceof List
+                ? (List<Map<String, Object>>) request.get("files")
+                : List.of();
+        return assetService.generateUploadUrls(files, actorId);
+    }
+
     @PostMapping("/{assetId}/complete")
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> completeAsset(
             @PathVariable String assetId,
-            @RequestBody(required = false) Map<String, Object> request
+            @RequestBody(required = false) Map<String, Object> request,
+            @AuthenticationPrincipal String actorId
     ) {
-        return assetService.completeAsset(assetId, request != null ? request : Map.of());
+        return assetService.completeAsset(assetId, request != null ? request : Map.of(), actorId);
     }
 
     @GetMapping("/{assetId}")

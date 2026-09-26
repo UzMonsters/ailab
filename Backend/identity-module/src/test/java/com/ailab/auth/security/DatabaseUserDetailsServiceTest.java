@@ -39,4 +39,18 @@ class DatabaseUserDetailsServiceTest {
         assertThatThrownBy(() -> service.loadUserByUsername("missing@example.com"))
                 .isInstanceOf(UsernameNotFoundException.class);
     }
+
+    @Test
+    void loadsUserWithNullPasswordSafely() {
+        User user = new User("googleuser", "google@example.com", null, Role.USER);
+        when(repository.findByEmailIgnoreCase("google@example.com")).thenReturn(Optional.of(user));
+        DatabaseUserDetailsService service = new DatabaseUserDetailsService(repository);
+
+        var details = service.loadUserByUsername("google@example.com");
+
+        assertThat(details.getUsername()).isEqualTo("google@example.com");
+        assertThat(details.getPassword()).isEqualTo("");
+        assertThat(details.getAuthorities()).extracting(authority -> authority.getAuthority())
+                .containsExactly("ROLE_USER");
+    }
 }

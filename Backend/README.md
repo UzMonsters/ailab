@@ -28,6 +28,34 @@ The supported configuration variables are `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`
 and `JWT_SECRET`. Optional variables are `SERVER_PORT`,
 `ACCESS_TOKEN_TTL`, and `REFRESH_TOKEN_TTL`.
 
+## Object storage
+
+Admin assets, book assets, user avatars, and workspace preview images use the
+shared object-storage layer. For production and docker-compose, set
+`APP_STORAGE_PROVIDER=s3` and provide an S3-compatible bucket. Local tests default
+to `APP_STORAGE_PROVIDER=local`.
+
+Required production variables:
+
+| Variable | Purpose |
+|---|---|
+| `APP_STORAGE_PROVIDER` | `s3` for S3-compatible storage, `local` for development-only disk storage |
+| `APP_STORAGE_ENDPOINT` | S3-compatible endpoint; omit only for AWS S3 default endpoints |
+| `APP_STORAGE_REGION` | S3 signing region |
+| `APP_STORAGE_BUCKET` | Bucket used for uploaded objects |
+| `APP_STORAGE_ACCESS_KEY` | Storage access key |
+| `APP_STORAGE_SECRET_KEY` | Storage secret key |
+| `APP_STORAGE_PATH_STYLE` | `true` for MinIO and most S3-compatible providers |
+| `APP_STORAGE_CREATE_BUCKET` | `true` only for local/dev MinIO; production buckets should be pre-created |
+| `APP_STORAGE_MAX_ASSET_SIZE` | Admin/book asset limit, default `10MB` |
+| `APP_STORAGE_MAX_AVATAR_SIZE` | Avatar limit, default `2MB` |
+| `APP_STORAGE_MAX_PREVIEW_SIZE` | Workspace preview limit, default `10MB` |
+
+The local `docker-compose.yml` starts MinIO and points the backend at it with
+development credentials. Do not reuse those credentials outside local development.
+Upload URLs contain one-time tickets; the server validates ticket scope, actor,
+MIME type, size, checksum, and object existence before completing metadata.
+
 Authentication stores only hashed refresh-token sessions in PostgreSQL. Login and
 refresh set an HttpOnly refresh-token cookie; the JSON response contains both the
 short-lived access JWT and the refresh token for compatibility with the architecture

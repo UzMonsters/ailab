@@ -228,4 +228,10 @@ public final class UserDtos {
 
     public record SuccessResponse(boolean success) {
     }
+
+    public record LinkedProviderDto(String provider, String providerEmail, Instant linkedAt) {
+    }
+
+    public record LinkedProvidersResponse(List<LinkedProviderDto> providers) {
+    }
 }

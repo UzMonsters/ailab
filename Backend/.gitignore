@@ -5,3 +5,9 @@ target/
 .env
 storage/
 app/storage/
+!identity-module/src/main/java/com/ailab/storage/
+!identity-module/src/main/java/com/ailab/storage/**
+!identity-module/src/test/java/com/ailab/storage/
+!identity-module/src/test/java/com/ailab/storage/**
+!app/src/test/java/com/ailab/storage/
+!app/src/test/java/com/ailab/storage/**

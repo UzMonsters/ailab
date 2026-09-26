@@ -14,12 +14,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.ailab.user.domain.User;
 import com.ailab.user.repository.UserRepository;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserRepository userRepository;
+
     public JwtAuthenticationFilter(JwtService jwtService, UserRepository userRepository) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
@@ -56,6 +58,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     chain.doFilter(request, response);
                     return;
                 }
+
+                // Enforce account status
+                String status = user.getStatus();
+                if ("BLOCKED".equalsIgnoreCase(status) || "DEACTIVATED".equalsIgnoreCase(status) || "DELETION_SCHEDULED".equalsIgnoreCase(status)) {
+                    chain.doFilter(request, response);
+                    return;
+                }
+                if (user.getBlockedUntil() != null && user.getBlockedUntil().isAfter(Instant.now())) {
+                    chain.doFilter(request, response);
+                    return;
+                }
+
                 SecurityContextHolder.getContext().setAuthentication(
                         new UsernamePasswordAuthenticationToken(claims.getSubject(), null,
                                 List.of(new SimpleGrantedAuthority(role))));

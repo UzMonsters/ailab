@@ -6,6 +6,7 @@ import com.ailab.workspace.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.core.io.ByteArrayResource;
@@ -307,9 +308,25 @@ public class WorkspaceController {
             @PathVariable String id,
             @PathVariable String previewId,
             @PathVariable String assetId,
-            @RequestBody byte[] body,
+            HttpServletRequest request,
+            @RequestParam(name = "ticket", required = false) String ticket,
+            @RequestHeader(name = "X-Upload-Ticket", required = false) String ticketHeader,
             @RequestHeader(name = "Content-Type", required = false) String contentType) {
-        return previewService.uploadAsset(id, getWorkspaceActorId(id), previewId, assetId, body, contentType);
+        try {
+            return previewService.uploadAsset(
+                    id,
+                    getWorkspaceActorId(id),
+                    previewId,
+                    assetId,
+                    request.getInputStream(),
+                    request.getContentLengthLong(),
+                    contentType,
+                    ticket != null ? ticket : ticketHeader
+            );
+        } catch (java.io.IOException exception) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "PREVIEW_UPLOAD_READ_FAILED: Preview upload body could not be read", exception);
+        }
     }
 
     @GetMapping("/{id}/previews/{previewId}/assets/{assetId}")

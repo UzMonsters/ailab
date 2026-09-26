@@ -86,8 +86,19 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
                     Claims claims = jwtService.parse(token);
                     String userId = claims.getSubject();
                     String role = claims.get("role", String.class);
+                    Number tokenVersion = claims.get("tokenVersion", Number.class);
                     User user = userRepository.findById(userId)
                             .orElseThrow(() -> new AuthenticationCredentialsNotFoundException("Token subject is not an active user"));
+                    if (tokenVersion == null || user.getTokenVersion() != tokenVersion.longValue()) {
+                        throw new AuthenticationCredentialsNotFoundException("Token version is invalid or expired");
+                    }
+                    String status = user.getStatus();
+                    if ("BLOCKED".equalsIgnoreCase(status) || "DEACTIVATED".equalsIgnoreCase(status) || "DELETION_SCHEDULED".equalsIgnoreCase(status)) {
+                        throw new AuthenticationCredentialsNotFoundException("Account is blocked or deactivated");
+                    }
+                    if (user.getBlockedUntil() != null && user.getBlockedUntil().isAfter(java.time.Instant.now())) {
+                        throw new AuthenticationCredentialsNotFoundException("Account is temporarily suspended");
+                    }
                     UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                             user.getId(), null, List.of(new SimpleGrantedAuthority(role != null ? role : "ROLE_USER")));
                     accessor.setUser(auth);

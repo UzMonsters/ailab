@@ -1,6 +1,10 @@
 package com.ailab.auth.token;
 
+import com.ailab.auth.security.AuthenticationEligibilityPolicy;
 import com.ailab.user.api.UserDtos;
+import com.ailab.user.domain.User;
+import com.ailab.user.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,10 +29,21 @@ import java.util.UUID;
 public class RefreshTokenService implements RefreshTokenOperations {
     private static final SecureRandom RANDOM = new SecureRandom();
     private final RefreshTokenRepository repository;
+    private final UserRepository userRepository;
+    private final AuthenticationEligibilityPolicy eligibilityPolicy;
     @Value("${app.security.refresh-token-ttl}") private Duration ttl;
 
     public RefreshTokenService(RefreshTokenRepository repository) {
+        this(repository, null, null);
+    }
+
+    @Autowired
+    public RefreshTokenService(RefreshTokenRepository repository,
+                               @Autowired(required = false) UserRepository userRepository,
+                               @Autowired(required = false) AuthenticationEligibilityPolicy eligibilityPolicy) {
         this.repository = repository;
+        this.userRepository = userRepository;
+        this.eligibilityPolicy = eligibilityPolicy;
     }
 
     @Transactional
@@ -45,6 +60,13 @@ public class RefreshTokenService implements RefreshTokenOperations {
             throw new RefreshTokenReuseException("Refresh token reuse detected");
         }
         if (current.isExpired(Instant.now())) throw new InvalidRefreshTokenException("Invalid or expired refresh token");
+
+        if (userRepository != null && eligibilityPolicy != null) {
+            User user = userRepository.findById(current.getUserId())
+                    .orElseThrow(() -> new InvalidRefreshTokenException("Invalid or expired refresh token"));
+            eligibilityPolicy.assertEligibleForRefresh(user);
+        }
+
         IssuedToken replacement = create(current.getUserId(), current.getFamilyId());
         current.revoke(hash(replacement.rawToken()));
         repository.save(current);

@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Base64;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -27,6 +28,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles({"test", "local"})
 class WorkspaceMeasurementsAndPreviewsIntegrationTest {
+    private static final byte[] PNG_BYTES = Base64.getDecoder().decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/6X7hLkAAAAASUVORK5CYII=");
 
     @Autowired
     private MockMvc mockMvc;
@@ -117,8 +120,8 @@ class WorkspaceMeasurementsAndPreviewsIntegrationTest {
     void testVersionedPreviewPipelineAndStaleCheck() throws Exception {
         // 1. Request Upload URLs at version 1
         PreviewUploadUrlsRequest req = new PreviewUploadUrlsRequest(1L, List.of(
-                new PreviewUploadUrlsRequest.VariantRequest("DARK", "image/webp", 960, 540, null),
-                new PreviewUploadUrlsRequest.VariantRequest("LIGHT", "image/webp", 960, 540, null)
+                new PreviewUploadUrlsRequest.VariantRequest("DARK", "image/png", 960, 540, null),
+                new PreviewUploadUrlsRequest.VariantRequest("LIGHT", "image/png", 960, 540, null)
         ));
         MvcResult res = mockMvc.perform(post("/api/v1/workspaces/" + wsId + "/preview-upload-urls")
                         .header("Authorization", token)
@@ -131,20 +134,22 @@ class WorkspaceMeasurementsAndPreviewsIntegrationTest {
 
         PreviewUploadUrlsResponse uploadResp = objectMapper.readValue(res.getResponse().getContentAsString(), PreviewUploadUrlsResponse.class);
         String prevId = uploadResp.previewId();
-        String darkAssetId = uploadResp.uploads().stream().filter(u -> "DARK".equals(u.theme())).findFirst().orElseThrow().assetId();
-        String lightAssetId = uploadResp.uploads().stream().filter(u -> "LIGHT".equals(u.theme())).findFirst().orElseThrow().assetId();
+        PreviewUploadUrlsResponse.UploadTarget darkUpload = uploadResp.uploads().stream().filter(u -> "DARK".equals(u.theme())).findFirst().orElseThrow();
+        PreviewUploadUrlsResponse.UploadTarget lightUpload = uploadResp.uploads().stream().filter(u -> "LIGHT".equals(u.theme())).findFirst().orElseThrow();
+        String darkAssetId = darkUpload.assetId();
+        String lightAssetId = lightUpload.assetId();
 
-        mockMvc.perform(put("/api/v1/workspaces/" + wsId + "/previews/" + prevId + "/assets/" + darkAssetId + "/upload")
+        mockMvc.perform(put(darkUpload.uploadUrl())
                         .header("Authorization", token)
-                        .contentType("image/webp")
-                        .content("dark-preview-bytes"))
+                        .contentType("image/png")
+                        .content(PNG_BYTES))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.assetId").value(darkAssetId));
 
-        mockMvc.perform(put("/api/v1/workspaces/" + wsId + "/previews/" + prevId + "/assets/" + lightAssetId + "/upload")
+        mockMvc.perform(put(lightUpload.uploadUrl())
                         .header("Authorization", token)
-                        .contentType("image/webp")
-                        .content("light-preview-bytes"))
+                        .contentType("image/png")
+                        .content(PNG_BYTES))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.assetId").value(lightAssetId));
 

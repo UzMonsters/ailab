@@ -19,6 +19,25 @@ services:
     networks:
       - ailab-network
 
+  minio:
+    image: greptime/minio:2025.4.22-debian-12-r1
+    container_name: ailab-minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-ailab}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-ailab-minio-password}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ailab-network
+
   backend:
     build:
       context: ./Backend
@@ -45,9 +64,38 @@ services:
       SEED_USER_USERNAME: ${SEED_USER_USERNAME:-user}
       SEED_USER_EMAIL: ${SEED_USER_EMAIL:-user@ailab.local}
       SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-User@12345}
+      APP_STORAGE_PROVIDER: ${APP_STORAGE_PROVIDER:-s3}
+      APP_STORAGE_ENDPOINT: ${APP_STORAGE_ENDPOINT:-http://ailab-minio:9000}
+      APP_STORAGE_REGION: ${APP_STORAGE_REGION:-us-east-1}
+      APP_STORAGE_BUCKET: ${APP_STORAGE_BUCKET:-ailab-assets}
+      APP_STORAGE_ACCESS_KEY: ${APP_STORAGE_ACCESS_KEY:-ailab}
+      APP_STORAGE_SECRET_KEY: ${APP_STORAGE_SECRET_KEY:-ailab-minio-password}
+      APP_STORAGE_PATH_STYLE: ${APP_STORAGE_PATH_STYLE:-true}
+      APP_STORAGE_CREATE_BUCKET: ${APP_STORAGE_CREATE_BUCKET:-true}
+      APP_STORAGE_DOWNLOAD_URL_TTL: ${APP_STORAGE_DOWNLOAD_URL_TTL:-PT10M}
+      APP_STORAGE_MAX_ASSET_SIZE: ${APP_STORAGE_MAX_ASSET_SIZE:-10MB}
+      APP_STORAGE_MAX_AVATAR_SIZE: ${APP_STORAGE_MAX_AVATAR_SIZE:-2MB}
+      APP_STORAGE_MAX_PREVIEW_SIZE: ${APP_STORAGE_MAX_PREVIEW_SIZE:-10MB}
+      MAIL_HOST: ${MAIL_HOST:-ailab-mailpit}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_FROM: ${MAIL_FROM:-noreply@ailab.local}
+      APP_FRONTEND_URL: ${APP_FRONTEND_URL:-http://localhost:3000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     depends_on:
       postgres:
         condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - ailab-network
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: ailab-mailpit
+    ports:
+      - "${MAILPIT_PORT:-1025}:1025"
+      - "${MAILPIT_WEB_PORT:-8025}:8025"
     networks:
       - ailab-network
 
@@ -72,6 +120,7 @@ services:
 
 volumes:
   pgdata:
+  miniodata:
 
 networks:
   ailab-network:

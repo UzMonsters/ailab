@@ -27,8 +27,10 @@ public class User {
     private String bio;
     @Column(nullable = false, unique = true, length = 320)
     private String email;
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash")
     private String passwordHash;
+    @Column(name = "email_verified_at")
+    private Instant emailVerifiedAt;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Role role;
@@ -83,6 +85,12 @@ public class User {
     public String getBio() { return bio; }
     public String getEmail() { return email; }
     public String getPasswordHash() { return passwordHash; }
+    public Instant getEmailVerifiedAt() { return emailVerifiedAt; }
+    public void markEmailVerified(Instant verifiedAt) { this.emailVerifiedAt = verifiedAt; }
+    public void markEmailVerified() { this.emailVerifiedAt = Instant.now(); }
+    public void setDisplayName(String displayName) { this.displayName = displayName; }
+    public boolean isEmailVerified() { return this.emailVerifiedAt != null; }
+    public boolean hasPassword() { return this.passwordHash != null && !this.passwordHash.isBlank(); }
     public Role getRole() { return role; }
     public String getAvatarUrl() { return avatarUrl; }
     public int getLevel() { return level; }

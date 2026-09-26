@@ -102,6 +102,17 @@ public class UserController {
         service.revokeUserSession(userId, id);
     }
 
+    @GetMapping("/me/providers")
+    public UserDtos.LinkedProvidersResponse getLinkedProviders(@AuthenticationPrincipal String userId) {
+        return service.getLinkedProviders(userId);
+    }
+
+    @DeleteMapping("/me/providers/{provider}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void unlinkProvider(@AuthenticationPrincipal String userId, @PathVariable String provider) {
+        service.unlinkProvider(userId, provider);
+    }
+
     @PostMapping("/me/deletion-requests")
     public ResponseEntity<UserDtos.AccountDeletionResponse> createDeletionRequest(@AuthenticationPrincipal String userId,
                                                                                  @Valid @RequestBody UserDtos.AccountDeletionRequest request) {
