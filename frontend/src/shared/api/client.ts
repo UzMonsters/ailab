@@ -89,11 +89,33 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
-  let res = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-    credentials: 'include',
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 45000);
+  if (options.signal) {
+    options.signal.addEventListener('abort', () => controller.abort());
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers,
+      credentials: 'include',
+      signal: controller.signal,
+    });
+  } catch (err: unknown) {
+    clearTimeout(timer);
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new ApiErrorImpl({
+        status: 408,
+        message: 'Request timed out. The server may be waking up. Please try again.',
+        code: 'REQUEST_TIMEOUT',
+      });
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (res.status === 401 && !endpoint.startsWith('/api/v1/auth/')) {
     let refreshed = false;
@@ -125,11 +147,14 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     } catch {
       errorData = { message: res.statusText };
     }
-    const message = errorData.message || errorData.detail || errorData.error || errorData.title || res.statusText || 'Unknown error';
+    const rawError = errorData.error;
+    const extractedCode = errorData.code
+      || (typeof rawError === 'string' && !rawError.includes(' ') ? rawError : undefined);
+    const message = errorData.message || errorData.detail || (typeof rawError === 'string' ? rawError : undefined) || errorData.title || res.statusText || 'Unknown error';
     throw new ApiErrorImpl({
       status: res.status,
       message,
-      code: errorData.code,
+      code: extractedCode,
       correlationId: errorData.correlationId,
       traceId: errorData.traceId,
       errors: errorData.errors,

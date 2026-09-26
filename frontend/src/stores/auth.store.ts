@@ -2,23 +2,29 @@
 
 import { create } from 'zustand';
 import type { UserMeResponse } from '@/types';
+import { ApiError } from '@/shared/api/client';
+import { authApi } from '@/entities/auth/api/auth.api';
+import { userApi } from '@/entities/user/api/user.api';
+import { errorMessage } from '@/shared/utils/errorMessage';
 
 interface AuthState {
   user: UserMeResponse | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  verificationEmail: string | null;
+  unverifiedEmail: string | null;
 
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
+  resendVerification: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   fetchUser: () => Promise<void>;
   clearError: () => void;
+  setVerificationEmail: (email: string | null) => void;
+  clearUnverifiedEmail: () => void;
 }
 
-import { authApi } from '@/entities/auth/api/auth.api';
-import { userApi } from '@/entities/user/api/user.api';
-import { errorMessage } from '@/shared/utils/errorMessage';
 let fetchUserPromise: Promise<void> | null = null;
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -26,26 +32,47 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  verificationEmail: null,
+  unverifiedEmail: null,
 
   login: async (email, password) => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, unverifiedEmail: null });
     try {
       await authApi.login(email, password);
       await get().fetchUser();
     } catch (e: unknown) {
-      set({ error: errorMessage(e, 'Login failed'), isLoading: false });
+      if (e instanceof ApiError && (e.status === 403 && (e.code === 'EMAIL_NOT_VERIFIED' || e.message?.includes('EMAIL_NOT_VERIFIED') || e.message?.toLowerCase().includes('not verified')))) {
+        set({
+          unverifiedEmail: email.trim().toLowerCase(),
+          error: 'EMAIL_NOT_VERIFIED',
+          isLoading: false,
+        });
+      } else {
+        set({ error: errorMessage(e, 'Login failed'), isLoading: false });
+      }
     }
   },
 
   register: async (username, email, password) => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, verificationEmail: null });
     try {
       await authApi.register(username, email, password);
-      await get().login(email, password);
+      set({
+        verificationEmail: email.trim().toLowerCase(),
+        isLoading: false,
+        error: null,
+      });
     } catch (e: unknown) {
       set({ error: errorMessage(e, 'Registration failed'), isLoading: false });
     }
   },
+
+  resendVerification: async (email: string) => {
+    await authApi.resendVerification(email.trim().toLowerCase());
+  },
+
+  setVerificationEmail: (email: string | null) => set({ verificationEmail: email }),
+  clearUnverifiedEmail: () => set({ unverifiedEmail: null }),
 
   logout: async () => {
     try {

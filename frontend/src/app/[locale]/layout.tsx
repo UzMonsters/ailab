@@ -1,5 +1,6 @@
 import I18nProvider from '@/shared/ui/I18nProvider';
 import { ToastProvider } from '@/shared/ui/ToastContainer';
+import BackendKeepAlive from '@/shared/ui/BackendKeepAlive';
 
 export default async function LocaleLayout({
   children,
@@ -19,7 +20,10 @@ export default async function LocaleLayout({
 
   return (
     <I18nProvider locale={locale} messages={messages}>
-      <ToastProvider>{children}</ToastProvider>
+      <ToastProvider>
+        <BackendKeepAlive />
+        {children}
+      </ToastProvider>
     </I18nProvider>
   );
 }

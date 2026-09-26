@@ -4,4 +4,9 @@ export type {
   AuthLoginRequest,
   AuthTokenResponse,
   AuthSuccessResponse,
+  VerifyEmailRequest,
+  VerifyEmailResponse,
+  ResendVerificationRequest,
+  LinkedProviderDto,
+  LinkedProvidersResponse,
 } from '@/shared/api/contracts/definitions';
