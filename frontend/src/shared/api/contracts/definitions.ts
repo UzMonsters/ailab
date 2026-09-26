@@ -26,6 +26,30 @@ export interface AuthRegisterResponse {
   id: string;
   username: string;
   email: string;
+  verificationRequired?: boolean;
+}
+
+export interface VerifyEmailRequest {
+  token: string;
+}
+
+export interface VerifyEmailResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface ResendVerificationRequest {
+  email: string;
+}
+
+export interface LinkedProviderDto {
+  provider: string;
+  providerEmail?: string;
+  linkedAt: string;
+}
+
+export interface LinkedProvidersResponse {
+  providers: LinkedProviderDto[];
 }
 
 export interface AuthLoginRequest {
