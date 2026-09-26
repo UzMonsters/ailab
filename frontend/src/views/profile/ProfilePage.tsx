@@ -11,6 +11,7 @@ import {
   FlaskConical, Camera,
 } from 'lucide-react';
 import { userApi } from '@/entities/user/api/user.api';
+import { api, ApiError } from '@/shared/api/client';
 import { useAuthStore } from '@/stores/auth.store';
 import type { UserStatisticsResponse, UserPreferencesResponse } from '@/types';
 
@@ -144,9 +145,69 @@ export default function ProfilePage() {
   };
 
   const handleAvatar = async (file?: File) => {
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!file) return;
+
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const fileMime = file.type || '';
+    if (!allowedMimeTypes.includes(fileMime)) {
+      showToast('Unsupported image format. Allowed formats: JPEG, PNG, WebP', 'error');
+      return;
+    }
+
+    const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+    if (file.size > MAX_AVATAR_BYTES) {
+      showToast('Image file exceeds the 2MB size limit', 'error');
+      return;
+    }
+
     setAvatarBusy(true);
-    try { const dataUrl = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Invalid image')); reader.onerror = () => reject(reader.error || new Error('Could not read image')); reader.readAsDataURL(file); }); await userApi.uploadAvatar(dataUrl); await fetchUser(); } catch (err: unknown) { showToast(err instanceof Error ? err.message : 'Avatar upload failed', 'error'); } finally { setAvatarBusy(false); }
+    try {
+      const ticket = await userApi.createAvatarUploadTicket({
+        fileName: file.name,
+        mimeType: fileMime,
+        size: file.size,
+      });
+
+      if (!ticket?.uploadUrl || !ticket?.assetId) {
+        throw new Error('Avatar upload ticket was not generated');
+      }
+
+      if (ticket.maxBytes && file.size > ticket.maxBytes) {
+        throw new Error(`File exceeds server limit of ${(ticket.maxBytes / (1024 * 1024)).toFixed(0)}MB`);
+      }
+
+      await api.putBinary(ticket.uploadUrl, file, fileMime);
+
+      await userApi.completeAvatarUpload({
+        assetId: ticket.assetId,
+        crop: {},
+      });
+
+      await fetchUser();
+      showToast('Avatar updated successfully', 'success');
+    } catch (err: unknown) {
+      let message = 'Avatar upload failed';
+      if (err instanceof ApiError) {
+        if (err.status === 413 || err.code === 'ASSET_TOO_LARGE' || err.code === 'UPLOAD_TOO_LARGE') {
+          message = 'Image file exceeds the 2MB size limit';
+        } else if (err.status === 415 || err.code === 'UNSUPPORTED_MEDIA_TYPE' || err.code === 'UPLOAD_CONTENT_TYPE_MISMATCH') {
+          message = 'Unsupported image format. Allowed formats: JPEG, PNG, WebP';
+        } else if (err.status === 409 || err.code === 'UPLOAD_TICKET_ALREADY_USED') {
+          message = 'Upload ticket was already used. Please select the file again.';
+        } else if (err.status === 410 || err.code === 'UPLOAD_TICKET_EXPIRED') {
+          message = 'Upload ticket expired. Please select the file again.';
+        } else if (err.status === 422 || err.code === 'UPLOAD_INCOMPLETE') {
+          message = 'Upload was incomplete. Please retry.';
+        } else if (err.message) {
+          message = err.message;
+        }
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
+      showToast(message, 'error');
+    } finally {
+      setAvatarBusy(false);
+    }
   };
   const copyId = async () => { await navigator.clipboard.writeText(user?.id || ''); setCopied(true); window.setTimeout(() => setCopied(false), 1600); };
   const handleDelete = async () => { setDeleteError(null); try { await userApi.deleteMe(); await logout(); router.push(`/${locale}/auth`); } catch (err: unknown) { setDeleteError(err instanceof Error ? err.message : 'Could not delete account'); } };
@@ -189,7 +250,7 @@ export default function ProfilePage() {
             <div className="relative group">
               <div className="relative w-[120px] h-[120px] rounded-[24px] border-4 border-[var(--card)] bg-[var(--accent)] flex items-center justify-center text-[48px] text-[var(--primary)] font-bold shadow-lg overflow-hidden">
                 {user.avatarUrl ? <Image src={user.avatarUrl} alt={`${user.username} avatar`} width={120} height={120} unoptimized className="h-full w-full object-cover" /> : user.username.substring(0, 2).toUpperCase()}
-                <input ref={avatarInput} type="file" accept="image/*" className="hidden" onChange={(event) => handleAvatar(event.target.files?.[0])} />
+                <input ref={avatarInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) void handleAvatar(file); event.target.value = ''; }} />
                 {avatarBusy && <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><Loader2 className="animate-spin text-white" size={28} /></div>}
               </div>
               <div className="absolute top-1 right-1 w-[20px] h-[20px] bg-[#34D399] border-[4px] border-[var(--card)] rounded-full z-10" />

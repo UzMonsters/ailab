@@ -6,6 +6,10 @@ import type {
   WorkspaceEventAck,
   WorkspacePageResponse,
   WorkspaceState,
+  WorkspacePreviewUploadUrlsRequest,
+  WorkspacePreviewUploadUrlsResponse,
+  WorkspacePreviewCompleteRequest,
+  WorkspacePreviewDto,
 } from '@/types';
 
 export interface WorkspaceListQuery {
@@ -55,6 +59,55 @@ export const workspacesApi = {
 
   saveThumbnail: (id: string, data: { svg?: string; width?: number; height?: number; imageData?: string }) =>
     api.post<{ thumbnailUrl: string; updatedAt: string }>(`/api/v1/workspaces/${id}/thumbnail`, data),
+
+  createPreviewUploadUrls: (
+    id: string,
+    request?: WorkspacePreviewUploadUrlsRequest,
+    sessionToken?: string
+  ) =>
+    api.post<WorkspacePreviewUploadUrlsResponse>(
+      `/api/v1/workspaces/${id}/preview-upload-urls`,
+      request ?? {},
+      sessionToken ? { headers: { 'X-Share-Session': sessionToken } } : undefined
+    ),
+
+  completePreview: (
+    id: string,
+    previewId: string,
+    request: WorkspacePreviewCompleteRequest,
+    sessionToken?: string
+  ) =>
+    api.post<WorkspacePreviewDto>(
+      `/api/v1/workspaces/${id}/previews/${previewId}/complete`,
+      request,
+      sessionToken ? { headers: { 'X-Share-Session': sessionToken } } : undefined
+    ),
+
+  getPreview: (id: string, sessionToken?: string) =>
+    api.get<WorkspacePreviewDto>(
+      `/api/v1/workspaces/${id}/preview`,
+      sessionToken ? { headers: { 'X-Share-Session': sessionToken } } : undefined
+    ),
+
+  uploadPreviewAsset: (
+    id: string,
+    previewId: string,
+    assetId: string,
+    data: Blob | ArrayBuffer | Uint8Array,
+    contentType: string,
+    ticket?: string,
+    sessionToken?: string
+  ) => {
+    const query = ticket ? `?ticket=${encodeURIComponent(ticket)}` : '';
+    const headers: Record<string, string> = {};
+    if (sessionToken) headers['X-Share-Session'] = sessionToken;
+    return api.putBinary(
+      `/api/v1/workspaces/${id}/previews/${previewId}/assets/${assetId}/upload${query}`,
+      data,
+      contentType,
+      { headers }
+    );
+  },
 
   getState: (id: string, sessionToken?: string) => api.get<WorkspaceState>(`/api/v1/workspaces/${id}/state`, sessionToken ? { headers: { 'X-Share-Session': sessionToken } } : undefined),
 

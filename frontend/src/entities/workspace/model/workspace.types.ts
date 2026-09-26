@@ -5,4 +5,12 @@ export type {
   SandboxEventCommand,
   WorkspaceEventAck,
   AutosaveRequest,
+  WorkspacePreviewVariantRequest,
+  WorkspacePreviewUploadUrlsRequest,
+  WorkspacePreviewUploadTarget,
+  WorkspacePreviewUploadUrlsResponse,
+  WorkspacePreviewCompleteAsset,
+  WorkspacePreviewCompleteRequest,
+  WorkspacePreviewVariantDto,
+  WorkspacePreviewDto,
 } from '@/shared/api/contracts/definitions';
