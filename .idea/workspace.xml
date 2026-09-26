@@ -4,7 +4,105 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6ea24f21-b959-46d6-9657-a11c26c2b30f" name="Changes" comment="" />
+    <list default="true" id="6ea24f21-b959-46d6-9657-a11c26c2b30f" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Backend/app/src/test/java/com/ailab/book/service/BookAssetServiceImplTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/app/src/test/java/com/ailab/storage/S3ObjectStorageServiceMinioIntegrationTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/app/src/test/java/com/ailab/storage/UploadTicketPostgresMigrationIntegrationTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/oauth/CookieUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/oauth/CustomOAuth2AuthorizationRequestResolver.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/oauth/GoogleOAuthService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/oauth/GoogleOAuthServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/oauth/HttpCookieOAuth2AuthorizationRequestRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/oauth/OAuth2AuthenticationFailureHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/oauth/OAuth2AuthenticationSuccessHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/oauth/OAuthUserData.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/security/AuthenticationEligibilityPolicy.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/verification/EmailVerificationService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/verification/EmailVerificationServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/verification/EmailVerificationToken.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/verification/EmailVerificationTokenRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/common/mail/EmailDeliveryService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/common/mail/SmtpEmailDeliveryService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/LocalObjectStorageService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/ObjectStorageService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/S3ObjectStorageService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/StorageConfiguration.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/StorageException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/StorageKeyFactory.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/StorageProperties.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/StorageProvider.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/StorageUpload.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/StoredObject.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/StoredObjectDownload.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/upload/InspectedUpload.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/upload/IssuedUploadTicket.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/upload/TransientUploadTicketStore.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/upload/UploadContentInspector.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/upload/UploadScope.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/upload/UploadTicketClaimCommand.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/upload/UploadTicketEntity.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/upload/UploadTicketIssueCommand.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/upload/UploadTicketRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/upload/UploadTicketService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/upload/UploadTicketStatus.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/storage/upload/UploadTicketStore.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/user/domain/UserAuthIdentity.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/user/repository/UserAuthIdentityRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/resources/db/migration/identity/V6__create_upload_tickets.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/resources/db/migration/identity/V7__email_verification_and_oauth_identities.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/test/java/com/ailab/auth/oauth/GoogleOAuthServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/test/java/com/ailab/auth/security/AuthenticationEligibilityPolicyTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/test/java/com/ailab/auth/verification/EmailVerificationServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/test/java/com/ailab/storage/LocalObjectStorageServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/test/java/com/ailab/storage/StorageKeyFactoryTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/test/java/com/ailab/storage/upload/InMemoryUploadTicketRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/test/java/com/ailab/storage/upload/UploadContentInspectorTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Backend/identity-module/src/test/java/com/ailab/storage/upload/UploadTicketServiceUnitTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/handoffs/2026-09-25-s3-object-storage-frontend-handoff.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/superpowers/plans/2026-09-25-s3-object-storage-integration.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/admin/assets/AdminAssetController.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/admin/assets/AdminAssetController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/admin/assets/AdminAssetService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/admin/assets/AdminAssetService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/admin/assets/AdminAssetServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/admin/assets/AdminAssetServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/admin/assets/AssetUploadTicketService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/admin/assets/AssetUploadTicketService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/admin/assets/PublicAssetController.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/admin/assets/PublicAssetController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/book/service/BookAssetService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/book/service/BookAssetService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/book/service/BookAssetServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/book/service/BookAssetServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/workspace/controller/WorkspaceController.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/workspace/controller/WorkspaceController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/workspace/service/WorkspacePreviewService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/workspace/service/WorkspacePreviewService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/workspace/websocket/JwtStompChannelInterceptor.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/app/src/main/java/com/ailab/workspace/websocket/JwtStompChannelInterceptor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/app/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/app/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/app/src/test/java/com/ailab/workspace/WorkspaceMeasurementsAndPreviewsIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/app/src/test/java/com/ailab/workspace/WorkspaceMeasurementsAndPreviewsIntegrationTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/app/src/test/resources/application-test.properties" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/app/src/test/resources/application-test.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/api/AuthDtos.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/api/AuthDtos.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/controller/AuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/security/DatabaseUserDetailsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/security/DatabaseUserDetailsService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/security/JwtAuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/security/JwtAuthenticationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/service/AuthService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/service/AuthServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/service/AuthServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/token/RefreshTokenService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/auth/token/RefreshTokenService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/user/api/UserDtos.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/user/api/UserDtos.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/user/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/user/controller/UserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/user/domain/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/user/domain/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/user/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/user/repository/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/user/service/UserAccountService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/user/service/UserAccountService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/user/service/UserAccountServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/java/com/ailab/user/service/UserAccountServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/test/java/com/ailab/auth/security/DatabaseUserDetailsServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/test/java/com/ailab/auth/security/DatabaseUserDetailsServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/identity-module/src/test/java/com/ailab/auth/service/AuthServiceImplTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/identity-module/src/test/java/com/ailab/auth/service/AuthServiceImplTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/entities/user/api/user.api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/entities/user/api/user.api.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/entities/workspace/api/workspace.api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/entities/workspace/api/workspace.api.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/shared/api/contracts/definitions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/shared/api/contracts/definitions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/views/profile/ProfilePage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/views/profile/ProfilePage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/render.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/render.yaml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -196,6 +294,9 @@
       <workItem from="1786528904108" duration="3986000" />
       <workItem from="1789036026456" duration="2026000" />
       <workItem from="1789369818503" duration="2255000" />
+      <workItem from="1790232973940" duration="32000" />
+      <workItem from="1790311557161" duration="373000" />
+      <workItem from="1790397219307" duration="1420000" />
     </task>
     <servers />
   </component>

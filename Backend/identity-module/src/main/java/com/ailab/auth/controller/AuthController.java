@@ -40,6 +40,34 @@ public class AuthController {
         return service.register(request);
     }
 
+    @PostMapping("/email/verify")
+    public AuthDtos.VerifyEmailResponse verifyEmail(@Valid @RequestBody AuthDtos.VerifyEmailRequest request) {
+        return service.verifyEmail(request);
+    }
+
+    @PostMapping("/email/verification/resend")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void resendVerification(@Valid @RequestBody AuthDtos.ResendVerificationRequest request) {
+        service.resendVerification(request);
+    }
+
+    @GetMapping("/oauth/google/link")
+    public java.util.Map<String, String> getGoogleLinkUrl(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal String userId,
+            HttpServletResponse response) {
+        if (userId == null || userId.isBlank()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "AUTH_REQUIRED: You must be logged in to link an OAuth provider");
+        }
+        com.ailab.auth.oauth.CookieUtils.addCookie(response,
+                com.ailab.auth.oauth.HttpCookieOAuth2AuthorizationRequestRepository.LINK_USER_ID_COOKIE_NAME,
+                userId, 300, refreshCookieSecure, "Lax");
+        com.ailab.auth.oauth.CookieUtils.addCookie(response,
+                com.ailab.auth.oauth.HttpCookieOAuth2AuthorizationRequestRepository.ACTION_COOKIE_NAME,
+                "link", 300, refreshCookieSecure, "Lax");
+        return java.util.Map.of("url", "/oauth2/authorization/google?action=link");
+    }
+
     @PostMapping("/login")
     public AuthDtos.TokenResponse login(@Valid @RequestBody AuthDtos.LoginRequest request, HttpServletResponse response) {
         return writeTokenResponse(service.login(request), response);

@@ -47,6 +47,30 @@ services:
         value: "true"
       - key: REFRESH_COOKIE_SAME_SITE
         value: None
+      - key: APP_STORAGE_PROVIDER
+        value: s3
+      - key: APP_STORAGE_ENDPOINT
+        sync: false
+      - key: APP_STORAGE_REGION
+        sync: false
+      - key: APP_STORAGE_BUCKET
+        sync: false
+      - key: APP_STORAGE_ACCESS_KEY
+        sync: false
+      - key: APP_STORAGE_SECRET_KEY
+        sync: false
+      - key: APP_STORAGE_PATH_STYLE
+        value: "true"
+      - key: APP_STORAGE_CREATE_BUCKET
+        value: "false"
+      - key: APP_STORAGE_DOWNLOAD_URL_TTL
+        value: PT10M
+      - key: APP_STORAGE_MAX_ASSET_SIZE
+        value: 10MB
+      - key: APP_STORAGE_MAX_AVATAR_SIZE
+        value: 2MB
+      - key: APP_STORAGE_MAX_PREVIEW_SIZE
+        value: 10MB
 
   - type: web
     name: aichemistry-frontend

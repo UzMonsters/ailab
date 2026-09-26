@@ -93,6 +93,32 @@ export interface UserAvatarRequest {
   avatarUrl: string;
 }
 
+export interface UserAvatarUploadTicketRequest {
+  fileName: string;
+  mimeType: string;
+  size?: number;
+  checksum?: string;
+}
+
+export interface UserAvatarUploadTicketResponse {
+  assetId: string;
+  uploadUrl: string;
+  expiresAt: string;
+  maxBytes: number;
+  allowedMimeTypes: string[];
+}
+
+export interface UserAvatarCompleteRequest {
+  assetId: string;
+  crop?: Record<string, unknown>;
+}
+
+export interface UserAvatarCompleteResponse {
+  avatarUrl: string;
+  assetId: string;
+  updatedAt: string;
+}
+
 export interface AdminUserResponse {
   id: string;
   username: string;
@@ -595,6 +621,41 @@ export interface AutosaveRequest {
   expectedVersion?: number;
   stateHash: string;
   state: Record<string, unknown>;
+}
+
+export interface PreviewUploadUrlsRequest {
+  sourceStateVersion?: number;
+  variants: Array<{
+    theme: 'DARK' | 'LIGHT' | string;
+    mimeType: string;
+    width?: number;
+    height?: number;
+    checksum?: string;
+  }>;
+}
+
+export interface PreviewUploadTarget {
+  theme: string;
+  assetId: string;
+  uploadUrl: string;
+  expiresAt: string;
+}
+
+export interface PreviewUploadUrlsResponse {
+  previewId: string;
+  sourceStateVersion: number;
+  uploads: PreviewUploadTarget[];
+}
+
+export interface CompletePreviewRequest {
+  sourceStateVersion?: number;
+  assets: Array<{
+    theme: string;
+    assetId: string;
+    url?: string;
+    checksum?: string;
+  }>;
+  fallbackKey?: string;
 }
 
 export interface EquipmentSummary {

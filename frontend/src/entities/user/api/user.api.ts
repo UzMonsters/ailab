@@ -7,6 +7,10 @@ import type {
   UserPreferencesUpdateRequest,
   UserStatisticsResponse,
   UserAvatarRequest,
+  UserAvatarUploadTicketRequest,
+  UserAvatarUploadTicketResponse,
+  UserAvatarCompleteRequest,
+  UserAvatarCompleteResponse,
   AuthSuccessResponse,
 } from '@/types';
 
@@ -45,6 +49,12 @@ export const userApi = {
 
   uploadAvatar: (avatarUrl: string) =>
     api.put<AuthSuccessResponse>('/api/v1/users/avatar', { avatarUrl } satisfies UserAvatarRequest),
+
+  createAvatarUploadTicket: (data: UserAvatarUploadTicketRequest) =>
+    api.post<UserAvatarUploadTicketResponse>('/api/v1/users/me/avatar/upload-urls', data),
+
+  completeAvatarUpload: (data: UserAvatarCompleteRequest) =>
+    api.post<UserAvatarCompleteResponse>('/api/v1/users/me/avatar/complete', data),
 
   deleteAvatar: () =>
     api.delete<AuthSuccessResponse>('/api/v1/users/avatar'),

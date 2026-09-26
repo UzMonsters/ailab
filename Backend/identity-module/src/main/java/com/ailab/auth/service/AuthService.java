@@ -12,4 +12,8 @@ public interface AuthService {
     void logout(String token);
 
     void logoutAll(String userId);
+
+    AuthDtos.VerifyEmailResponse verifyEmail(AuthDtos.VerifyEmailRequest request);
+
+    void resendVerification(AuthDtos.ResendVerificationRequest request);
 }

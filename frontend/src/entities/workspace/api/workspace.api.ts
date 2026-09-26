@@ -1,6 +1,9 @@
 import { api } from '@/shared/api/client';
 import type {
   AutosaveRequest,
+  CompletePreviewRequest,
+  PreviewUploadUrlsRequest,
+  PreviewUploadUrlsResponse,
   SandboxEventCommand,
   Workspace,
   WorkspaceEventAck,
@@ -55,6 +58,12 @@ export const workspacesApi = {
 
   saveThumbnail: (id: string, data: { svg?: string; width?: number; height?: number; imageData?: string }) =>
     api.post<{ thumbnailUrl: string; updatedAt: string }>(`/api/v1/workspaces/${id}/thumbnail`, data),
+
+  createPreviewUploadUrls: (id: string, data: PreviewUploadUrlsRequest) =>
+    api.post<PreviewUploadUrlsResponse>(`/api/v1/workspaces/${id}/preview-upload-urls`, data),
+
+  completePreview: (id: string, previewId: string, data: CompletePreviewRequest) =>
+    api.post<Workspace['preview']>(`/api/v1/workspaces/${id}/previews/${previewId}/complete`, data),
 
   getState: (id: string, sessionToken?: string) => api.get<WorkspaceState>(`/api/v1/workspaces/${id}/state`, sessionToken ? { headers: { 'X-Share-Session': sessionToken } } : undefined),
 

@@ -20,8 +20,10 @@ public class DatabaseUserDetailsService implements UserDetailsService {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
+        String password = user.getPasswordHash() != null ? user.getPasswordHash() : "";
+
         return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
-                .password(user.getPasswordHash())
+                .password(password)
                 .roles(user.getRole().name())
                 .build();
     }

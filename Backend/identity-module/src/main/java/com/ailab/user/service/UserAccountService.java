@@ -79,4 +79,6 @@ public interface UserAccountService {
     UserDtos.UserLearningProgressResponse getUserLearningProgress(String id, String track);
 
     UserDtos.AdminDeleteUserResponse deleteUserAdmin(String id, UserDtos.AdminDeleteUserRequest request);
+    UserDtos.LinkedProvidersResponse getLinkedProviders(String userId);
+    void unlinkProvider(String userId, String provider);
 }

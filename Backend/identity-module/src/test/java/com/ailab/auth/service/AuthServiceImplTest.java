@@ -23,12 +23,17 @@ class AuthServiceImplTest {
     @Mock AuthenticationManager authenticationManager;
     @Mock AccessTokenIssuer jwtService;
     @Mock RefreshTokenOperations refreshTokens;
+    @Mock com.ailab.auth.verification.EmailVerificationService verificationService;
+    @Mock com.ailab.common.mail.EmailDeliveryService emailDeliveryService;
+    @Mock com.ailab.auth.security.AuthenticationEligibilityPolicy eligibilityPolicy;
     @InjectMocks AuthServiceImpl service;
 
     @Test
     void registersUserAndReturnsPublicResponse() {
         User user = new User("alice", "alice@example.com", "hash");
         when(users.register("alice", "alice@example.com", "password")).thenReturn(user);
+        when(verificationService.createRegisterChallenge(eq(user.getId()), any()))
+                .thenReturn(new com.ailab.auth.verification.EmailVerificationService.IssuedVerificationChallenge("raw-token", "token-hash", java.time.Instant.now().plusSeconds(1800)));
 
         AuthDtos.RegisterResponse response = service.register(
                 new AuthDtos.RegisterRequest("alice", "alice@example.com", "password"));
@@ -36,6 +41,8 @@ class AuthServiceImplTest {
         assertThat(response.id()).isEqualTo(user.getId());
         assertThat(response.username()).isEqualTo("alice");
         assertThat(response.email()).isEqualTo("alice@example.com");
+        assertThat(response.verificationRequired()).isTrue();
+        verify(emailDeliveryService).sendVerificationEmail(eq("alice@example.com"), eq("alice"), eq("raw-token"), any());
     }
 
     @Test
@@ -48,20 +55,23 @@ class AuthServiceImplTest {
 
         AuthDtos.AuthenticationResult result = service.login(new AuthDtos.LoginRequest("alice@example.com", "password"));
 
-        assertThat(result.response()).isEqualTo(new AuthDtos.TokenResponse("access-token", "refresh-token", 900L, "Bearer"));
+        assertThat(result.response()).isEqualTo(new AuthDtos.TokenResponse("access-token", 900L, "Bearer"));
         assertThat(result.refreshToken()).isEqualTo("refresh-token");
         verify(authenticationManager).authenticate(any());
+        verify(eligibilityPolicy).assertEligibleForPasswordLogin(user);
     }
 
     @Test
     void rejectsInvalidPassword() {
+        User user = new User("alice", "alice@example.com", "encoded-password");
+        when(users.findByEmail("alice@example.com")).thenReturn(user);
         when(authenticationManager.authenticate(any()))
                 .thenThrow(new BadCredentialsException("Invalid credentials"));
 
         assertThatThrownBy(() -> service.login(new AuthDtos.LoginRequest("alice@example.com", "wrong")))
                 .isInstanceOf(BadCredentialsException.class)
                 .hasMessage("Invalid credentials");
-        verifyNoInteractions(users, jwtService, refreshTokens);
+        verifyNoInteractions(jwtService, refreshTokens);
     }
 
     @Test

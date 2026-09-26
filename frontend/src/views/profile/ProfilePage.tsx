@@ -11,6 +11,7 @@ import {
   FlaskConical, Camera,
 } from 'lucide-react';
 import { userApi } from '@/entities/user/api/user.api';
+import { getApiBaseUrl } from '@/shared/api/client';
 import { useAuthStore } from '@/stores/auth.store';
 import type { UserStatisticsResponse, UserPreferencesResponse } from '@/types';
 
@@ -146,7 +147,30 @@ export default function ProfilePage() {
   const handleAvatar = async (file?: File) => {
     if (!file || !file.type.startsWith('image/')) return;
     setAvatarBusy(true);
-    try { const dataUrl = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Invalid image')); reader.onerror = () => reject(reader.error || new Error('Could not read image')); reader.readAsDataURL(file); }); await userApi.uploadAvatar(dataUrl); await fetchUser(); } catch (err: unknown) { showToast(err instanceof Error ? err.message : 'Avatar upload failed', 'error'); } finally { setAvatarBusy(false); }
+    try {
+      const ticket = await userApi.createAvatarUploadTicket({
+        fileName: file.name || 'avatar',
+        mimeType: file.type,
+        size: file.size,
+      });
+      const uploadUrl = ticket.uploadUrl.startsWith('/')
+        ? `${getApiBaseUrl()}${ticket.uploadUrl}`
+        : ticket.uploadUrl;
+      const uploaded = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      });
+      if (!uploaded.ok) throw new Error(uploaded.statusText || 'Avatar upload failed');
+      await userApi.completeAvatarUpload({ assetId: ticket.assetId });
+      await fetchUser();
+      showToast(t('profileUpdated'));
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Avatar upload failed', 'error');
+    } finally {
+      setAvatarBusy(false);
+      if (avatarInput.current) avatarInput.current.value = '';
+    }
   };
   const copyId = async () => { await navigator.clipboard.writeText(user?.id || ''); setCopied(true); window.setTimeout(() => setCopied(false), 1600); };
   const handleDelete = async () => { setDeleteError(null); try { await userApi.deleteMe(); await logout(); router.push(`/${locale}/auth`); } catch (err: unknown) { setDeleteError(err instanceof Error ? err.message : 'Could not delete account'); } };

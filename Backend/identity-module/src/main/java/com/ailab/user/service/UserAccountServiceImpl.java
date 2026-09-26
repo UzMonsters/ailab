@@ -35,13 +35,27 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final ReAuthTokenOperations reAuthTokenService;
     private final UserLearningProgressProvider learningProgressProvider;
     private final UserActivityProvider activityProvider;
+    private final com.ailab.auth.verification.EmailVerificationService verificationService;
+    private final com.ailab.common.mail.EmailDeliveryService emailDeliveryService;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.ailab.user.repository.UserAuthIdentityRepository identityRepository;
 
     public UserAccountServiceImpl(UserRepository repository,
                                   PasswordEncoder passwordEncoder,
                                   ApplicationEventPublisher events,
                                   com.ailab.auth.token.RefreshTokenOperations refreshTokenService,
                                   ReAuthTokenOperations reAuthTokenService) {
-        this(repository, passwordEncoder, events, refreshTokenService, reAuthTokenService, null, null);
+        this(repository, passwordEncoder, events, refreshTokenService, reAuthTokenService, null, null, null, null);
+    }
+
+    public UserAccountServiceImpl(UserRepository repository,
+                                  PasswordEncoder passwordEncoder,
+                                  ApplicationEventPublisher events,
+                                  com.ailab.auth.token.RefreshTokenOperations refreshTokenService,
+                                  ReAuthTokenOperations reAuthTokenService,
+                                  UserLearningProgressProvider learningProgressProvider,
+                                  UserActivityProvider activityProvider) {
+        this(repository, passwordEncoder, events, refreshTokenService, reAuthTokenService, learningProgressProvider, activityProvider, null, null);
     }
 
     @org.springframework.beans.factory.annotation.Autowired
@@ -51,7 +65,9 @@ public class UserAccountServiceImpl implements UserAccountService {
                                   com.ailab.auth.token.RefreshTokenOperations refreshTokenService,
                                   ReAuthTokenOperations reAuthTokenService,
                                   @org.springframework.beans.factory.annotation.Autowired(required = false) UserLearningProgressProvider learningProgressProvider,
-                                  @org.springframework.beans.factory.annotation.Autowired(required = false) UserActivityProvider activityProvider) {
+                                  @org.springframework.beans.factory.annotation.Autowired(required = false) UserActivityProvider activityProvider,
+                                  @org.springframework.beans.factory.annotation.Autowired(required = false) com.ailab.auth.verification.EmailVerificationService verificationService,
+                                  @org.springframework.beans.factory.annotation.Autowired(required = false) com.ailab.common.mail.EmailDeliveryService emailDeliveryService) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.events = events;
@@ -59,6 +75,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         this.reAuthTokenService = reAuthTokenService;
         this.learningProgressProvider = learningProgressProvider;
         this.activityProvider = activityProvider;
+        this.verificationService = verificationService;
+        this.emailDeliveryService = emailDeliveryService;
     }
 
     @Override
@@ -540,6 +558,30 @@ public class UserAccountServiceImpl implements UserAccountService {
         } else {
             user.deactivate(request != null ? request.reason() : "Deactivated by admin");
             return new UserDtos.AdminDeleteUserResponse("DEACTIVATED", null);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserDtos.LinkedProvidersResponse getLinkedProviders(String userId) {
+        findById(userId);
+        if (identityRepository == null) {
+            return new UserDtos.LinkedProvidersResponse(List.of());
+        }
+        List<UserDtos.LinkedProviderDto> providers = identityRepository.findAllByUserId(userId).stream()
+                .map(i -> new UserDtos.LinkedProviderDto(i.getProvider(), i.getProviderEmail(), i.getCreatedAt()))
+                .toList();
+        return new UserDtos.LinkedProvidersResponse(providers);
+    }
+
+    @Override
+    public void unlinkProvider(String userId, String provider) {
+        User user = findById(userId);
+        if (!user.hasPassword()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CANNOT_UNLINK_LAST_AUTH_METHOD: You must set a password before unlinking your OAuth provider");
+        }
+        if (identityRepository != null) {
+            identityRepository.deleteAllByUserIdAndProvider(userId, provider);
         }
     }
 

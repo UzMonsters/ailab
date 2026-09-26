@@ -109,15 +109,7 @@ public class AssetUploadTicketService {
     }
 
     public static String detectMimeType(byte[] data) {
-        if (data == null || data.length == 0) return null;
-        if (data.length >= 8 && data[0] == (byte) 0x89 && data[1] == 'P' && data[2] == 'N' && data[3] == 'G') return "image/png";
-        if (data.length >= 3 && data[0] == (byte) 0xFF && data[1] == (byte) 0xD8 && data[2] == (byte) 0xFF) return "image/jpeg";
-        if (data.length >= 12 && data[0] == 'R' && data[1] == 'I' && data[2] == 'F' && data[3] == 'F' && data[8] == 'W' && data[9] == 'E' && data[10] == 'B' && data[11] == 'P') return "image/webp";
-        if (data.length >= 5 && data[0] == '%' && data[1] == 'P' && data[2] == 'D' && data[3] == 'F' && data[4] == '-') return "application/pdf";
-        String s = new String(data, 0, Math.min(data.length, 512), StandardCharsets.UTF_8).trim().toLowerCase();
-        if (s.startsWith("<?xml") || s.startsWith("<svg") || s.contains("<svg")) return "image/svg+xml";
-        if (s.startsWith("{") || s.startsWith("[")) return "application/json";
-        return "application/octet-stream";
+        return com.ailab.storage.upload.UploadContentInspector.detectMimeType(data);
     }
 
 }

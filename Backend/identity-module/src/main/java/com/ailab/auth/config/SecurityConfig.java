@@ -79,6 +79,18 @@ public class SecurityConfig {
         return source;
     }
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.security.oauth2.client.registration.ClientRegistrationRepository clientRegistrationRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.ailab.auth.oauth.HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.ailab.auth.oauth.OAuth2AuthenticationSuccessHandler oauth2SuccessHandler;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.ailab.auth.oauth.OAuth2AuthenticationFailureHandler oauth2FailureHandler;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter,
                                                      AuthenticationProvider authenticationProvider,
@@ -91,7 +103,7 @@ public class SecurityConfig {
                 .formLogin(formLogin -> formLogin.disable())
                 .authenticationProvider(authenticationProvider)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**", "/api/v1/books/**", "/api/v1/assets/**", "/api/v1/shared-workspaces/**", "/ws/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/health").permitAll()
+                        .requestMatchers("/api/v1/auth/**", "/oauth2/**", "/login/oauth2/**", "/api/v1/books/**", "/api/v1/assets/**", "/api/v1/shared-workspaces/**", "/ws/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/health").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/learning/tracks/**", "/api/v1/learning/levels", "/api/v1/learning/levels/**").permitAll()
                         .requestMatchers("/api/v1/learning/levels/*/attempts", "/api/v1/learning/attempts/**").authenticated()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
@@ -101,6 +113,24 @@ public class SecurityConfig {
                         .authenticationEntryPoint((req, res, e) -> write(req, res, mapper, 401, "AUTH_REQUIRED", "Unauthorized", "Authentication required"))
                         .accessDeniedHandler((req, res, e) -> write(req, res, mapper, 403, "FORBIDDEN", "Forbidden", "Access is forbidden")))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        if (clientRegistrationRepository != null && cookieAuthorizationRequestRepository != null && oauth2SuccessHandler != null) {
+            http.oauth2Login(oauth2 -> {
+                oauth2.authorizationEndpoint(auth -> auth
+                        .baseUri("/oauth2/authorization")
+                        .authorizationRequestRepository(cookieAuthorizationRequestRepository)
+                        .authorizationRequestResolver(new com.ailab.auth.oauth.CustomOAuth2AuthorizationRequestResolver(clientRegistrationRepository, "/oauth2/authorization"))
+                );
+                oauth2.redirectionEndpoint(redir -> redir
+                        .baseUri("/login/oauth2/code/*")
+                );
+                oauth2.successHandler(oauth2SuccessHandler);
+                if (oauth2FailureHandler != null) {
+                    oauth2.failureHandler(oauth2FailureHandler);
+                }
+            });
+        }
+
         return http.build();
     }
 
