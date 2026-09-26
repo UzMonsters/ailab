@@ -93,6 +93,32 @@ export interface UserAvatarRequest {
   avatarUrl: string;
 }
 
+export interface AvatarUploadTicketRequest {
+  fileName: string;
+  mimeType: string;
+  size?: number;
+  checksum?: string;
+}
+
+export interface AvatarUploadTicketResponse {
+  assetId: string;
+  uploadUrl: string;
+  expiresAt: string;
+  maxBytes: number;
+  allowedMimeTypes: string[];
+}
+
+export interface AvatarCompleteRequest {
+  assetId: string;
+  crop?: Record<string, unknown>;
+}
+
+export interface AvatarCompleteResponse {
+  avatarUrl: string;
+  assetId: string;
+  updatedAt: string;
+}
+
 export interface AdminUserResponse {
   id: string;
   username: string;
@@ -551,6 +577,107 @@ export interface Workspace {
   isDeleted: boolean;
   stateVersion?: number;
   experimentSessionId?: string | null;
+}
+
+export interface WorkspacePreviewVariantRequest {
+  theme: 'DARK' | 'LIGHT' | string;
+  mimeType?: string;
+  width?: number;
+  height?: number;
+  checksum?: string;
+}
+
+export interface WorkspacePreviewUploadUrlsRequest {
+  sourceStateVersion?: number;
+  variants?: WorkspacePreviewVariantRequest[];
+}
+
+export interface WorkspacePreviewUploadTarget {
+  theme: 'DARK' | 'LIGHT' | string;
+  assetId: string;
+  uploadUrl: string;
+  expiresAt: string;
+}
+
+export interface WorkspacePreviewUploadUrlsResponse {
+  previewId: string;
+  sourceStateVersion?: number;
+  uploads: WorkspacePreviewUploadTarget[];
+}
+
+export interface WorkspacePreviewCompleteAsset {
+  theme: 'DARK' | 'LIGHT' | string;
+  assetId: string;
+  url?: string;
+  checksum?: string;
+}
+
+export interface WorkspacePreviewCompleteRequest {
+  sourceStateVersion?: number;
+  assets: WorkspacePreviewCompleteAsset[];
+  fallbackKey?: string;
+}
+
+export interface WorkspacePreviewVariantDto {
+  url: string;
+  width?: number;
+  height?: number;
+  mimeType?: string;
+}
+
+export interface WorkspacePreviewDto {
+  status: 'READY' | 'PROCESSING' | 'FALLBACK' | 'ERROR' | string;
+  sourceStateVersion?: number;
+  generatedAt?: string | null;
+  variants: Record<string, WorkspacePreviewVariantDto>;
+  fallback?: Record<string, unknown>;
+}
+
+export interface AdminAssetUploadRequestItem {
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  kind?: 'IMAGE' | 'SVG' | 'MODEL' | 'DOCUMENT' | 'RAW' | string;
+  checksum?: string;
+}
+
+export interface AdminAssetUploadUrlsRequest {
+  files: AdminAssetUploadRequestItem[];
+}
+
+export interface AdminAssetUploadTarget {
+  fileId?: string;
+  assetId: string;
+  filename: string;
+  contentType: string;
+  uploadUrl: string;
+  downloadUrl: string;
+  expiresAt: string;
+}
+
+export interface AdminAssetUploadUrlsResponse {
+  uploads: AdminAssetUploadTarget[];
+}
+
+export interface AdminAssetCompleteRequest {
+  checksum?: string;
+  width?: number;
+  height?: number;
+  alt?: Record<string, string>;
+  caption?: Record<string, string>;
+  variants?: Record<string, unknown>;
+}
+
+export interface AdminAssetCompleteResponse {
+  assetId: string;
+  status: 'READY' | 'PENDING' | 'FAILED' | string;
+  downloadUrl: string;
+  checksum?: string;
+  mimeType?: string;
+  sizeBytes?: number;
+  width?: number;
+  height?: number;
+  [key: string]: unknown;
 }
 
 export interface WorkspacePageResponse<T> {
